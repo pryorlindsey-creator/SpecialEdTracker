@@ -1,0 +1,706 @@
+import React, { useState, useEffect, createContext, useContext } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, doc, addDoc, getDocs, onSnapshot, query, orderBy, where, serverTimestamp } from 'firebase/firestore';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+// --- Firebase Initialization & Context ---
+// These global variables are provided by the Canvas environment.
+// Ensure they are correctly handled, providing fallbacks for local development.
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+// Initialize Firebase App
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Create a context for Firebase services and user ID
+const FirebaseContext = createContext(null);
+
+// Custom hook to provide Firebase services
+const useFirebase = () => useContext(FirebaseContext);
+
+// --- Message Modal Component ---
+const MessageModal = ({ message, type, onClose }) => {
+  if (!message) return null;
+
+  const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-500';
+  const textColor = 'text-white';
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className={`p-6 rounded-lg shadow-xl max-w-sm w-full ${bgColor} ${textColor} text-center`}>
+        <p className="text-lg font-semibold mb-4">{message}</p>
+        <button
+          onClick={onClose}
+          className="px-4 py-2 bg-white text-gray-800 rounded-md hover:bg-gray-100 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// --- Loading Spinner Component ---
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center py-8">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+  </div>
+);
+
+// --- Student List Component ---
+const StudentList = ({ onSelectStudent, onCreateStudent }) => {
+  const { db, auth, userId, isAuthReady } = useFirebase();
+  const [students, setStudents] = useState([]);
+  const [newStudentName, setNewStudentName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
+
+  useEffect(() => {
+    if (!isAuthReady || !userId || !db) return;
+
+    setLoading(true);
+    setError(null);
+    const studentsCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'students');
+
+    const unsubscribe = onSnapshot(studentsCollectionRef, (snapshot) => {
+      try {
+        const studentList = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setStudents(studentList);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching students:", err);
+        setError("Failed to load students. Please try again.");
+        setLoading(false);
+      }
+    }, (err) => {
+      console.error("Error setting up student snapshot listener:", err);
+      setError("Failed to listen for student updates.");
+      setLoading(false);
+    });
+
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, [db, userId, isAuthReady]);
+
+  const handleCreateStudent = async () => {
+    if (!newStudentName.trim()) {
+      setMessage("Student name cannot be empty.");
+      setMessageType('error');
+      return;
+    }
+    if (!userId || !db) {
+      setMessage("Authentication not ready. Please wait.");
+      setMessageType('error');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const studentsCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'students');
+      await addDoc(studentsCollectionRef, {
+        name: newStudentName.trim(),
+        createdAt: serverTimestamp()
+      });
+      setNewStudentName('');
+      setMessage("Student added successfully!");
+      setMessageType('success');
+    } catch (err) {
+      console.error("Error creating student:", err);
+      setError("Failed to add student. Please try again.");
+      setMessage("Failed to add student. Please try again.");
+      setMessageType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeMessageModal = () => setMessage('');
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <MessageModal message={message} type={messageType} onClose={closeMessageModal} />
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Manage Students</h2>
+
+      {/* Add New Student Form */}
+      <div className="bg-white p-6 rounded-xl shadow-lg mb-8 max-w-lg mx-auto">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">Add New Student</h3>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <input
+            type="text"
+            placeholder="Enter student name"
+            value={newStudentName}
+            onChange={(e) => setNewStudentName(e.target.value)}
+            className="flex-grow p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          <button
+            onClick={handleCreateStudent}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md shadow-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? 'Adding...' : 'Add Student'}
+          </button>
+        </div>
+        {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+      </div>
+
+      {/* Student List */}
+      <div className="bg-white p-6 rounded-xl shadow-lg max-w-3xl mx-auto">
+        <h3 className="text-xl font-semibold text-gray-700 mb-4">Your Students</h3>
+        {loading && <LoadingSpinner />}
+        {!loading && students.length === 0 && (
+          <p className="text-gray-600 text-center">No students added yet. Add one above!</p>
+        )}
+        {!loading && students.length > 0 && (
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {students.map((student) => (
+              <li
+                key={student.id}
+                className="bg-blue-100 p-4 rounded-lg shadow-sm flex items-center justify-between hover:bg-blue-200 transition-colors cursor-pointer"
+                onClick={() => onSelectStudent(student.id, student.name)}
+              >
+                <span className="text-lg font-medium text-blue-800">{student.name}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onSelectStudent(student.id, student.name); }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                >
+                  View Data
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <p className="text-gray-500 text-sm text-center mt-8">
+        Your User ID (for data separation): <span className="font-mono">{userId || 'Not authenticated'}</span>
+      </p>
+    </div>
+  );
+};
+
+// --- Student Dashboard Component ---
+const StudentDashboard = ({ studentId, studentName, onBackToStudents }) => {
+  const { db, auth, userId, isAuthReady } = useFirebase();
+  const [dataPoints, setDataPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [view, setView] = useState('dataEntry'); // 'dataEntry', 'rawData', 'reports'
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState('');
+
+  // Form states
+  const [date, setDate] = useState('');
+  const [goalNumber, setGoalNumber] = useState('');
+  const [goalDescription, setGoalDescription] = useState('');
+  const [progressValue, setProgressValue] = useState('');
+  const [anecdotalInfo, setAnecdotalInfo] = useState('');
+  const [levelOfSupport, setLevelOfSupport] = useState('');
+
+  // Fetch data points for the selected student
+  useEffect(() => {
+    if (!isAuthReady || !userId || !db || !studentId) return;
+
+    setLoading(true);
+    setError(null);
+    const dataCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'students', studentId, 'data');
+    const q = query(dataCollectionRef, orderBy('date', 'asc')); // Order by date for consistent display
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      try {
+        const list = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date ? doc.data().date.toDate().toISOString().split('T')[0] : '' // Convert Firebase Timestamp to YYYY-MM-DD
+        }));
+        setDataPoints(list);
+        setLoading(false);
+      } catch (err) {
+        console.error("Error fetching data points:", err);
+        setError("Failed to load data. Please try again.");
+        setLoading(false);
+      }
+    }, (err) => {
+      console.error("Error setting up data point snapshot listener:", err);
+      setError("Failed to listen for data updates.");
+      setLoading(false);
+    });
+
+    return () => unsubscribe(); // Cleanup listener
+  }, [db, userId, isAuthReady, studentId]);
+
+  const handleAddData = async (e) => {
+    e.preventDefault();
+    if (!studentId || !db || !userId) {
+      setMessage("App not fully initialized. Please wait.");
+      setMessageType('error');
+      return;
+    }
+    if (!date || !goalNumber || !progressValue) {
+      setMessage("Date, Goal Number, and Progress Value are required.");
+      setMessageType('error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const dataCollectionRef = collection(db, 'artifacts', appId, 'users', userId, 'students', studentId, 'data');
+      await addDoc(dataCollectionRef, {
+        date: new Date(date), // Store as Firestore Timestamp
+        goalNumber: goalNumber.trim(),
+        goalDescription: goalDescription.trim(),
+        progressValue: parseFloat(progressValue), // Ensure it's a number
+        anecdotalInfo: anecdotalInfo.trim(),
+        levelOfSupport: levelOfSupport.trim(),
+        createdAt: serverTimestamp()
+      });
+      // Clear form
+      setDate('');
+      setGoalNumber('');
+      setGoalDescription('');
+      setProgressValue('');
+      setAnecdotalInfo('');
+      setLevelOfSupport('');
+      setMessage("Data added successfully!");
+      setMessageType('success');
+    } catch (err) {
+      console.error("Error adding data:", err);
+      setMessage("Failed to add data. Please try again.");
+      setMessageType('error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const closeMessageModal = () => setMessage('');
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <MessageModal message={message} type={messageType} onClose={closeMessageModal} />
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-3xl font-bold text-gray-800">
+          <span className="text-blue-600">{studentName}</span>'s Data
+        </h2>
+        <button
+          onClick={onBackToStudents}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors shadow"
+        >
+          &larr; Back to Students
+        </button>
+      </div>
+
+      <div className="mb-6 bg-white p-4 rounded-xl shadow-lg flex flex-wrap justify-center gap-2 md:gap-4">
+        <button
+          onClick={() => setView('dataEntry')}
+          className={`px-4 py-2 rounded-md font-semibold transition-colors ${view === 'dataEntry' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+        >
+          Add Data
+        </button>
+        <button
+          onClick={() => setView('rawData')}
+          className={`px-4 py-2 rounded-md font-semibold transition-colors ${view === 'rawData' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+        >
+          View Raw Data
+        </button>
+        <button
+          onClick={() => setView('reports')}
+          className={`px-4 py-2 rounded-md font-semibold transition-colors ${view === 'reports' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+        >
+          View Reports
+        </button>
+      </div>
+
+      {loading && <LoadingSpinner />}
+      {!loading && error && <p className="text-red-600 text-center text-lg">{error}</p>}
+      {!loading && !error && (
+        <>
+          {view === 'dataEntry' && (
+            <DataEntryForm
+              date={date} setDate={setDate}
+              goalNumber={goalNumber} setGoalNumber={setGoalNumber}
+              goalDescription={goalDescription} setGoalDescription={setGoalDescription}
+              progressValue={progressValue} setProgressValue={setProgressValue}
+              anecdotalInfo={anecdotalInfo} setAnecdotalInfo={setAnecdotalInfo}
+              levelOfSupport={levelOfSupport} setLevelOfSupport={setLevelOfSupport}
+              onSubmit={handleAddData}
+            />
+          )}
+
+          {view === 'rawData' && (
+            <RawDataTable dataPoints={dataPoints} />
+          )}
+
+          {view === 'reports' && (
+            <ReportsView dataPoints={dataPoints} studentName={studentName} />
+          )}
+        </>
+      )}
+    </div>
+  );
+};
+
+// --- Data Entry Form Component ---
+const DataEntryForm = ({
+  date, setDate,
+  goalNumber, setGoalNumber,
+  goalDescription, setGoalDescription,
+  progressValue, setProgressValue,
+  anecdotalInfo, setAnecdotalInfo,
+  levelOfSupport, setLevelOfSupport,
+  onSubmit
+}) => {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg max-w-3xl mx-auto">
+      <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">Add New Data Point</h3>
+      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Date */}
+        <div className="col-span-1">
+          <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+          <input
+            type="date"
+            id="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        {/* Goal Number */}
+        <div className="col-span-1">
+          <label htmlFor="goalNumber" className="block text-sm font-medium text-gray-700 mb-1">Goal Number *</label>
+          <input
+            type="text"
+            id="goalNumber"
+            placeholder="e.g., Goal 1, Objective 2.1"
+            value={goalNumber}
+            onChange={(e) => setGoalNumber(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+
+        {/* Goal Description */}
+        <div className="col-span-2">
+          <label htmlFor="goalDescription" className="block text-sm font-medium text-gray-700 mb-1">Goal Description</label>
+          <textarea
+            id="goalDescription"
+            placeholder="Full description of the IEP goal/objective"
+            value={goalDescription}
+            onChange={(e) => setGoalDescription(e.target.value)}
+            rows="2"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 resize-y"
+          ></textarea>
+        </div>
+
+        {/* Progress Value */}
+        <div className="col-span-1">
+          <label htmlFor="progressValue" className="block text-sm font-medium text-gray-700 mb-1">Progress Value *</label>
+          <input
+            type="number"
+            id="progressValue"
+            placeholder="e.g., 4 (for 4/5 items), 80 (for 80%)"
+            value={progressValue}
+            onChange={(e) => setProgressValue(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            step="any"
+            required
+          />
+        </div>
+
+        {/* Level of Support */}
+        <div className="col-span-1">
+          <label htmlFor="levelOfSupport" className="block text-sm font-medium text-gray-700 mb-1">Level of Support</label>
+          <input
+            type="text"
+            id="levelOfSupport"
+            placeholder="e.g., Independent, Verbal Prompt, Hand-over-hand"
+            value={levelOfSupport}
+            onChange={(e) => setLevelOfSupport(e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+
+        {/* Anecdotal Information */}
+        <div className="col-span-2">
+          <label htmlFor="anecdotalInfo" className="block text-sm font-medium text-gray-700 mb-1">Anecdotal Information</label>
+          <textarea
+            id="anecdotalInfo"
+            placeholder="Observations, specific examples, notes"
+            value={anecdotalInfo}
+            onChange={(e) => setAnecdotalInfo(e.target.value)}
+            rows="3"
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 resize-y"
+          ></textarea>
+        </div>
+
+        {/* Submit Button */}
+        <div className="col-span-2 text-center mt-4">
+          <button
+            type="submit"
+            className="px-8 py-3 bg-green-600 text-white font-semibold rounded-md shadow-lg hover:bg-green-700 transition-colors transform hover:scale-105"
+          >
+            Add Data Point
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// --- Raw Data Table Component ---
+const RawDataTable = ({ dataPoints }) => {
+  if (!dataPoints || dataPoints.length === 0) {
+    return <p className="text-gray-600 text-center mt-8">No raw data available for this student yet.</p>;
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg max-w-full overflow-x-auto">
+      <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">Raw Data Log</h3>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tl-lg">Date</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal #</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal Description</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress Value</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Anecdotal Info</th>
+            <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rounded-tr-lg">Support</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {dataPoints.map((data, index) => (
+            <tr key={data.id || index} className="hover:bg-gray-50">
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{data.date}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{data.goalNumber}</td>
+              <td className="px-4 py-2 text-sm text-gray-900 max-w-xs overflow-hidden text-ellipsis">{data.goalDescription}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{data.progressValue}</td>
+              <td className="px-4 py-2 text-sm text-gray-900 max-w-xs overflow-hidden text-ellipsis">{data.anecdotalInfo}</td>
+              <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900">{data.levelOfSupport}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
+// --- Goal Chart Component ---
+const GoalChart = ({ goalNumber, goalDescription, data }) => {
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg mb-6">
+      <h4 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+        {goalNumber}: {goalDescription || 'No description provided'}
+      </h4>
+      {data.length > 0 ? (
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+            <XAxis dataKey="date" angle={-45} textAnchor="end" height={80} interval="preserveStartEnd" />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="progressValue"
+              stroke="#4F46E5"
+              activeDot={{ r: 8 }}
+              name="Progress"
+              strokeWidth={2}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      ) : (
+        <p className="text-gray-600 text-center">No data points for this goal in the selected period.</p>
+      )}
+    </div>
+  );
+};
+
+// --- Reports View Component ---
+const ReportsView = ({ dataPoints, studentName }) => {
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
+  const [uniqueGoals, setUniqueGoals] = useState([]);
+
+  useEffect(() => {
+    // Set initial date range to last 4.5 weeks (approx 31 days for simplicity)
+    const today = new Date();
+    const fourAndHalfWeeksAgo = new Date();
+    fourAndHalfWeeksAgo.setDate(today.getDate() - 31);
+    setStartDate(fourAndHalfWeeksAgo.toISOString().split('T')[0]);
+    setEndDate(today.toISOString().split('T')[0]);
+  }, []);
+
+  useEffect(() => {
+    // Filter data based on date range and identify unique goals
+    if (!dataPoints) return;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const dataFilteredByDate = dataPoints.filter(dp => {
+      const dpDate = new Date(dp.date);
+      return dpDate >= start && dpDate <= end;
+    });
+
+    setFilteredData(dataFilteredByDate);
+
+    // Get unique goals and their descriptions
+    const goalsMap = new Map();
+    dataFilteredByDate.forEach(dp => {
+      if (!goalsMap.has(dp.goalNumber)) {
+        goalsMap.set(dp.goalNumber, dp.goalDescription || '');
+      }
+    });
+    setUniqueGoals(Array.from(goalsMap.entries()).map(([number, description]) => ({
+      number,
+      description
+    })).sort((a, b) => a.number.localeCompare(b.number))); // Sort goals for consistent display
+
+  }, [dataPoints, startDate, endDate]);
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg max-w-4xl mx-auto">
+      <h3 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+        {studentName}'s Progress Reports
+      </h3>
+
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8 p-4 bg-gray-50 rounded-lg shadow-inner">
+        <div>
+          <label htmlFor="reportStartDate" className="block text-sm font-medium text-gray-700 mb-1">Start Date:</label>
+          <input
+            type="date"
+            id="reportStartDate"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="reportEndDate" className="block text-sm font-medium text-gray-700 mb-1">End Date:</label>
+          <input
+            type="date"
+            id="reportEndDate"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+      </div>
+
+      {uniqueGoals.length === 0 && (
+        <p className="text-gray-600 text-center mt-8">
+          No goals with data points found in the selected date range.
+        </p>
+      )}
+
+      {uniqueGoals.map(goal => {
+        const goalData = filteredData
+          .filter(dp => dp.goalNumber === goal.number)
+          .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date for chart
+
+        return (
+          <GoalChart
+            key={goal.number}
+            goalNumber={goal.number}
+            goalDescription={goal.description}
+            data={goalData}
+          />
+        );
+      })}
+    </div>
+  );
+};
+
+
+// --- Main App Component ---
+const App = () => {
+  const [user, setUser] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [selectedStudentName, setSelectedStudentName] = useState(null);
+  const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        setUserId(currentUser.uid);
+        setIsAuthReady(true);
+      } else {
+        // Sign in anonymously if no initial token or user is not logged in
+        try {
+          if (initialAuthToken) {
+            await signInWithCustomToken(auth, initialAuthToken);
+          } else {
+            await signInAnonymously(auth);
+          }
+        } catch (error) {
+          console.error("Firebase Auth Error:", error);
+          setAuthError("Failed to authenticate. Please try refreshing the page.");
+          setIsAuthReady(true); // Still set ready even on error to unblock UI
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []); // Run once on mount
+
+  const handleSelectStudent = (id, name) => {
+    setSelectedStudentId(id);
+    setSelectedStudentName(name);
+  };
+
+  const handleBackToStudents = () => {
+    setSelectedStudentId(null);
+    setSelectedStudentName(null);
+  };
+
+  if (!isAuthReady) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <LoadingSpinner />
+        <p className="ml-4 text-lg text-gray-700">Loading application...</p>
+        {authError && <p className="text-red-600 text-center mt-4">{authError}</p>}
+      </div>
+    );
+  }
+
+  return (
+    <FirebaseContext.Provider value={{ db, auth, user, userId, isAuthReady }}>
+      <div className="font-sans bg-gray-100 antialiased">
+        <header className="bg-blue-700 text-white p-4 shadow-md text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight">IEP Progress Tracker</h1>
+          <p className="text-blue-200 mt-1">Efficient Data Collection & Reporting for Special Education</p>
+        </header>
+
+        <main className="container mx-auto p-4 py-8">
+          {selectedStudentId ? (
+            <StudentDashboard
+              studentId={selectedStudentId}
+              studentName={selectedStudentName}
+              onBackToStudents={handleBackToStudents}
+            />
+          ) : (
+            <StudentList
+              onSelectStudent={handleSelectStudent}
+            />
+          )}
+        </main>
+      </div>
+    </FirebaseContext.Provider>
+  );
+};
+
+export default App;
