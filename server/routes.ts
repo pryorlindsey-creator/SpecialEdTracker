@@ -52,12 +52,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/students', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Creating student for user:", userId);
+      console.log("Request body:", req.body);
+      
       const studentData = insertStudentSchema.parse({
         ...req.body,
         userId,
       });
       
+      console.log("Parsed student data:", studentData);
       const student = await storage.createStudent(studentData);
+      console.log("Student created successfully:", student.id);
       res.status(201).json(student);
     } catch (error) {
       console.error("Error creating student:", error);
@@ -186,15 +191,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/students/:studentId/goals', isAuthenticated, async (req: any, res) => {
     try {
       const studentId = parseInt(req.params.studentId);
+      const userId = req.user.claims.sub;
+      console.log("Creating goal for student:", studentId, "user:", userId);
+      console.log("Goal request body:", req.body);
+      
       const student = await storage.getStudentById(studentId);
       
       if (!student) {
+        console.log("Student not found:", studentId);
         return res.status(404).json({ message: "Student not found" });
       }
 
       // Verify ownership
-      const userId = req.user.claims.sub;
       if (student.userId !== userId) {
+        console.log("Access denied - student belongs to:", student.userId, "but user is:", userId);
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -203,7 +213,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         studentId,
       });
       
+      console.log("Parsed goal data:", goalData);
       const goal = await storage.createGoal(goalData);
+      console.log("Goal created successfully:", goal.id);
       res.status(201).json(goal);
     } catch (error) {
       console.error("Error creating goal:", error);
