@@ -443,6 +443,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin routes (for database administrator)
+  app.get('/api/admin/stats', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const students = await storage.getAllStudents();
+      const goals = await storage.getAllGoals();
+      const dataPoints = await storage.getAllDataPoints();
+
+      const stats = {
+        totalUsers: users.length,
+        totalStudents: students.length,
+        totalGoals: goals.length,
+        totalDataPoints: dataPoints.length,
+        recentActivity: [] // Can be expanded later
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get('/api/admin/users', async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.get('/api/admin/students', async (req, res) => {
+    try {
+      const students = await storage.getAllStudentsWithDetails();
+      res.json(students);
+    } catch (error) {
+      console.error("Error fetching all students:", error);
+      res.status(500).json({ message: "Failed to fetch students" });
+    }
+  });
+
+  app.get('/api/admin/goals', async (req, res) => {
+    try {
+      const goals = await storage.getAllGoalsWithDetails();
+      res.json(goals);
+    } catch (error) {
+      console.error("Error fetching all goals:", error);
+      res.status(500).json({ message: "Failed to fetch goals" });
+    }
+  });
+
+  app.delete('/api/admin/users/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      await storage.deleteUser(userId);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.get('/api/admin/schema', async (req, res) => {
+    try {
+      const schema = await storage.getDatabaseSchema();
+      res.json(schema);
+    } catch (error) {
+      console.error("Error fetching database schema:", error);
+      res.status(500).json({ message: "Failed to fetch database schema" });
+    }
+  });
+
+  app.get('/api/admin/table/:tableName', async (req, res) => {
+    try {
+      const tableName = req.params.tableName;
+      let data;
+      
+      switch (tableName) {
+        case 'users':
+          data = await storage.getAllUsers();
+          break;
+        case 'students':
+          data = await storage.getAllStudents();
+          break;
+        case 'goals':
+          data = await storage.getAllGoals();
+          break;
+        case 'data_points':
+          data = await storage.getAllDataPoints();
+          break;
+        default:
+          return res.status(404).json({ message: "Table not found" });
+      }
+      
+      res.json(data);
+    } catch (error) {
+      console.error(`Error fetching table ${req.params.tableName}:`, error);
+      res.status(500).json({ message: "Failed to fetch table data" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

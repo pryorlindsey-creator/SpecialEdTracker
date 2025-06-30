@@ -290,6 +290,133 @@ export class DatabaseStorage implements IStorage {
       lastScore,
     };
   }
+
+  // Admin methods for database management
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getAllStudents(): Promise<Student[]> {
+    return await db.select().from(students);
+  }
+
+  async getAllGoals(): Promise<Goal[]> {
+    return await db.select().from(goals);
+  }
+
+  async getAllDataPoints(): Promise<DataPoint[]> {
+    return await db.select().from(dataPoints);
+  }
+
+  async getAllStudentsWithDetails(): Promise<any[]> {
+    const allStudents = await db.select().from(students);
+    const studentsWithDetails = await Promise.all(
+      allStudents.map(async (student) => {
+        const summary = await this.getStudentSummary(student.id);
+        const user = await this.getUser(student.userId);
+        return {
+          ...student,
+          ...summary,
+          teacherEmail: user?.email,
+        };
+      })
+    );
+    return studentsWithDetails;
+  }
+
+  async getAllGoalsWithDetails(): Promise<any[]> {
+    const allGoals = await db.select().from(goals);
+    const goalsWithDetails = await Promise.all(
+      allGoals.map(async (goal) => {
+        const student = await this.getStudentById(goal.studentId);
+        const progress = await this.getGoalProgress(goal.id);
+        return {
+          ...goal,
+          studentName: student?.name,
+          currentProgress: progress.currentProgress,
+          dataPointsCount: progress.dataPoints.length,
+        };
+      })
+    );
+    return goalsWithDetails;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // First delete all related data
+    const userStudents = await this.getStudentsByUserId(userId);
+    for (const student of userStudents) {
+      await this.deleteStudent(student.id);
+    }
+    // Then delete the user
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
+  async getDatabaseSchema(): Promise<any> {
+    // Return schema information for admin view
+    return {
+      users: {
+        tableName: "users",
+        fields: [
+          { name: "id", type: "varchar", isPrimary: true },
+          { name: "email", type: "varchar", isUnique: true },
+          { name: "firstName", type: "varchar" },
+          { name: "lastName", type: "varchar" },
+          { name: "profileImageUrl", type: "varchar" },
+          { name: "createdAt", type: "timestamp" },
+          { name: "updatedAt", type: "timestamp" }
+        ]
+      },
+      students: {
+        tableName: "students",
+        fields: [
+          { name: "id", type: "serial", isPrimary: true },
+          { name: "userId", type: "varchar", isForeign: true, references: "users.id" },
+          { name: "name", type: "varchar" },
+          { name: "grade", type: "varchar" },
+          { name: "createdAt", type: "timestamp" },
+          { name: "updatedAt", type: "timestamp" }
+        ]
+      },
+      goals: {
+        tableName: "goals",
+        fields: [
+          { name: "id", type: "serial", isPrimary: true },
+          { name: "studentId", type: "integer", isForeign: true, references: "students.id" },
+          { name: "title", type: "varchar" },
+          { name: "description", type: "text" },
+          { name: "targetCriteria", type: "text" },
+          { name: "levelOfSupport", type: "varchar" },
+          { name: "status", type: "varchar" },
+          { name: "createdAt", type: "timestamp" },
+          { name: "updatedAt", type: "timestamp" }
+        ]
+      },
+      dataPoints: {
+        tableName: "data_points",
+        fields: [
+          { name: "id", type: "serial", isPrimary: true },
+          { name: "goalId", type: "integer", isForeign: true, references: "goals.id" },
+          { name: "objectiveId", type: "integer", isForeign: true, references: "objectives.id" },
+          { name: "date", type: "timestamp" },
+          { name: "progressValue", type: "decimal" },
+          { name: "progressFormat", type: "varchar" },
+          { name: "numerator", type: "integer" },
+          { name: "denominator", type: "integer" },
+          { name: "levelOfSupport", type: "varchar" },
+          { name: "anecdotalInfo", type: "text" },
+          { name: "createdAt", type: "timestamp" }
+        ]
+      },
+      sessions: {
+        tableName: "sessions",
+        fields: [
+          { name: "sid", type: "varchar", isPrimary: true },
+          { name: "sess", type: "jsonb" },
+          { name: "expire", type: "timestamp" }
+        ]
+      }
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();
