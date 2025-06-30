@@ -16,6 +16,7 @@ const addGoalSchema = z.object({
   title: z.string().min(1, "Goal title is required"),
   description: z.string().min(1, "Goal description is required"),
   targetCriteria: z.string().optional(),
+  levelOfSupport: z.string().optional(),
   status: z.string().default("active"),
 });
 
@@ -37,6 +38,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       title: "",
       description: "",
       targetCriteria: "",
+      levelOfSupport: "",
       status: "active",
     },
   });
@@ -137,6 +139,31 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                       {...field} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="levelOfSupport"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Level of Support</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select support level..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="independent">Independent</SelectItem>
+                      <SelectItem value="verbal-prompt">Verbal Prompt</SelectItem>
+                      <SelectItem value="visual-prompt">Visual Prompt</SelectItem>
+                      <SelectItem value="physical-prompt">Physical Prompt</SelectItem>
+                      <SelectItem value="hand-over-hand">Hand-over-Hand</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

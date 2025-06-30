@@ -53,6 +53,19 @@ export const goals = pgTable("goals", {
   title: varchar("title").notNull(),
   description: text("description").notNull(),
   targetCriteria: text("target_criteria"), // e.g., "80% accuracy over 3 consecutive trials"
+  levelOfSupport: varchar("level_of_support"), // independent, verbal-prompt, etc.
+  status: varchar("status").notNull().default("active"), // active, mastered, discontinued
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Objectives table
+export const objectives = pgTable("objectives", {
+  id: serial("id").primaryKey(),
+  goalId: integer("goal_id").notNull().references(() => goals.id),
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  targetCriteria: text("target_criteria"),
   status: varchar("status").notNull().default("active"), // active, mastered, discontinued
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -62,6 +75,7 @@ export const goals = pgTable("goals", {
 export const dataPoints = pgTable("data_points", {
   id: serial("id").primaryKey(),
   goalId: integer("goal_id").notNull().references(() => goals.id),
+  objectiveId: integer("objective_id").references(() => objectives.id), // optional - can be for goal or specific objective
   date: timestamp("date").notNull(),
   progressValue: decimal("progress_value", { precision: 5, scale: 2 }).notNull(), // percentage or score
   progressFormat: varchar("progress_format").notNull().default("percentage"), // percentage or fraction
@@ -90,6 +104,15 @@ export const goalsRelations = relations(goals, ({ one, many }) => ({
     fields: [goals.studentId],
     references: [students.id],
   }),
+  objectives: many(objectives),
+  dataPoints: many(dataPoints),
+}));
+
+export const objectivesRelations = relations(objectives, ({ one, many }) => ({
+  goal: one(goals, {
+    fields: [objectives.goalId],
+    references: [goals.id],
+  }),
   dataPoints: many(dataPoints),
 }));
 
@@ -97,6 +120,10 @@ export const dataPointsRelations = relations(dataPoints, ({ one }) => ({
   goal: one(goals, {
     fields: [dataPoints.goalId],
     references: [goals.id],
+  }),
+  objective: one(objectives, {
+    fields: [dataPoints.objectiveId],
+    references: [objectives.id],
   }),
 }));
 
