@@ -34,10 +34,11 @@ interface Goal {
 interface DataEntryFormProps {
   studentId: number;
   goals: Goal[];
+  selectedGoalId?: number;
   onSuccess?: () => void;
 }
 
-export default function DataEntryForm({ studentId, goals, onSuccess }: DataEntryFormProps) {
+export default function DataEntryForm({ studentId, goals, selectedGoalId, onSuccess }: DataEntryFormProps) {
   const { toast } = useToast();
   const [progressInputType, setProgressInputType] = useState<"percentage" | "fraction">("percentage");
 

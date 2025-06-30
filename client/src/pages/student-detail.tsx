@@ -265,6 +265,10 @@ export default function StudentDetail() {
                       setSelectedGoalId(goal.id);
                       setActiveTab("reports");
                     }}
+                    onAddData={() => {
+                      setSelectedGoalId(goal.id);
+                      setActiveTab("data-entry");
+                    }}
                   />
                 ))}
                 

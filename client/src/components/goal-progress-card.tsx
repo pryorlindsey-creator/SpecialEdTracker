@@ -22,9 +22,10 @@ interface GoalProgressCardProps {
   goal: Goal;
   onRefresh?: () => void;
   onViewChart?: () => void;
+  onAddData?: () => void;
 }
 
-export default function GoalProgressCard({ goal, onRefresh, onViewChart }: GoalProgressCardProps) {
+export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddData }: GoalProgressCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'mastered':
@@ -120,6 +121,7 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart }: GoalP
             <Button 
               variant="ghost" 
               size="sm"
+              onClick={onAddData}
               className="text-primary hover:bg-blue-50"
             >
               <Plus className="h-4 w-4 mr-1" />
