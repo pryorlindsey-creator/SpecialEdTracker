@@ -350,23 +350,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Received data point request body:", req.body);
       
-      // Convert the date string to a Date object
-      const requestData = {
+      // The schema now handles date and number conversions automatically
+      const dataPointData = insertDataPointSchema.parse({
         ...req.body,
         goalId,
-        date: new Date(req.body.date), // Convert string date to Date object
-      };
-      
-      const dataPointData = insertDataPointSchema.parse(requestData);
+      });
       
       console.log("Parsed data point data:", dataPointData);
       
       const dataPoint = await storage.createDataPoint(dataPointData);
       console.log("Data point created successfully:", dataPoint.id);
       res.status(201).json(dataPoint);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating data point:", error);
-      console.error("Error stack:", error.stack);
+      console.error("Error stack:", (error as Error)?.stack);
       if (error instanceof z.ZodError) {
         console.error("Zod validation errors:", error.errors);
         res.status(400).json({ message: "Invalid data point data", errors: error.errors });
