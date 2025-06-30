@@ -296,6 +296,7 @@ export default function StudentDetail() {
                 <DataEntryForm 
                   studentId={studentId!} 
                   goals={goals || []}
+                  selectedGoalId={selectedGoalId || undefined}
                   onSuccess={() => {
                     refetchStudent();
                     refetchGoals();

@@ -45,6 +45,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(dataEntrySchema),
     defaultValues: {
+      goalId: selectedGoalId || 0,
       date: new Date().toISOString().split('T')[0], // Today's date
       progressFormat: "percentage",
       progressValue: 0,
