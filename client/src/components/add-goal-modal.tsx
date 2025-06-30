@@ -157,7 +157,6 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                     <SelectContent>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="mastered">Mastered</SelectItem>
-                      <SelectItem value="discontinued">Discontinued</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
