@@ -13,7 +13,7 @@ import {
   type InsertDataPoint,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and } from "drizzle-orm";
+import { eq, desc, sql, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -232,7 +232,7 @@ export class DatabaseStorage implements IStorage {
     const allDataPoints = await db
       .select()
       .from(dataPoints)
-      .where(sql`${dataPoints.goalId} = ANY(${goalIds})`)
+      .where(sql`${dataPoints.goalId} IN (${goalIds.join(',')})`)
       .orderBy(desc(dataPoints.date));
 
     const lastDataPoint = allDataPoints[0];
