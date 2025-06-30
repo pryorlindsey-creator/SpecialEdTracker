@@ -78,9 +78,13 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
+    console.log("Authentication verify callback triggered");
+    console.log("User claims:", tokens.claims());
+    
     const user = {};
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
+    console.log("User session created and stored");
     verified(null, user);
   };
 
@@ -114,9 +118,29 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/callback", (req, res, next) => {
     console.log("Auth callback received for hostname:", req.hostname);
+    console.log("Callback query params:", req.query);
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
+    }, (err, user, info) => {
+      console.log("Auth callback result - Error:", err, "User:", !!user, "Info:", info);
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.redirect("/api/login");
+      }
+      if (!user) {
+        console.log("No user returned from authentication");
+        return res.redirect("/api/login");
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Login error:", loginErr);
+          return res.redirect("/api/login");
+        }
+        console.log("User successfully logged in");
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 

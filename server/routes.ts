@@ -46,6 +46,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentsWithSummary = await Promise.all(
         students.map(async (student) => {
           const summary = await storage.getStudentSummary(student.id);
+          console.log(`Student ${student.id} summary:`, summary);
           return {
             ...student,
             ...summary,
@@ -53,6 +54,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
       
+      console.log("Returning students with summary:", studentsWithSummary.length);
       res.json(studentsWithSummary);
     } catch (error) {
       console.error("Error fetching students:", error);
