@@ -149,6 +149,8 @@ export const insertObjectiveSchema = createInsertSchema(objectives).omit({
 export const insertDataPointSchema = createInsertSchema(dataPoints).omit({
   id: true,
   createdAt: true,
+}).extend({
+  objectiveId: z.number().optional(), // Make objectiveId explicitly optional for data points
 });
 
 // Types
