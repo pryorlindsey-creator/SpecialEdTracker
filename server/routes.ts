@@ -404,9 +404,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Received data point request body:", req.body);
       
+      // Convert level of support array to JSON string for storage
+      const requestBody = { ...req.body };
+      if (requestBody.levelOfSupport && Array.isArray(requestBody.levelOfSupport)) {
+        requestBody.levelOfSupport = requestBody.levelOfSupport.length > 0 
+          ? JSON.stringify(requestBody.levelOfSupport) 
+          : null;
+      }
+      
       // The schema now handles date and number conversions automatically
       const dataPointData = insertDataPointSchema.parse({
-        ...req.body,
+        ...requestBody,
         goalId,
       });
       

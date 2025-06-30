@@ -15,6 +15,20 @@ import {
 import { db } from "./db";
 import { eq, desc, sql, and, inArray } from "drizzle-orm";
 
+// Helper function to convert level of support data for frontend
+function convertLevelOfSupport(levelOfSupport: string | null): string[] | null {
+  if (!levelOfSupport) return null;
+  
+  try {
+    // Try to parse as JSON array
+    const parsed = JSON.parse(levelOfSupport);
+    return Array.isArray(parsed) ? parsed : [levelOfSupport];
+  } catch {
+    // If parsing fails, treat as single string
+    return [levelOfSupport];
+  }
+}
+
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -163,11 +177,17 @@ export class DatabaseStorage implements IStorage {
 
   // Data point operations
   async getDataPointsByGoalId(goalId: number): Promise<DataPoint[]> {
-    return await db
+    const rawDataPoints = await db
       .select()
       .from(dataPoints)
       .where(eq(dataPoints.goalId, goalId))
       .orderBy(desc(dataPoints.date));
+    
+    // Convert level of support from JSON strings back to arrays
+    return rawDataPoints.map(dp => ({
+      ...dp,
+      levelOfSupport: dp.levelOfSupport || null
+    }));
   }
 
   async createDataPoint(dataPoint: InsertDataPoint): Promise<DataPoint> {
