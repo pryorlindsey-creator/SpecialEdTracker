@@ -115,6 +115,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      <SelectItem value="PreK">Pre-K</SelectItem>
                       <SelectItem value="K">Kindergarten</SelectItem>
                       <SelectItem value="1">1st Grade</SelectItem>
                       <SelectItem value="2">2nd Grade</SelectItem>
