@@ -146,6 +146,8 @@ Preferred communication style: Simple, everyday language.
   - Added session expiration detection
   - Fixed "Add Data" button functionality on goal cards
   - Pre-selection of goals when navigating to data entry
+  - Resolved date validation errors with proper type conversion
+  - Fixed decimal field handling and nullable field validation
 
 - December 30, 2024: Added level of support field to goals
   - Updated goal creation form with support level options
