@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,6 +70,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
     },
     onSuccess: () => {
+      // Invalidate all related caches to refresh dashboard and progress data
+      queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/goals/${form.getValues().goalId}/data-points`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/goals/${form.getValues().goalId}`] });
+      
       toast({
         title: "Success",
         description: "Data point added successfully!",

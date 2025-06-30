@@ -48,6 +48,11 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       await apiRequest("POST", `/api/students/${studentId}/goals`, data);
     },
     onSuccess: () => {
+      // Invalidate multiple caches to refresh all related data
+      queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}`] });
+      
       toast({
         title: "Success",
         description: "Goal added successfully!",
