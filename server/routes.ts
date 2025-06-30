@@ -10,6 +10,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Auth routes
+  app.get('/api/auth/debug', (req: any, res) => {
+    res.json({
+      isAuthenticated: req.isAuthenticated(),
+      hasUser: !!req.user,
+      hasSession: !!req.session,
+      sessionId: req.sessionID,
+      userClaims: req.user?.claims || null,
+      expires_at: req.user?.expires_at || null,
+    });
+  });
+
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
