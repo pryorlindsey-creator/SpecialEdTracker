@@ -13,7 +13,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Fetching user data for ID:", userId);
       const user = await storage.getUser(userId);
+      console.log("User found:", !!user);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -25,7 +27,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/students', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      console.log("Fetching students for user ID:", userId);
       const students = await storage.getStudentsByUserId(userId);
+      console.log("Found students:", students.length);
       
       // Get summary data for each student
       const studentsWithSummary = await Promise.all(
