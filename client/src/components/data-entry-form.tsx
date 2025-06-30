@@ -56,10 +56,15 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
   const addDataPointMutation = useMutation({
     mutationFn: async (data: DataEntryFormData) => {
+      console.log("Submitting data point data:", data);
+      
       const payload = {
         ...data,
         date: new Date(data.date).toISOString(),
       };
+      
+      console.log("Final payload:", payload);
+      console.log("API endpoint:", `/api/goals/${data.goalId}/data-points`);
       
       await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
     },
@@ -72,12 +77,14 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       onSuccess?.();
     },
     onError: (error) => {
+      console.error("Error adding data point:", error);
+      console.error("Error message:", error.message);
+      
       toast({
         title: "Error",
-        description: "Failed to add data point. Please try again.",
+        description: `Failed to add data point: ${error.message}`,
         variant: "destructive",
       });
-      console.error("Error adding data point:", error);
     },
   });
 
