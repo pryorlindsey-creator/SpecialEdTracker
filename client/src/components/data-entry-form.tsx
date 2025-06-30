@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Save } from "lucide-react";
@@ -19,7 +20,7 @@ const dataEntrySchema = z.object({
   progressValue: z.number().min(0).max(100, "Progress must be between 0 and 100"),
   numerator: z.number().optional(),
   denominator: z.number().optional(),
-  levelOfSupport: z.string().optional(),
+  levelOfSupport: z.array(z.string()).optional(),
   anecdotalInfo: z.string().optional(),
 });
 
@@ -49,7 +50,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       date: new Date().toISOString().split('T')[0], // Today's date
       progressFormat: "percentage",
       progressValue: 0,
-      levelOfSupport: "",
+      levelOfSupport: [],
       anecdotalInfo: "",
     },
   });
@@ -256,26 +257,46 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
           <FormField
             control={form.control}
             name="levelOfSupport"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Level of Support</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select support level..." />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="independent">Independent</SelectItem>
-                    <SelectItem value="verbal-prompt">Verbal Prompt</SelectItem>
-                    <SelectItem value="visual-prompt">Visual Prompt</SelectItem>
-                    <SelectItem value="physical-prompt">Physical Prompt</SelectItem>
-                    <SelectItem value="hand-over-hand">Hand-over-Hand</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const supportOptions = [
+                { id: "independent", label: "Independent" },
+                { id: "verbal-prompt", label: "Verbal Prompt" },
+                { id: "visual-prompt", label: "Visual Prompt" },
+                { id: "physical-prompt", label: "Physical Prompt" },
+                { id: "hand-over-hand", label: "Hand-over-Hand" },
+              ];
+
+              return (
+                <FormItem>
+                  <FormLabel>Level of Support (Select all that apply)</FormLabel>
+                  <div className="space-y-3 pt-2">
+                    {supportOptions.map((option) => (
+                      <div key={option.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={option.id}
+                          checked={field.value?.includes(option.id) || false}
+                          onCheckedChange={(checked) => {
+                            const currentValues = field.value || [];
+                            if (checked) {
+                              field.onChange([...currentValues, option.id]);
+                            } else {
+                              field.onChange(currentValues.filter((value) => value !== option.id));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={option.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {option.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
           />
 
           {/* Anecdotal Information */}

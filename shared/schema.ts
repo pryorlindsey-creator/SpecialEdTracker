@@ -81,7 +81,7 @@ export const dataPoints = pgTable("data_points", {
   progressFormat: varchar("progress_format").notNull().default("percentage"), // percentage or fraction
   numerator: integer("numerator"), // for fraction format (e.g., 8 in 8/10)
   denominator: integer("denominator"), // for fraction format (e.g., 10 in 8/10)
-  levelOfSupport: varchar("level_of_support"), // independent, verbal-prompt, etc.
+  levelOfSupport: text("level_of_support").array(), // array of support levels: independent, verbal-prompt, etc.
   anecdotalInfo: text("anecdotal_info"),
   createdAt: timestamp("created_at").defaultNow(),
 });
