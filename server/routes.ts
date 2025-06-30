@@ -21,6 +21,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
+  // Temporary test route to create a user session for testing
+  app.get('/api/auth/test-login', async (req: any, res) => {
+    try {
+      console.log("Creating test user session");
+      
+      // Create a test user
+      const testUser = await storage.upsertUser({
+        id: 'test-user-123',
+        email: 'test@example.com',
+        firstName: 'Test',
+        lastName: 'User',
+      });
+      
+      // Manually create session
+      req.user = {
+        claims: { sub: 'test-user-123', email: 'test@example.com' },
+        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+      };
+      
+      req.session.passport = { user: req.user };
+      
+      console.log("Test user session created");
+      res.redirect('/');
+    } catch (error) {
+      console.error("Error creating test session:", error);
+      res.status(500).json({ message: "Failed to create test session" });
+    }
+  });
+
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
