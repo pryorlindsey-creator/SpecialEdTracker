@@ -91,10 +91,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
+    console.log("Creating student:", student);
     const [newStudent] = await db
       .insert(students)
       .values(student)
       .returning();
+    console.log("Student created successfully:", newStudent);
     return newStudent;
   }
 
@@ -129,10 +131,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGoal(goal: InsertGoal): Promise<Goal> {
+    console.log("Creating goal:", goal);
     const [newGoal] = await db
       .insert(goals)
       .values(goal)
       .returning();
+    console.log("Goal created successfully:", newGoal);
     return newGoal;
   }
 
@@ -167,10 +171,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDataPoint(dataPoint: InsertDataPoint): Promise<DataPoint> {
+    console.log("Creating data point:", dataPoint);
     const [newDataPoint] = await db
       .insert(dataPoints)
       .values(dataPoint)
       .returning();
+    console.log("Data point created successfully:", newDataPoint);
     return newDataPoint;
   }
 

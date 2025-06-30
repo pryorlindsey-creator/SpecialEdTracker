@@ -151,7 +151,7 @@ export const insertDataPointSchema = createInsertSchema(dataPoints).omit({
   createdAt: true,
 }).extend({
   objectiveId: z.number().optional().nullable(), // Make objectiveId explicitly optional and nullable
-  progressValue: z.number().or(z.string().transform(Number)), // Handle both number and string inputs
+  progressValue: z.number().transform((num) => num.toString()), // Convert number to string for decimal field
   date: z.date().or(z.string().transform((str) => new Date(str))), // Handle both Date and string inputs
 });
 
