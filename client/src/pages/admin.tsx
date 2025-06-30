@@ -254,6 +254,133 @@ export default function AdminPage() {
             <TabsTrigger value="goals">Goals & Progress</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="database">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Database Tables List */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Database Tables</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {schema && Object.keys(schema).map((tableName) => (
+                      <Button
+                        key={tableName}
+                        variant={selectedTable === tableName ? "default" : "outline"}
+                        className="w-full justify-start"
+                        onClick={() => setSelectedTable(tableName)}
+                      >
+                        <Database className="h-4 w-4 mr-2" />
+                        {schema[tableName].tableName}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Table Details */}
+              {selectedTable && schema && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center justify-between">
+                      Table: {schema[selectedTable].tableName}
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.location.href = '/'}
+                      >
+                        ← Back to Main
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Fields:</h4>
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Field Name</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead>Attributes</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {schema[selectedTable].fields.map((field: any) => (
+                              <TableRow key={field.name}>
+                                <TableCell className="font-mono">{field.name}</TableCell>
+                                <TableCell>{field.type}</TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    {field.isPrimary && (
+                                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                                        PRIMARY
+                                      </span>
+                                    )}
+                                    {field.isForeign && (
+                                      <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">
+                                        FOREIGN
+                                      </span>
+                                    )}
+                                    {field.isUnique && (
+                                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                                        UNIQUE
+                                      </span>
+                                    )}
+                                  </div>
+                                  {field.references && (
+                                    <div className="text-xs text-gray-500 mt-1">
+                                      → {field.references}
+                                    </div>
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      <div>
+                        <h4 className="font-semibold mb-2">Sample Data:</h4>
+                        {tableData && tableData.length > 0 ? (
+                          <div className="max-h-64 overflow-auto">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  {Object.keys(tableData[0]).map((key) => (
+                                    <TableHead key={key}>{key}</TableHead>
+                                  ))}
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {tableData.slice(0, 5).map((row: any, index: number) => (
+                                  <TableRow key={index}>
+                                    {Object.values(row).map((value: any, colIndex: number) => (
+                                      <TableCell key={colIndex} className="max-w-32 truncate">
+                                        {value?.toString() || 'NULL'}
+                                      </TableCell>
+                                    ))}
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                            {tableData.length > 5 && (
+                              <p className="text-sm text-gray-500 mt-2">
+                                Showing 5 of {tableData.length} records
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">No data available</p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
           <TabsContent value="users">
             <Card>
               <CardHeader>

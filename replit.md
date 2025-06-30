@@ -131,6 +131,26 @@ This is a full-stack web application designed specifically for special education
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+- December 30, 2024: Created database administrator interface
+  - Added secure admin login (sandralindsey/IsabelShea@1998)
+  - Database schema viewer with field details and relationships
+  - Clickable table browser with sample data
+  - User management with deletion capabilities
+  - System statistics dashboard
+  - Navigation between admin and main application
+
+- December 30, 2024: Fixed data point creation issues
+  - Enhanced error handling and debugging
+  - Added session expiration detection
+  - Fixed "Add Data" button functionality on goal cards
+  - Pre-selection of goals when navigating to data entry
+
+- December 30, 2024: Added level of support field to goals
+  - Updated goal creation form with support level options
+  - Database schema updated to include levelOfSupport field
+
 ## Changelog
 
 Changelog:

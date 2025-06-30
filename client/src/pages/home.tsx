@@ -62,6 +62,14 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               <div className="text-sm text-gray-600">{user?.email}</div>
               <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = '/admin'}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Admin Panel
+              </Button>
+              <Button 
                 variant="ghost"
                 onClick={() => window.location.href = '/api/logout'}
                 className="text-gray-400 hover:text-gray-600"
