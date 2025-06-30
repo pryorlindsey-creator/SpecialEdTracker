@@ -358,10 +358,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed data point data:", dataPointData);
       
       const dataPoint = await storage.createDataPoint(dataPointData);
+      console.log("Data point created successfully:", dataPoint.id);
       res.status(201).json(dataPoint);
     } catch (error) {
       console.error("Error creating data point:", error);
+      console.error("Error stack:", error.stack);
       if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
         res.status(400).json({ message: "Invalid data point data", errors: error.errors });
       } else {
         res.status(500).json({ message: "Failed to create data point" });
