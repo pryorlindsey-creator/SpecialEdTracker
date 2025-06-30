@@ -58,9 +58,10 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     mutationFn: async (data: DataEntryFormData) => {
       console.log("Submitting data point data:", data);
       
+      // Convert the date string to ISO format for the server
       const payload = {
         ...data,
-        date: new Date(data.date).toISOString(),
+        date: data.date, // Keep as string, server will parse it
       };
       
       console.log("Final payload:", payload);
