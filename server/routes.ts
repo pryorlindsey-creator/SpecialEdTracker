@@ -350,10 +350,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Received data point request body:", req.body);
       
-      const dataPointData = insertDataPointSchema.parse({
+      // Convert the date string to a Date object
+      const requestData = {
         ...req.body,
         goalId,
-      });
+        date: new Date(req.body.date), // Convert string date to Date object
+      };
+      
+      const dataPointData = insertDataPointSchema.parse(requestData);
       
       console.log("Parsed data point data:", dataPointData);
       
