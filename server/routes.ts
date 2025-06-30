@@ -344,10 +344,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
+      console.log("Received data point request body:", req.body);
+      
       const dataPointData = insertDataPointSchema.parse({
         ...req.body,
         goalId,
       });
+      
+      console.log("Parsed data point data:", dataPointData);
       
       const dataPoint = await storage.createDataPoint(dataPointData);
       res.status(201).json(dataPoint);

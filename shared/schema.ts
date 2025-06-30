@@ -140,6 +140,12 @@ export const insertGoalSchema = createInsertSchema(goals).omit({
   updatedAt: true,
 });
 
+export const insertObjectiveSchema = createInsertSchema(objectives).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertDataPointSchema = createInsertSchema(dataPoints).omit({
   id: true,
   createdAt: true,
@@ -152,5 +158,7 @@ export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type Student = typeof students.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;
 export type Goal = typeof goals.$inferSelect;
+export type InsertObjective = z.infer<typeof insertObjectiveSchema>;
+export type Objective = typeof objectives.$inferSelect;
 export type InsertDataPoint = z.infer<typeof insertDataPointSchema>;
 export type DataPoint = typeof dataPoints.$inferSelect;
