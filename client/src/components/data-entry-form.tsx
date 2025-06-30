@@ -80,6 +80,19 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       console.error("Error adding data point:", error);
       console.error("Error message:", error.message);
       
+      // Handle unauthorized errors
+      if (error.message.includes("401") || error.message.includes("Unauthorized")) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to continue.",
+          variant: "destructive",
+        });
+        setTimeout(() => {
+          window.location.href = "/api/login";
+        }, 2000);
+        return;
+      }
+      
       toast({
         title: "Error",
         description: `Failed to add data point: ${error.message}`,
@@ -89,13 +102,18 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   });
 
   const onSubmit = (data: DataEntryFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Form validation errors:", form.formState.errors);
+    
     let finalData = { ...data };
 
     // Convert fraction to percentage if needed
     if (progressInputType === "fraction" && data.numerator && data.denominator) {
       finalData.progressValue = (data.numerator / data.denominator) * 100;
+      console.log("Converted fraction to percentage:", finalData.progressValue);
     }
 
+    console.log("Final data being sent:", finalData);
     addDataPointMutation.mutate(finalData);
   };
 
