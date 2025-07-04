@@ -54,12 +54,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       console.log("Fetching user data for ID:", userId);
+      console.log("Full user claims:", req.user.claims);
       const user = await storage.getUser(userId);
       console.log("User found:", !!user);
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Debug endpoint to check user data associations
+  app.get('/api/debug/user-data', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("=== DEBUG USER DATA ===");
+      console.log("Current user ID:", userId);
+      
+      // Get all users
+      const allUsers = await storage.getAllUsers();
+      console.log("All users:", allUsers.map(u => ({ id: u.id, email: u.email })));
+      
+      // Get all students
+      const allStudents = await storage.getAllStudents();
+      console.log("All students:", allStudents.map(s => ({ id: s.id, name: s.name, userId: s.userId })));
+      
+      // Get students for current user
+      const userStudents = await storage.getStudentsByUserId(userId);
+      console.log("Students for current user:", userStudents.length);
+      
+      res.json({
+        currentUserId: userId,
+        allUsers: allUsers.map(u => ({ id: u.id, email: u.email })),
+        allStudents: allStudents.map(s => ({ id: s.id, name: s.name, userId: s.userId })),
+        userStudents: userStudents.length
+      });
+    } catch (error) {
+      console.error("Debug error:", error);
+      res.status(500).json({ message: "Debug failed" });
     }
   });
 

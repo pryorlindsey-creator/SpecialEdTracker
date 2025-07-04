@@ -252,7 +252,7 @@ export class DatabaseStorage implements IStorage {
     const allDataPoints = await db
       .select()
       .from(dataPoints)
-      .where(sql`${dataPoints.goalId} IN (${goalIds.join(',')})`)
+      .where(inArray(dataPoints.goalId, goalIds))
       .orderBy(desc(dataPoints.date));
 
     const lastDataPoint = allDataPoints[0];
