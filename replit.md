@@ -158,6 +158,13 @@ Preferred communication style: Simple, everyday language.
   - **Authentication flow verified** - Test user creation and API protection working
   - **Progress calculations confirmed** - Goal progress updates correctly with new data points
 
+- June 30, 2025: Enhanced Level of Support functionality for data points
+  - **Added multi-select capability** - Users can now select multiple support levels when entering data
+  - **Updated UI with checkboxes** - Replaced single dropdown with checkbox interface
+  - **Backend array handling** - Modified data storage to handle multiple selections as JSON strings
+  - **Preserved existing data** - Maintained backward compatibility without data loss
+  - **Confirmed functionality** - User successfully tested multi-select level of support feature
+
 - December 30, 2024: Added level of support field to goals
   - Updated goal creation form with support level options
   - Database schema updated to include levelOfSupport field
