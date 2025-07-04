@@ -13,6 +13,7 @@ import GoalProgressCard from "@/components/goal-progress-card";
 import DataEntryForm from "@/components/data-entry-form";
 import GoalChart from "@/components/goal-chart";
 import AddGoalModal from "@/components/add-goal-modal";
+import EditGoalModal from "@/components/edit-goal-modal";
 import { format } from "date-fns";
 
 export default function StudentDetail() {
@@ -22,7 +23,9 @@ export default function StudentDetail() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
+  const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
+  const [editingGoal, setEditingGoal] = useState<any>(null);
 
   const studentId = params.id ? parseInt(params.id) : null;
 
@@ -269,6 +272,10 @@ export default function StudentDetail() {
                       setSelectedGoalId(goal.id);
                       setActiveTab("data-entry");
                     }}
+                    onEditGoal={() => {
+                      setEditingGoal(goal);
+                      setIsEditGoalModalOpen(true);
+                    }}
                   />
                 ))}
                 
@@ -382,6 +389,23 @@ export default function StudentDetail() {
           setIsAddGoalModalOpen(false);
         }}
       />
+
+      {/* Edit Goal Modal */}
+      {editingGoal && (
+        <EditGoalModal
+          goal={editingGoal}
+          isOpen={isEditGoalModalOpen}
+          onClose={() => {
+            setIsEditGoalModalOpen(false);
+            setEditingGoal(null);
+          }}
+          onSuccess={() => {
+            refetchGoals();
+            setIsEditGoalModalOpen(false);
+            setEditingGoal(null);
+          }}
+        />
+      )}
     </div>
   );
 }

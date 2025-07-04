@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ChartLine, Plus, Calendar } from "lucide-react";
+import { ChartLine, Plus, Calendar, Edit } from "lucide-react";
 import { format } from "date-fns";
+import EditGoalModal from "./edit-goal-modal";
 
 interface Goal {
   id: number;
@@ -23,9 +25,10 @@ interface GoalProgressCardProps {
   onRefresh?: () => void;
   onViewChart?: () => void;
   onAddData?: () => void;
+  onEditGoal?: () => void;
 }
 
-export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddData }: GoalProgressCardProps) {
+export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddData, onEditGoal }: GoalProgressCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'mastered':
@@ -117,6 +120,15 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddDa
             >
               <ChartLine className="h-4 w-4 mr-1" />
               View Chart
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onEditGoal}
+              className="text-primary hover:bg-blue-50"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit Goal
             </Button>
             <Button 
               variant="ghost" 

@@ -417,7 +417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/goals/:id', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/goals/:id', isAuthenticated, async (req: any, res) => {
     try {
       const goalId = parseInt(req.params.id);
       const existingGoal = await storage.getGoalById(goalId);
