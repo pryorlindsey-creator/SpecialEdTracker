@@ -46,10 +46,11 @@ export default function Home() {
     );
   }
 
-  const totalStudents = students?.length || 0;
-  const totalGoals = students?.reduce((sum, student) => sum + (student.totalGoals || 0), 0) || 0;
-  const activeGoals = students?.reduce((sum, student) => sum + (student.activeGoals || 0), 0) || 0;
-  const totalDataPoints = students?.reduce((sum, student) => sum + (student.totalDataPoints || 0), 0) || 0;
+  const studentsArray = Array.isArray(students) ? students : [];
+  const totalStudents = studentsArray.length || 0;
+  const totalGoals = studentsArray.reduce((sum: number, student: any) => sum + (student.totalGoals || 0), 0) || 0;
+  const activeGoals = studentsArray.reduce((sum: number, student: any) => sum + (student.activeGoals || 0), 0) || 0;
+  const totalDataPoints = studentsArray.reduce((sum: number, student: any) => sum + (student.totalDataPoints || 0), 0) || 0;
 
   return (
     <div className="min-h-screen bg-surface">
@@ -62,7 +63,7 @@ export default function Home() {
               <h1 className="text-xl font-bold text-gray-900">Special Education Data Collection</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">{user?.email}</div>
+              <div className="text-sm text-gray-600">{(user as any)?.email || 'User'}</div>
               <Button 
                 variant="outline"
                 size="sm"
@@ -161,7 +162,7 @@ export default function Home() {
         </div>
 
         {/* Students Grid */}
-        {!students || students.length === 0 ? (
+        {!studentsArray || studentsArray.length === 0 ? (
           <Card className="p-12 text-center">
             <CardContent>
               <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -177,7 +178,7 @@ export default function Home() {
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {students.map((student) => (
+            {studentsArray.map((student: any) => (
               <StudentOverviewCard key={student.id} student={student} />
             ))}
           </div>
