@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertStudentSchema, insertGoalSchema, insertDataPointSchema } from "@shared/schema";
+import { insertStudentSchema, insertGoalSchema, insertDataPointSchema, students } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -92,6 +94,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Debug error:", error);
       res.status(500).json({ message: "Debug failed" });
+    }
+  });
+
+  // Fix user data association - transfer students from test user to current user
+  app.post('/api/debug/fix-user-data', isAuthenticated, async (req: any, res) => {
+    try {
+      const currentUserId = req.user.claims.sub;
+      const testUserId = 'test-user-123';
+      
+      console.log(`Transferring students from ${testUserId} to ${currentUserId}`);
+      
+      // Update all students from test user to current user
+      const result = await db
+        .update(students)
+        .set({ userId: currentUserId })
+        .where(eq(students.userId, testUserId))
+        .returning();
+      
+      console.log(`Transferred ${result.length} students to current user`);
+      
+      res.json({
+        message: `Successfully transferred ${result.length} students to your account`,
+        transferredStudents: result.length
+      });
+    } catch (error) {
+      console.error("Fix error:", error);
+      res.status(500).json({ message: "Failed to fix user data" });
     }
   });
 
