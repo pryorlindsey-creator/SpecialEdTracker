@@ -8,6 +8,30 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Temporary debug endpoint (before auth middleware)
+  app.get('/api/debug/force-load', async (req, res) => {
+    try {
+      console.log("Force loading students for user 4201332");
+      const students = await storage.getStudentsByUserId('4201332');
+      
+      const studentsWithSummary = await Promise.all(
+        students.map(async (student) => {
+          const summary = await storage.getStudentSummary(student.id);
+          return {
+            ...student,
+            ...summary,
+          };
+        })
+      );
+      
+      console.log("Force load result:", studentsWithSummary.length, "students");
+      res.json(studentsWithSummary);
+    } catch (error) {
+      console.error("Force load error:", error);
+      res.status(500).json({ message: "Failed to force load students" });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 
@@ -121,6 +145,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Fix error:", error);
       res.status(500).json({ message: "Failed to fix user data" });
+    }
+  });
+
+  // Temporary fix endpoint for user 4201332 (no auth required for testing)
+  app.get('/api/students/force-load', async (req, res) => {
+    try {
+      console.log("Force loading students for user 4201332");
+      const students = await storage.getStudentsByUserId('4201332');
+      
+      const studentsWithSummary = await Promise.all(
+        students.map(async (student) => {
+          const summary = await storage.getStudentSummary(student.id);
+          return {
+            ...student,
+            ...summary,
+          };
+        })
+      );
+      
+      console.log("Force load result:", studentsWithSummary.length, "students");
+      res.json(studentsWithSummary);
+    } catch (error) {
+      console.error("Force load error:", error);
+      res.status(500).json({ message: "Failed to force load students" });
     }
   });
 

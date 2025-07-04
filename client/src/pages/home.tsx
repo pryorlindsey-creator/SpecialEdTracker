@@ -18,6 +18,8 @@ export default function Home() {
   const { data: students, isLoading, error, refetch } = useQuery({
     queryKey: ["/api/students"],
     enabled: !!user,
+    retry: 3,
+    staleTime: 0, // Always fetch fresh data
   });
 
   // Handle unauthorized errors
