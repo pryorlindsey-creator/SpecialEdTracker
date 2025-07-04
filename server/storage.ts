@@ -97,11 +97,14 @@ export class DatabaseStorage implements IStorage {
 
   // Student operations
   async getStudentsByUserId(userId: string): Promise<Student[]> {
-    return await db
+    console.log("Querying students for user ID:", userId);
+    const result = await db
       .select()
       .from(students)
       .where(eq(students.userId, userId))
       .orderBy(desc(students.createdAt));
+    console.log("Query result:", result);
+    return result;
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
