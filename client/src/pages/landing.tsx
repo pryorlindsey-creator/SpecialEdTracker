@@ -1,8 +1,43 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, BarChart3, Users, Target } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { GraduationCap, BarChart3, Users, Target, Lock } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const { toast } = useToast();
+
+  const adminLoginMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest("/api/auth/admin-login", {
+        method: "POST",
+        body: { username, password }
+      });
+    },
+    onSuccess: () => {
+      window.location.href = '/';
+    },
+    onError: (error) => {
+      toast({
+        title: "Login Failed",
+        description: "Invalid admin credentials",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    adminLoginMutation.mutate();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-surface via-background to-muted/30">
       {/* Header */}
@@ -13,12 +48,71 @@ export default function Landing() {
               <GraduationCap className="h-8 w-8 text-primary mr-3" />
               <h1 className="text-xl font-bold text-gray-900">Special Education Data Collection</h1>
             </div>
-            <Button onClick={() => window.location.href = '/api/login'} size="lg">
-              Sign In
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowAdminLogin(true)}
+                size="lg"
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Admin Login
+              </Button>
+              <Button onClick={() => window.location.href = '/api/login'} size="lg">
+                Sign In
+              </Button>
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Admin Login Modal */}
+      {showAdminLogin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-900">Admin Login</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setShowAdminLogin(false)}
+                >
+                  ×
+                </Button>
+              </div>
+              <form onSubmit={handleAdminLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={adminLoginMutation.isPending}
+                >
+                  {adminLoginMutation.isPending ? "Logging in..." : "Login"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">

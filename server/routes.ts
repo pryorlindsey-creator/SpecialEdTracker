@@ -32,6 +32,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin login route (before auth middleware)
+  app.post('/api/auth/admin-login', async (req: any, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Check admin credentials
+      if (username === 'sandralindsey' && password === 'IsabelShea@1998') {
+        console.log("Admin login successful");
+        
+        // Create admin user if doesn't exist
+        const adminUser = await storage.upsertUser({
+          id: 'admin-user',
+          email: 'admin@speechpathai.com',
+          firstName: 'Sandra',
+          lastName: 'Lindsey',
+        });
+        
+        // Manually create session for admin
+        req.user = {
+          claims: { 
+            sub: 'admin-user', 
+            email: 'admin@speechpathai.com',
+            first_name: 'Sandra',
+            last_name: 'Lindsey'
+          },
+          expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week
+        };
+        
+        req.session.passport = { user: req.user };
+        
+        console.log("Admin session created successfully");
+        res.json({ success: true, message: "Admin login successful" });
+      } else {
+        res.status(401).json({ message: "Invalid admin credentials" });
+      }
+    } catch (error) {
+      console.error("Error during admin login:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+
   // Auth middleware
   await setupAuth(app);
 
