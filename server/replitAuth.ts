@@ -117,28 +117,27 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log("Auth callback received for hostname:", req.hostname);
-    console.log("Callback query params:", req.query);
+    console.log("🔄 Auth callback received for hostname:", req.hostname);
+    console.log("🔄 Callback query params:", req.query);
+    console.log("🔄 Session before auth:", req.session);
     
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    }, (err, user, info) => {
-      console.log("Auth callback result - Error:", err, "User:", !!user, "Info:", info);
+    passport.authenticate(`replitauth:${req.hostname}`, (err, user, info) => {
+      console.log("🔄 Auth callback result - Error:", err, "User:", !!user, "Info:", info);
       if (err) {
-        console.error("Authentication error:", err);
+        console.error("❌ Authentication error:", err);
         return res.redirect("/api/login");
       }
       if (!user) {
-        console.log("No user returned from authentication");
+        console.log("❌ No user returned from authentication");
         return res.redirect("/api/login");
       }
       req.logIn(user, (loginErr) => {
         if (loginErr) {
-          console.error("Login error:", loginErr);
+          console.error("❌ Login error:", loginErr);
           return res.redirect("/api/login");
         }
-        console.log("User successfully logged in");
+        console.log("✅ User successfully logged in, redirecting to home");
+        console.log("✅ Session after login:", req.session);
         return res.redirect("/");
       });
     })(req, res, next);
