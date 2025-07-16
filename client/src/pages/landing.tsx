@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GraduationCap, BarChart3, Users, Target, Lock } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
@@ -42,10 +42,14 @@ export default function Landing() {
       console.log("Frontend: Login successful, redirecting to home");
       console.log("Frontend: Response data:", data);
       
+      // Invalidate auth query to force refresh
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      
       // Force a page reload to refresh authentication state
       setTimeout(() => {
+        console.log("Frontend: Reloading page to refresh auth state");
         window.location.reload();
-      }, 500);
+      }, 1500);
     },
     onError: (error) => {
       console.error("Frontend: Login error:", error);

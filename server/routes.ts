@@ -91,9 +91,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error("Direct session error:", sessionError);
             // Fallback: use a cookie-based approach
             res.cookie('admin_session', JSON.stringify(req.user), { 
-              httpOnly: true, 
+              httpOnly: false, // Allow frontend access for debugging
               secure: false, // Allow for development
-              maxAge: 7 * 24 * 60 * 60 * 1000 
+              maxAge: 7 * 24 * 60 * 60 * 1000,
+              sameSite: 'lax'
             });
             res.json({ success: true, message: "Admin login successful (cookie fallback)", redirectTo: "/" });
           }
@@ -110,9 +111,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
           
           res.cookie('admin_session', JSON.stringify(userData), { 
-            httpOnly: true, 
+            httpOnly: false, // Allow frontend access
             secure: false,
-            maxAge: 7 * 24 * 60 * 60 * 1000 
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            sameSite: 'lax'
           });
           res.json({ success: true, message: "Admin login successful (no session)", redirectTo: "/" });
         }
