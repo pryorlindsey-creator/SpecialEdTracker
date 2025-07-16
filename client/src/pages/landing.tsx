@@ -45,16 +45,7 @@ export default function Landing() {
       // Invalidate auth query to force refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Immediately check auth state without page reload
-      setTimeout(() => {
-        console.log("Frontend: Invalidating auth query to trigger immediate refresh");
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      }, 500);
-      
-      // Fallback page reload if auth state doesn't update
-      setTimeout(() => {
-        queryClient.getQueryData(["/api/auth/user"]) || window.location.reload();
-      }, 3000);
+      // The new useAuth hook will automatically detect the change
     },
     onError: (error) => {
       console.error("Frontend: Login error:", error);

@@ -11,21 +11,13 @@ import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
 
 function Router() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  console.log("Router - isAuthenticated:", isAuthenticated, "isLoading:", isLoading);
-
+  // Authentication disabled for development - direct access to all pages
   return (
     <Switch>
-      {isLoading || !isAuthenticated ? (
-        <Route path="/" component={Landing} />
-      ) : (
-        <>
-          <Route path="/" component={Home} />
-          <Route path="/students/:id" component={StudentDetail} />
-          <Route path="/admin" component={AdminPage} />
-        </>
-      )}
+      <Route path="/" component={Home} />
+      <Route path="/students/:id" component={StudentDetail} />
+      <Route path="/admin" component={AdminPage} />
+      <Route path="/landing" component={Landing} />
       <Route component={NotFound} />
     </Switch>
   );

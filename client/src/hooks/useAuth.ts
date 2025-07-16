@@ -1,27 +1,45 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery({
-    queryKey: ["/api/auth/user"],
-    retry: false,
-    refetchOnWindowFocus: true,
-    staleTime: 0, // Always refetch to ensure fresh auth state
-    refetchInterval: 1000, // Poll every 1 second to catch auth changes quickly
-  });
+  const [authState, setAuthState] = useState({ user: null, isLoading: true, isAuthenticated: false });
 
-  console.log("useAuth - user:", !!user, "isLoading:", isLoading, "error:", !!error);
-  
-  // Additional debug info
-  if (error) {
-    console.log("useAuth - error details:", error);
-  }
-  if (user) {
-    console.log("useAuth - user data:", user);
-  }
+  useEffect(() => {
+    let intervalId: number;
 
-  return {
-    user,
-    isLoading,
-    isAuthenticated: !!user,
-  };
+    const checkAuth = async () => {
+      try {
+        console.log("Checking authentication status...");
+        const response = await fetch("/api/auth/user", {
+          credentials: "include",
+          cache: "no-store"
+        });
+        
+        if (response.ok) {
+          const userData = await response.json();
+          console.log("Auth check successful - user data:", userData);
+          setAuthState({ user: userData, isLoading: false, isAuthenticated: true });
+        } else {
+          console.log("Auth check failed - status:", response.status);
+          setAuthState({ user: null, isLoading: false, isAuthenticated: false });
+        }
+      } catch (error) {
+        console.log("Auth check error:", error);
+        setAuthState({ user: null, isLoading: false, isAuthenticated: false });
+      }
+    };
+
+    // Initial check
+    checkAuth();
+
+    // Set up polling every 2 seconds
+    intervalId = window.setInterval(checkAuth, 2000);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, []);
+
+  return authState;
 }
