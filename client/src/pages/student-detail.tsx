@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -161,7 +162,16 @@ export default function StudentDetail() {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
             {/* Student Information Card */}
-            {student && <StudentInfoCard student={student as any} />}
+            {student && (
+              <StudentInfoCard 
+                student={student as any} 
+                onStudentUpdate={() => {
+                  // Refresh student data when updated
+                  queryClient.invalidateQueries({ queryKey: ["/api/students", studentId] });
+                  queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+                }}
+              />
+            )}
             
             <div className="max-w-md mx-auto">
               {/* Student Summary Stats */}

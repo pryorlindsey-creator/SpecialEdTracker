@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, GraduationCap, Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, GraduationCap, Users, Edit } from "lucide-react";
 import { format } from "date-fns";
+import EditStudentModal from "./edit-student-modal";
 
 interface StudentInfoCardProps {
   student: {
@@ -11,9 +14,11 @@ interface StudentInfoCardProps {
     iepDueDate?: string;
     relatedServices?: string;
   };
+  onStudentUpdate?: () => void;
 }
 
-export default function StudentInfoCard({ student }: StudentInfoCardProps) {
+export default function StudentInfoCard({ student, onStudentUpdate }: StudentInfoCardProps) {
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const parseRelatedServices = (services: string | undefined): string[] => {
     if (!services) return [];
     try {
@@ -32,9 +37,20 @@ export default function StudentInfoCard({ student }: StudentInfoCardProps) {
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          Student Information
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Student Information
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsEditModalOpen(true)}
+            className="gap-1"
+          >
+            <Edit className="h-4 w-4" />
+            Edit
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -81,6 +97,16 @@ export default function StudentInfoCard({ student }: StudentInfoCardProps) {
           </div>
         </div>
       </CardContent>
+      
+      <EditStudentModal
+        student={student}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {
+          setIsEditModalOpen(false);
+          onStudentUpdate?.();
+        }}
+      />
     </Card>
   );
 }
