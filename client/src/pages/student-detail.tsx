@@ -174,66 +174,31 @@ export default function StudentDetail() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="max-w-md mx-auto">
               {/* Student Summary Stats */}
-              <div className="lg:col-span-1">
-                <Card className="bg-gradient-to-r from-blue-50 to-blue-100">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Student Summary</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Active Goals</span>
-                        <span className="font-semibold text-gray-900">{student.activeGoals || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Completed Goals</span>
-                        <span className="font-semibold text-gray-900">{student.completedGoals || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Total Data Points</span>
-                        <span className="font-semibold text-gray-900">{student.totalDataPoints || 0}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Last Assessment</span>
-                        <span className="font-semibold text-gray-900">{lastUpdateText}</span>
-                      </div>
+              <Card className="bg-gradient-to-r from-blue-50 to-blue-100">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Student Summary</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Active Goals</span>
+                      <span className="font-semibold text-gray-900">{student.activeGoals || 0}</span>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Activity */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
-                    {student.totalDataPoints === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-gray-600">No recent activity</p>
-                        <p className="text-sm text-gray-500 mt-1">Start by adding some goals and data points</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {student.lastDataPoint && (
-                          <div className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                              <Target className="h-4 w-4 text-secondary" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-900">
-                                Data point added: {student.lastDataPoint.progressValue}%
-                              </p>
-                              <p className="text-xs text-gray-600">
-                                {format(new Date(student.lastDataPoint.date), "MMM d, yyyy 'at' h:mm a")}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Completed Goals</span>
+                      <span className="font-semibold text-gray-900">{student.completedGoals || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Data Points</span>
+                      <span className="font-semibold text-gray-900">{student.totalDataPoints || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Last Assessment</span>
+                      <span className="font-semibold text-gray-900">{lastUpdateText}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
