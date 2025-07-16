@@ -35,11 +35,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin login route (before auth middleware)
   app.post('/api/auth/admin-login', async (req: any, res) => {
     try {
+      console.log("Admin login attempt received");
+      console.log("Request body:", req.body);
+      console.log("Request headers:", req.headers);
+      
       const { username, password } = req.body;
+      
+      console.log("Extracted credentials:", { username, password: password ? "[PASSWORD PROVIDED]" : "[NO PASSWORD]" });
       
       // Check admin credentials
       if (username === 'sandralindsey' && password === 'IsabelShea@1998') {
-        console.log("Admin login successful");
+        console.log("Admin credentials match! Login successful");
         
         // Create admin user if doesn't exist
         const adminUser = await storage.upsertUser({
@@ -65,6 +71,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Admin session created successfully");
         res.json({ success: true, message: "Admin login successful" });
       } else {
+        console.log("Admin credentials do NOT match");
+        console.log("Expected username: 'sandralindsey', received:", username);
+        console.log("Password provided:", password ? "YES" : "NO");
         res.status(401).json({ message: "Invalid admin credentials" });
       }
     } catch (error) {
