@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -16,10 +16,11 @@ import { Save } from "lucide-react";
 const dataEntrySchema = z.object({
   goalId: z.number().min(1, "Please select a goal"),
   date: z.string().min(1, "Date is required"),
-  progressFormat: z.enum(["percentage", "fraction"]),
-  progressValue: z.number().min(0).max(100, "Progress must be between 0 and 100"),
+  progressFormat: z.enum(["percentage", "fraction", "duration", "frequency"]),
+  progressValue: z.number().min(0, "Value must be positive"),
   numerator: z.number().optional(),
   denominator: z.number().optional(),
+  durationUnit: z.enum(["seconds", "minutes"]).optional(),
   levelOfSupport: z.array(z.string()).optional(),
   anecdotalInfo: z.string().optional(),
 });
@@ -30,6 +31,7 @@ interface Goal {
   id: number;
   title: string;
   description: string;
+  dataCollectionType: string;
 }
 
 interface DataEntryFormProps {
@@ -42,14 +44,42 @@ interface DataEntryFormProps {
 export default function DataEntryForm({ studentId, goals, selectedGoalId, onSuccess }: DataEntryFormProps) {
   const { toast } = useToast();
   const [progressInputType, setProgressInputType] = useState<"percentage" | "fraction">("percentage");
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+
+  // Find the selected goal to get its data collection type
+  useEffect(() => {
+    if (selectedGoalId) {
+      const goal = goals.find(g => g.id === selectedGoalId);
+      setSelectedGoal(goal || null);
+    }
+  }, [selectedGoalId, goals]);
+
+  // Watch for goal changes to update progress input type and selected goal
+  const selectedGoalIdValue = form.watch("goalId");
+  
+  useEffect(() => {
+    if (selectedGoalIdValue > 0) {
+      const goal = goals.find(g => g.id === selectedGoalIdValue);
+      setSelectedGoal(goal || null);
+      
+      // Update progress format based on goal's data collection type
+      if (goal?.dataCollectionType) {
+        const format = goal.dataCollectionType === "duration" ? "duration" : 
+                      goal.dataCollectionType === "frequency" ? "frequency" : "percentage";
+        form.setValue("progressFormat", format as any);
+      }
+    }
+  }, [selectedGoalIdValue, goals, form]);
 
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(dataEntrySchema),
     defaultValues: {
       goalId: selectedGoalId || 0,
       date: new Date().toISOString().split('T')[0], // Today's date
-      progressFormat: "percentage",
+      progressFormat: selectedGoal?.dataCollectionType === "duration" ? "duration" : 
+                     selectedGoal?.dataCollectionType === "frequency" ? "frequency" : "percentage",
       progressValue: 0,
+      durationUnit: "seconds",
       levelOfSupport: [],
       anecdotalInfo: "",
     },
@@ -190,67 +220,136 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             )}
           />
 
-          {/* Progress Value */}
+          {/* Progress Value - Dynamic based on goal's data collection type */}
           <div className="space-y-4">
-            <FormLabel>Progress Value</FormLabel>
-            <div className="flex space-x-4 items-end">
+            <FormLabel>
+              {selectedGoal?.dataCollectionType === "duration" ? "Duration" :
+               selectedGoal?.dataCollectionType === "frequency" ? "Frequency Count" :
+               "Progress Value"}
+            </FormLabel>
+            
+            {selectedGoal?.dataCollectionType === "duration" ? (
+              /* Duration Input with Time Unit Dropdown */
+              <div className="flex space-x-3 items-end">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-600 mb-1">Time Value</label>
+                  <FormField
+                    control={form.control}
+                    name="progressValue"
+                    render={({ field }) => (
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder="5"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      />
+                    )}
+                  />
+                </div>
+                
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-600 mb-1">Time Unit</label>
+                  <FormField
+                    control={form.control}
+                    name="durationUnit"
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select unit..." />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="seconds">Seconds</SelectItem>
+                          <SelectItem value="minutes">Minutes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+            ) : selectedGoal?.dataCollectionType === "frequency" ? (
+              /* Frequency Count Input */
               <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">Percentage</label>
+                <label className="block text-xs text-gray-600 mb-1">Number of Occurrences</label>
                 <FormField
                   control={form.control}
                   name="progressValue"
                   render={({ field }) => (
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        placeholder="85"
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(parseFloat(e.target.value) || 0);
-                          setProgressInputType("percentage");
-                        }}
-                        className="pr-8"
-                      />
-                      <span className="absolute right-3 top-3 text-gray-500">%</span>
-                    </div>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="3"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    />
                   )}
                 />
               </div>
-              
-              <div className="flex items-center justify-center px-4 pb-3">
-                <span className="text-gray-400">OR</span>
-              </div>
-              
-              <div className="flex-1">
-                <label className="block text-xs text-gray-600 mb-1">Attempts Format</label>
-                <div className="flex space-x-1">
-                  <Input
-                    type="number"
-                    min="0"
-                    placeholder="8"
-                    onChange={(e) => {
-                      setProgressInputType("fraction");
-                      handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
-                    }}
-                    className="w-20"
-                  />
-                  <span className="self-center text-gray-500">/</span>
-                  <Input
-                    type="number"
-                    min="1"
-                    placeholder="10"
-                    onChange={(e) => {
-                      setProgressInputType("fraction");
-                      handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
-                    }}
-                    className="w-20"
+            ) : (
+              /* Default Percentage/Fraction Input */
+              <div className="flex space-x-4 items-end">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-600 mb-1">Percentage</label>
+                  <FormField
+                    control={form.control}
+                    name="progressValue"
+                    render={({ field }) => (
+                      <div className="relative">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          placeholder="85"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(parseFloat(e.target.value) || 0);
+                            setProgressInputType("percentage");
+                          }}
+                          className="pr-8"
+                        />
+                        <span className="absolute right-3 top-3 text-gray-500">%</span>
+                      </div>
+                    )}
                   />
                 </div>
+                
+                <div className="flex items-center justify-center px-4 pb-3">
+                  <span className="text-gray-400">OR</span>
+                </div>
+                
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-600 mb-1">Attempts Format</label>
+                  <div className="flex space-x-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      placeholder="8"
+                      onChange={(e) => {
+                        setProgressInputType("fraction");
+                        handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
+                      }}
+                      className="w-20"
+                    />
+                    <span className="self-center text-gray-500">/</span>
+                    <Input
+                      type="number"
+                      min="1"
+                      placeholder="10"
+                      onChange={(e) => {
+                        setProgressInputType("fraction");
+                        handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
+                      }}
+                      className="w-20"
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Level of Support */}
