@@ -47,40 +47,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Temporary manual login endpoint to bypass OAuth issues
-  app.get('/api/debug/manual-login', async (req, res) => {
-    try {
-      console.log("Manual login bypass triggered");
-      
-      // Create a test user session
-      const testUser = {
-        claims: {
-          sub: '4201332',
-          email: 'test@example.com',
-          first_name: 'Test',
-          last_name: 'User',
-          profile_image_url: null,
-          exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
-        },
-        access_token: 'test-token',
-        refresh_token: 'test-refresh',
-        expires_at: Math.floor(Date.now() / 1000) + 3600
-      };
-
-      req.login(testUser, (err) => {
-        if (err) {
-          console.error("Manual login error:", err);
-          return res.status(500).json({ error: 'Login failed' });
-        }
-        console.log("Manual login successful");
-        return res.redirect('/');
-      });
-    } catch (error) {
-      console.error("Manual login error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   // Temporary test route to create a user session for testing
   app.get('/api/auth/test-login', async (req: any, res) => {
     try {

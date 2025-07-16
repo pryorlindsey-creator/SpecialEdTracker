@@ -88,8 +88,8 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  const domains = process.env.REPLIT_DOMAINS!.split(",");
-  for (const domain of domains) {
+  for (const domain of process.env
+    .REPLIT_DOMAINS!.split(",")) {
     console.log("Setting up auth strategy for domain:", domain);
     const strategy = new Strategy(
       {
@@ -103,49 +103,44 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
     console.log("Strategy registered:", `replitauth:${domain}`);
   }
-  
-  // Also register for localhost for local development
-  const localStrategy = new Strategy(
-    {
-      name: `replitauth:localhost`,
-      config,
-      scope: "openid email profile offline_access",
-      callbackURL: `https://${domains[0]}/api/callback`, // Use the first domain as callback
-    },
-    verify,
-  );
-  passport.use(localStrategy);
-  console.log("Strategy registered for localhost:", `replitauth:localhost`);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    console.log("🔐 Login attempt for hostname:", req.hostname);
-    console.log("🔐 Available strategies:", Object.keys((passport as any)._strategies || {}));
-    const strategyName = `replitauth:${req.hostname}`;
-    console.log("🔐 Using strategy:", strategyName);
-    
-    passport.authenticate(strategyName, {
+    console.log("Login attempt for hostname:", req.hostname);
+    console.log("Available strategies:", Object.keys((passport as any)._strategies || {}));
+    passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    console.log("🔄 Auth callback received for hostname:", req.hostname);
-    console.log("🔄 Callback query params:", req.query);
-    console.log("🔄 Session before auth:", req.session);
-    
-    // Force a simple redirect first to test
-    if (req.query.error) {
-      console.log("❌ OAuth error:", req.query.error);
-      return res.redirect("/api/login");
-    }
+    console.log("Auth callback received for hostname:", req.hostname);
+    console.log("Callback query params:", req.query);
     
     passport.authenticate(`replitauth:${req.hostname}`, {
-      successRedirect: "/",
+      successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
+    }, (err, user, info) => {
+      console.log("Auth callback result - Error:", err, "User:", !!user, "Info:", info);
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.redirect("/api/login");
+      }
+      if (!user) {
+        console.log("No user returned from authentication");
+        return res.redirect("/api/login");
+      }
+      req.logIn(user, (loginErr) => {
+        if (loginErr) {
+          console.error("Login error:", loginErr);
+          return res.redirect("/api/login");
+        }
+        console.log("User successfully logged in");
+        return res.redirect("/");
+      });
     })(req, res, next);
   });
 
