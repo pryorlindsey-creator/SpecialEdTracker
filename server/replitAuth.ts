@@ -119,27 +119,32 @@ export async function setupAuth(app: Express) {
   app.get("/api/callback", (req, res, next) => {
     console.log("Auth callback received for hostname:", req.hostname);
     console.log("Callback query params:", req.query);
+    console.log("Session ID:", req.sessionID);
     
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    }, (err, user, info) => {
+    passport.authenticate(`replitauth:${req.hostname}`, (err, user, info) => {
       console.log("Auth callback result - Error:", err, "User:", !!user, "Info:", info);
       if (err) {
         console.error("Authentication error:", err);
-        return res.redirect("/api/login");
+        return res.redirect(`/api/login?error=${encodeURIComponent(err.message)}`);
       }
       if (!user) {
         console.log("No user returned from authentication");
-        return res.redirect("/api/login");
+        return res.redirect("/api/login?error=no_user");
       }
+      
       req.logIn(user, (loginErr) => {
         if (loginErr) {
           console.error("Login error:", loginErr);
-          return res.redirect("/api/login");
+          return res.redirect(`/api/login?error=${encodeURIComponent(loginErr.message)}`);
         }
-        console.log("User successfully logged in");
-        return res.redirect("/");
+        console.log("User successfully logged in, redirecting to home");
+        
+        // Force a fresh redirect to ensure session is properly established
+        res.writeHead(302, {
+          'Location': '/',
+          'Set-Cookie': req.get('Set-Cookie') || []
+        });
+        res.end();
       });
     })(req, res, next);
   });

@@ -158,6 +158,14 @@ Preferred communication style: Simple, everyday language.
   - **Authentication flow verified** - Test user creation and API protection working
   - **Progress calculations confirmed** - Goal progress updates correctly with new data points
 
+- July 16, 2025: **ENHANCED DATA COLLECTION WITH DYNAMIC FORM INPUTS**
+  - **Added duration support** - Data collection now supports time-based measurements with seconds/minutes dropdown
+  - **Dynamic form adaptation** - Data entry form automatically changes based on goal's data collection type
+  - **Duration fields** - Shows time value input with unit dropdown for duration-type goals
+  - **Frequency fields** - Shows occurrence count input for frequency-type goals  
+  - **Enhanced database schema** - Added duration_unit field to data points table
+  - **Improved user experience** - Form labels and inputs adapt to match the selected goal type
+
 - July 4, 2025: **ADDED GOAL EDITING FUNCTIONALITY**
   - **Created edit goal modal** - Users can now modify goals after initial creation
   - **Added edit button** - Each goal card includes an "Edit Goal" button for easy access
