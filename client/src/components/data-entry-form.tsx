@@ -54,6 +54,20 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     }
   }, [selectedGoalId, goals]);
 
+  const form = useForm<DataEntryFormData>({
+    resolver: zodResolver(dataEntrySchema),
+    defaultValues: {
+      goalId: selectedGoalId || 0,
+      date: new Date().toISOString().split('T')[0], // Today's date
+      progressFormat: selectedGoal?.dataCollectionType === "duration" ? "duration" : 
+                     selectedGoal?.dataCollectionType === "frequency" ? "frequency" : "percentage",
+      progressValue: 0,
+      durationUnit: "seconds",
+      levelOfSupport: [],
+      anecdotalInfo: "",
+    },
+  });
+
   // Watch for goal changes to update progress input type and selected goal
   const selectedGoalIdValue = form.watch("goalId");
   
@@ -70,20 +84,6 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       }
     }
   }, [selectedGoalIdValue, goals, form]);
-
-  const form = useForm<DataEntryFormData>({
-    resolver: zodResolver(dataEntrySchema),
-    defaultValues: {
-      goalId: selectedGoalId || 0,
-      date: new Date().toISOString().split('T')[0], // Today's date
-      progressFormat: selectedGoal?.dataCollectionType === "duration" ? "duration" : 
-                     selectedGoal?.dataCollectionType === "frequency" ? "frequency" : "percentage",
-      progressValue: 0,
-      durationUnit: "seconds",
-      levelOfSupport: [],
-      anecdotalInfo: "",
-    },
-  });
 
   const addDataPointMutation = useMutation({
     mutationFn: async (data: DataEntryFormData) => {

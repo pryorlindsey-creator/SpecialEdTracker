@@ -78,14 +78,19 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    console.log("Authentication verify callback triggered");
-    console.log("User claims:", tokens.claims());
-    
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    console.log("User session created and stored");
-    verified(null, user);
+    try {
+      console.log("Authentication verify callback triggered");
+      console.log("User claims:", tokens.claims());
+      
+      const user = {};
+      updateUserSession(user, tokens);
+      await upsertUser(tokens.claims());
+      console.log("User session created and stored successfully");
+      verified(null, user);
+    } catch (error) {
+      console.error("Error in verify callback:", error);
+      verified(error, null);
+    }
   };
 
   for (const domain of process.env
@@ -120,32 +125,11 @@ export async function setupAuth(app: Express) {
     console.log("Auth callback received for hostname:", req.hostname);
     console.log("Callback query params:", req.query);
     console.log("Session ID:", req.sessionID);
+    console.log("Available auth strategies:", Object.keys((passport as any)._strategies || {}));
     
-    passport.authenticate(`replitauth:${req.hostname}`, (err, user, info) => {
-      console.log("Auth callback result - Error:", err, "User:", !!user, "Info:", info);
-      if (err) {
-        console.error("Authentication error:", err);
-        return res.redirect(`/api/login?error=${encodeURIComponent(err.message)}`);
-      }
-      if (!user) {
-        console.log("No user returned from authentication");
-        return res.redirect("/api/login?error=no_user");
-      }
-      
-      req.logIn(user, (loginErr) => {
-        if (loginErr) {
-          console.error("Login error:", loginErr);
-          return res.redirect(`/api/login?error=${encodeURIComponent(loginErr.message)}`);
-        }
-        console.log("User successfully logged in, redirecting to home");
-        
-        // Force a fresh redirect to ensure session is properly established
-        res.writeHead(302, {
-          'Location': '/',
-          'Set-Cookie': req.get('Set-Cookie') || []
-        });
-        res.end();
-      });
+    passport.authenticate(`replitauth:${req.hostname}`, {
+      successReturnToOrRedirect: "/",
+      failureRedirect: "/api/login",
     })(req, res, next);
   });
 
