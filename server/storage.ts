@@ -295,9 +295,31 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    const scores = dataPointsList.map(dp => parseFloat(dp.progressValue.toString()));
-    const averageScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
-    const lastScore = scores[0]; // dataPoints are ordered by date desc
+    // Calculate progress based on data collection type
+    const scores = dataPointsList.map(dp => {
+      const value = parseFloat(dp.progressValue.toString());
+      
+      // Convert different formats to percentage for consistent display
+      switch (dp.progressFormat) {
+        case 'percentage':
+          return value; // Already in percentage format
+        case 'frequency':
+          // For frequency, calculate percentage based on numerator/denominator
+          if (dp.denominator && dp.denominator > 0) {
+            return (dp.numerator || 0) / dp.denominator * 100;
+          }
+          return value;
+        case 'duration':
+          // For duration, normalize to percentage (you may need to adjust this based on target criteria)
+          // For now, treat duration values as percentages if no specific target is defined
+          return value;
+        default:
+          return value;
+      }
+    });
+
+    const averageScore = scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+    const lastScore = scores.length > 0 ? scores[0] : 0; // dataPoints are ordered by date desc
     const currentProgress = lastScore;
 
     // Calculate trend (compare last 3 vs previous 3 data points)

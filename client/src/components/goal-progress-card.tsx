@@ -76,7 +76,7 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddDa
             <span className="text-sm font-semibold text-gray-900">{goal.currentProgress?.toFixed(0) || 0}%</span>
           </div>
           <Progress 
-            value={goal.currentProgress || 0} 
+            value={Math.min(Math.max(goal.currentProgress || 0, 0), 100)} 
             className="h-3 bg-gray-200"
           />
         </div>
