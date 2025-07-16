@@ -136,6 +136,11 @@ export const insertStudentSchema = createInsertSchema(students).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  iepDueDate: z.union([z.string(), z.date(), z.undefined()]).optional().transform((val) => {
+    if (!val || val === '') return undefined;
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertGoalSchema = createInsertSchema(goals).omit({

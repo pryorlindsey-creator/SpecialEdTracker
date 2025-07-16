@@ -42,6 +42,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
 
   const addStudentMutation = useMutation({
     mutationFn: async (data: AddStudentFormData) => {
+      console.log("Frontend: Sending student data:", data);
       await apiRequest("POST", "/api/students", data);
     },
     onSuccess: () => {

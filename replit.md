@@ -172,6 +172,14 @@ Preferred communication style: Simple, everyday language.
   - **Improved data conversion** - Different data formats (percentage, frequency, duration) now convert properly to percentage for display
   - **Admin authentication working** - Complete bypass of OAuth issues with secure admin login system
 
+- July 16, 2025: **ADDED STUDENT INFORMATION CARD WITH IEP TRACKING**
+  - **Student info card** - Added comprehensive card showing grade level, IEP due date, and related services
+  - **Enhanced database schema** - Added iep_due_date and related_services fields to students table
+  - **Updated add student form** - Includes date picker for IEP due date and text input for related services
+  - **Fixed schema validation** - Proper date string transformation for IEP due dates
+  - **Visual enhancements** - Icons and badges for better information display
+  - **Sample data integration** - Test student now includes realistic IEP information
+
 - July 16, 2025: **ENHANCED DATA COLLECTION WITH DYNAMIC FORM INPUTS**
   - **Added duration support** - Data collection now supports time-based measurements with seconds/minutes dropdown
   - **Dynamic form adaptation** - Data entry form automatically changes based on goal's data collection type
