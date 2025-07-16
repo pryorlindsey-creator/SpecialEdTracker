@@ -88,8 +88,8 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
+  const domains = process.env.REPLIT_DOMAINS!.split(",");
+  for (const domain of domains) {
     console.log("Setting up auth strategy for domain:", domain);
     const strategy = new Strategy(
       {
@@ -103,14 +103,30 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
     console.log("Strategy registered:", `replitauth:${domain}`);
   }
+  
+  // Also register for localhost for local development
+  const localStrategy = new Strategy(
+    {
+      name: `replitauth:localhost`,
+      config,
+      scope: "openid email profile offline_access",
+      callbackURL: `https://${domains[0]}/api/callback`, // Use the first domain as callback
+    },
+    verify,
+  );
+  passport.use(localStrategy);
+  console.log("Strategy registered for localhost:", `replitauth:localhost`);
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    console.log("Login attempt for hostname:", req.hostname);
-    console.log("Available strategies:", Object.keys((passport as any)._strategies || {}));
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    console.log("🔐 Login attempt for hostname:", req.hostname);
+    console.log("🔐 Available strategies:", Object.keys((passport as any)._strategies || {}));
+    const strategyName = `replitauth:${req.hostname}`;
+    console.log("🔐 Using strategy:", strategyName);
+    
+    passport.authenticate(strategyName, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
