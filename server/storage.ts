@@ -13,7 +13,7 @@ import {
   type InsertDataPoint,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and, inArray } from "drizzle-orm";
+import { eq, desc, sql, and, inArray, asc } from "drizzle-orm";
 
 // Helper function to convert level of support data for frontend
 function convertLevelOfSupport(levelOfSupport: string | null): string[] | null {
@@ -102,7 +102,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(students)
       .where(eq(students.userId, userId))
-      .orderBy(desc(students.createdAt));
+      .orderBy(asc(students.name));
     console.log("Query result:", result);
     return result;
   }

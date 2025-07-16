@@ -77,7 +77,7 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddDa
           </div>
           <Progress 
             value={goal.currentProgress || 0} 
-            className="h-3"
+            className="h-3 bg-gray-200"
           />
         </div>
 
