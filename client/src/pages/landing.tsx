@@ -45,11 +45,16 @@ export default function Landing() {
       // Invalidate auth query to force refresh
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       
-      // Force a page reload to refresh authentication state
+      // Immediately check auth state without page reload
       setTimeout(() => {
-        console.log("Frontend: Reloading page to refresh auth state");
-        window.location.reload();
-      }, 1500);
+        console.log("Frontend: Invalidating auth query to trigger immediate refresh");
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      }, 500);
+      
+      // Fallback page reload if auth state doesn't update
+      setTimeout(() => {
+        queryClient.getQueryData(["/api/auth/user"]) || window.location.reload();
+      }, 3000);
     },
     onError: (error) => {
       console.error("Frontend: Login error:", error);

@@ -72,7 +72,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log("Session is available");
           
           // Set up user data directly
-          req.user = {
+          const adminUser = {
             claims: { 
               sub: '4201332',
               email: 'sandralindsey@speechpathai.com',
@@ -82,22 +82,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week
           };
           
-          // Try direct session assignment
-          try {
-            req.session.passport = { user: req.user };
-            console.log("Session passport set directly");
-            res.json({ success: true, message: "Admin login successful", redirectTo: "/" });
-          } catch (sessionError) {
-            console.error("Direct session error:", sessionError);
-            // Fallback: use a cookie-based approach
-            res.cookie('admin_session', JSON.stringify(req.user), { 
-              httpOnly: false, // Allow frontend access for debugging
-              secure: false, // Allow for development
-              maxAge: 7 * 24 * 60 * 60 * 1000,
-              sameSite: 'lax'
+          // Use passport's login method for proper session handling
+          req.login(adminUser, (err) => {
+            if (err) {
+              console.error('Passport login error:', err);
+              return res.status(500).json({ success: false, message: 'Session creation failed' });
+            }
+            
+            // Force session save to database
+            req.session.save((saveErr) => {
+              if (saveErr) {
+                console.error('Session save error:', saveErr);
+              } else {
+                console.log("Session saved to database successfully");
+              }
+              
+              res.json({ success: true, message: "Admin login successful", redirectTo: "/" });
             });
-            res.json({ success: true, message: "Admin login successful (cookie fallback)", redirectTo: "/" });
-          }
+          });
         } else {
           console.log("No session available, using cookie fallback");
           const userData = {
