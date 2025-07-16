@@ -55,10 +55,7 @@ export default function Landing() {
                 size="lg"
               >
                 <Lock className="h-4 w-4 mr-2" />
-                Admin Login
-              </Button>
-              <Button onClick={() => window.location.href = '/api/login'} size="lg">
-                Sign In
+                Admin Access
               </Button>
             </div>
           </div>
@@ -71,7 +68,7 @@ export default function Landing() {
           <Card className="w-full max-w-md mx-4">
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Admin Login</h2>
+                <h2 className="text-xl font-bold text-gray-900">Admin Access</h2>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -80,6 +77,9 @@ export default function Landing() {
                   ×
                 </Button>
               </div>
+              <p className="text-sm text-gray-600 mb-4">
+                Use your admin credentials to access the Special Education Data Collection system.
+              </p>
               <form onSubmit={handleAdminLogin} className="space-y-4">
                 <div>
                   <Label htmlFor="username">Username</Label>

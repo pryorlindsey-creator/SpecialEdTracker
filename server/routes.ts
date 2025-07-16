@@ -68,6 +68,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         req.session.passport = { user: req.user };
         
+        // Also save to session directly for isAuthenticated to work
+        req.login(req.user, (err) => {
+          if (err) {
+            console.error("Error logging in user:", err);
+          } else {
+            console.log("User logged in successfully via req.login");
+          }
+        });
+        
         console.log("Admin session created successfully");
         res.json({ success: true, message: "Admin login successful" });
       } else {
