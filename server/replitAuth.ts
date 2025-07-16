@@ -12,15 +12,27 @@ if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
-const getOidcConfig = memoize(
-  async () => {
-    return await client.discovery(
+const getOidcConfig = async () => {
+  console.log("Getting OIDC config with REPL_ID:", process.env.REPL_ID);
+  console.log("Using ISSUER_URL:", process.env.ISSUER_URL ?? "https://replit.com/oidc");
+  
+  // Extract the actual repl ID from the domain
+  const actualReplId = process.env.REPLIT_DOMAINS?.split('-00-')[0] || process.env.REPL_ID;
+  console.log("Extracted repl ID:", actualReplId);
+  
+  try {
+    const config = await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
+      actualReplId!
     );
-  },
-  { maxAge: 3600 * 1000 }
-);
+    console.log("OIDC Config obtained - client_id:", config.client_id);
+    console.log("OIDC Config - authorization_endpoint:", config.authorization_endpoint);
+    return config;
+  } catch (error) {
+    console.error("Error getting OIDC config:", error);
+    throw error;
+  }
+};
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -112,9 +124,15 @@ export async function setupAuth(app: Express) {
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
-  app.get("/api/login", (req, res, next) => {
+  app.get("/api/login", async (req, res, next) => {
     console.log("Login attempt for hostname:", req.hostname);
     console.log("Available strategies:", Object.keys((passport as any)._strategies || {}));
+    console.log("REPL_ID being used:", process.env.REPL_ID);
+    console.log("Expected callback URL:", `https://${req.hostname}/api/callback`);
+    
+    const currentConfig = await getOidcConfig();
+    console.log("Current OIDC config client_id:", currentConfig.client_id);
+    
     passport.authenticate(`replitauth:${req.hostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
