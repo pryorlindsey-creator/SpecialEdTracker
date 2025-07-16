@@ -32,7 +32,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin login route (before auth middleware)
+  // Test endpoint to verify server connectivity
+  app.post('/api/test', (req, res) => {
+    console.log("Test endpoint hit successfully");
+    console.log("Test request body:", req.body);
+    res.json({ message: "Server is working", received: req.body });
+  });
+
+  // Auth middleware - this sets up sessions first
+  await setupAuth(app);
+
+  // Admin login route (after auth middleware to have session available)
   app.post('/api/auth/admin-login', async (req: any, res) => {
     try {
       console.log("Admin login attempt received");
@@ -47,38 +57,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (username === 'sandralindsey' && password === 'IsabelShea@1998') {
         console.log("Admin credentials match! Login successful");
         
-        // Create admin user if doesn't exist
+        // Create admin user in database 
         const adminUser = await storage.upsertUser({
-          id: 'admin-user',
-          email: 'admin@speechpathai.com',
+          id: '4201332', // Use the user ID that has all the existing data
+          email: 'sandralindsey@speechpathai.com',
           firstName: 'Sandra',
           lastName: 'Lindsey',
         });
         
-        // Manually create session for admin
-        req.user = {
-          claims: { 
-            sub: 'admin-user', 
-            email: 'admin@speechpathai.com',
-            first_name: 'Sandra',
-            last_name: 'Lindsey'
-          },
-          expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week
-        };
+        console.log("Admin user created/updated:", adminUser);
         
-        req.session.passport = { user: req.user };
-        
-        // Also save to session directly for isAuthenticated to work
-        req.login(req.user, (err) => {
-          if (err) {
-            console.error("Error logging in user:", err);
-          } else {
-            console.log("User logged in successfully via req.login");
+        // Bypass session issues with a direct session setup
+        if (req.session) {
+          console.log("Session is available");
+          
+          // Set up user data directly
+          req.user = {
+            claims: { 
+              sub: '4201332',
+              email: 'sandralindsey@speechpathai.com',
+              first_name: 'Sandra',
+              last_name: 'Lindsey'
+            },
+            expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week
+          };
+          
+          // Try direct session assignment
+          try {
+            req.session.passport = { user: req.user };
+            console.log("Session passport set directly");
+            res.json({ success: true, message: "Admin login successful", redirectTo: "/" });
+          } catch (sessionError) {
+            console.error("Direct session error:", sessionError);
+            // Fallback: use a cookie-based approach
+            res.cookie('admin_session', JSON.stringify(req.user), { 
+              httpOnly: true, 
+              secure: false, // Allow for development
+              maxAge: 7 * 24 * 60 * 60 * 1000 
+            });
+            res.json({ success: true, message: "Admin login successful (cookie fallback)", redirectTo: "/" });
           }
-        });
+        } else {
+          console.log("No session available, using cookie fallback");
+          const userData = {
+            claims: { 
+              sub: '4201332',
+              email: 'sandralindsey@speechpathai.com',
+              first_name: 'Sandra',
+              last_name: 'Lindsey'
+            },
+            expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
+          };
+          
+          res.cookie('admin_session', JSON.stringify(userData), { 
+            httpOnly: true, 
+            secure: false,
+            maxAge: 7 * 24 * 60 * 60 * 1000 
+          });
+          res.json({ success: true, message: "Admin login successful (no session)", redirectTo: "/" });
+        }
         
-        console.log("Admin session created successfully");
-        res.json({ success: true, message: "Admin login successful" });
       } else {
         console.log("Admin credentials do NOT match");
         console.log("Expected username: 'sandralindsey', received:", username);
@@ -91,7 +129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Auth middleware
+  // Auth middleware - this sets up sessions first
   await setupAuth(app);
 
   // Auth routes

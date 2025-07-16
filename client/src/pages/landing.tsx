@@ -16,18 +16,41 @@ export default function Landing() {
 
   const adminLoginMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest("/api/auth/admin-login", {
+      console.log("Frontend: Attempting admin login with credentials:", { username, password: password ? "[PROVIDED]" : "[MISSING]" });
+      
+      const response = await fetch("/api/auth/admin-login", {
         method: "POST",
-        body: { username, password }
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password })
       });
+      
+      console.log("Frontend: Login response status:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.log("Frontend: Login error response:", errorData);
+        throw new Error(errorData.message || "Login failed");
+      }
+      
+      const data = await response.json();
+      console.log("Frontend: Login success response:", data);
+      return data;
     },
-    onSuccess: () => {
-      window.location.href = '/';
+    onSuccess: (data) => {
+      console.log("Frontend: Login successful, redirecting to home");
+      if (data.redirectTo) {
+        window.location.href = data.redirectTo;
+      } else {
+        window.location.href = '/';
+      }
     },
     onError: (error) => {
+      console.error("Frontend: Login error:", error);
       toast({
         title: "Login Failed",
-        description: "Invalid admin credentials",
+        description: error.message || "Invalid admin credentials",
         variant: "destructive",
       });
     },
@@ -89,6 +112,7 @@ export default function Landing() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
+                    placeholder="sandralindsey"
                   />
                 </div>
                 <div>
@@ -99,8 +123,39 @@ export default function Landing() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    placeholder="Enter your password"
                   />
                 </div>
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={async () => {
+                    console.log("Testing server connection...");
+                    try {
+                      const response = await fetch("/api/test", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ test: true })
+                      });
+                      const data = await response.json();
+                      console.log("Server test result:", data);
+                      toast({
+                        title: "Server Test",
+                        description: response.ok ? "✅ Server connected" : "❌ Server error",
+                      });
+                    } catch (error) {
+                      console.error("Server test failed:", error);
+                      toast({
+                        title: "Server Test", 
+                        description: "❌ Connection failed",
+                        variant: "destructive"
+                      });
+                    }
+                  }}
+                  className="w-full mb-2"
+                >
+                  Test Connection
+                </Button>
                 <Button 
                   type="submit" 
                   className="w-full"
