@@ -15,6 +15,8 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 const addStudentSchema = z.object({
   name: z.string().min(1, "Student name is required"),
   grade: z.string().optional(),
+  iepDueDate: z.string().optional(),
+  relatedServices: z.string().optional(),
 });
 
 type AddStudentFormData = z.infer<typeof addStudentSchema>;
@@ -33,6 +35,8 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
     defaultValues: {
       name: "",
       grade: "",
+      iepDueDate: "",
+      relatedServices: "",
     },
   });
 
@@ -134,6 +138,37 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
                       <SelectItem value="12">12th Grade</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="iepDueDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>IEP Due Date</FormLabel>
+                  <FormControl>
+                    <Input type="date" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="relatedServices"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Related Services</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="e.g., Speech Therapy, Occupational Therapy, Physical Therapy" 
+                      {...field} 
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

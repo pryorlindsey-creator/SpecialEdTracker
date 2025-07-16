@@ -42,6 +42,8 @@ export const students = pgTable("students", {
   userId: varchar("user_id").notNull().references(() => users.id),
   name: varchar("name").notNull(),
   grade: varchar("grade"),
+  iepDueDate: timestamp("iep_due_date"),
+  relatedServices: text("related_services"), // JSON string of services like "Speech Therapy, Occupational Therapy"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

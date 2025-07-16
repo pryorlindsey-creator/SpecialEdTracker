@@ -14,12 +14,13 @@ import DataEntryForm from "@/components/data-entry-form";
 import GoalChart from "@/components/goal-chart";
 import AddGoalModal from "@/components/add-goal-modal";
 import EditGoalModal from "@/components/edit-goal-modal";
+import StudentInfoCard from "@/components/student-info-card";
 import { format } from "date-fns";
 
 export default function StudentDetail() {
   const params = useParams();
   const [, navigate] = useLocation();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
@@ -31,37 +32,22 @@ export default function StudentDetail() {
 
   const { data: student, isLoading: studentLoading, error: studentError, refetch: refetchStudent } = useQuery({
     queryKey: [`/api/students/${studentId}`],
-    enabled: !!user && !!studentId,
+    enabled: !!studentId,
   });
 
   const { data: goals, isLoading: goalsLoading, error: goalsError, refetch: refetchGoals } = useQuery({
     queryKey: [`/api/students/${studentId}/goals`],
-    enabled: !!user && !!studentId,
+    enabled: !!studentId,
   });
 
   const { data: dataPoints, isLoading: dataPointsLoading, refetch: refetchDataPoints } = useQuery({
     queryKey: [`/api/goals/${selectedGoalId}/data-points`],
-    enabled: !!user && !!selectedGoalId,
+    enabled: !!selectedGoalId,
   });
 
-  // Handle unauthorized errors
-  useEffect(() => {
-    const errors = [studentError, goalsError].filter(Boolean);
-    const unauthorizedError = errors.find(error => isUnauthorizedError(error));
-    
-    if (unauthorizedError) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-    }
-  }, [studentError, goalsError, toast]);
+  // No auth handling needed in development mode
 
-  if (authLoading || studentLoading) {
+  if (studentLoading) {
     return (
       <div className="min-h-screen bg-surface">
         <div className="flex items-center justify-center min-h-screen">
@@ -88,8 +74,8 @@ export default function StudentDetail() {
     );
   }
 
-  const lastUpdateText = student.lastDataPoint 
-    ? format(new Date(student.lastDataPoint.date), "MMM d, yyyy")
+  const lastUpdateText = (student as any)?.lastDataPoint 
+    ? format(new Date((student as any).lastDataPoint.date), "MMM d, yyyy")
     : "No data yet";
 
   return (
@@ -103,7 +89,7 @@ export default function StudentDetail() {
               <h1 className="text-xl font-bold text-gray-900">Special Education Data Collection</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">{user?.email}</div>
+              <div className="text-sm text-gray-600">{(user as any)?.email || 'Development Mode'}</div>
               <Button 
                 variant="ghost"
                 onClick={() => window.location.href = '/api/logout'}
@@ -129,9 +115,9 @@ export default function StudentDetail() {
               <ArrowLeft className="h-6 w-6" />
             </Button>
             <div>
-              <h2 className="text-3xl font-bold text-gray-900">{student.name}</h2>
+              <h2 className="text-3xl font-bold text-gray-900">{(student as any)?.name}</h2>
               <p className="text-gray-600">
-                {student.grade ? `Grade ${student.grade} • ` : ""}IEP Goals Dashboard
+                {(student as any)?.grade ? `Grade ${(student as any).grade} • ` : ""}IEP Goals Dashboard
               </p>
             </div>
           </div>
@@ -174,6 +160,9 @@ export default function StudentDetail() {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Student Information Card */}
+            {student && <StudentInfoCard student={student as any} />}
+            
             <div className="max-w-md mx-auto">
               {/* Student Summary Stats */}
               <Card className="bg-gradient-to-r from-blue-50 to-blue-100">
@@ -182,15 +171,15 @@ export default function StudentDetail() {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Active Goals</span>
-                      <span className="font-semibold text-gray-900">{student.activeGoals || 0}</span>
+                      <span className="font-semibold text-gray-900">{(student as any)?.activeGoals || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Completed Goals</span>
-                      <span className="font-semibold text-gray-900">{student.completedGoals || 0}</span>
+                      <span className="font-semibold text-gray-900">{(student as any)?.completedGoals || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Total Data Points</span>
-                      <span className="font-semibold text-gray-900">{student.totalDataPoints || 0}</span>
+                      <span className="font-semibold text-gray-900">{(student as any)?.totalDataPoints || 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Last Assessment</span>
