@@ -12,27 +12,15 @@ if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
-const getOidcConfig = async () => {
-  console.log("Getting OIDC config with REPL_ID:", process.env.REPL_ID);
-  console.log("Using ISSUER_URL:", process.env.ISSUER_URL ?? "https://replit.com/oidc");
-  
-  // Extract the actual repl ID from the domain
-  const actualReplId = process.env.REPLIT_DOMAINS?.split('-00-')[0] || process.env.REPL_ID;
-  console.log("Extracted repl ID:", actualReplId);
-  
-  try {
-    const config = await client.discovery(
+const getOidcConfig = memoize(
+  async () => {
+    return await client.discovery(
       new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      actualReplId!
+      process.env.REPL_ID!
     );
-    console.log("OIDC Config obtained - client_id:", config.client_id);
-    console.log("OIDC Config - authorization_endpoint:", config.authorization_endpoint);
-    return config;
-  } catch (error) {
-    console.error("Error getting OIDC config:", error);
-    throw error;
-  }
-};
+  },
+  { maxAge: 3600 * 1000 }
+);
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
