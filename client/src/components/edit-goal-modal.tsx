@@ -35,6 +35,7 @@ const editGoalSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   targetCriteria: z.string().optional(),
+  dataCollectionType: z.string().optional(),
   status: z.string().optional(),
 });
 
@@ -45,6 +46,7 @@ interface Goal {
   title: string;
   description: string;
   targetCriteria: string | null;
+  dataCollectionType: string | null;
   status: string;
   levelOfSupport: string | null;
 }
@@ -82,6 +84,7 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
       title: goal.title,
       description: goal.description,
       targetCriteria: goal.targetCriteria || "",
+      dataCollectionType: goal.dataCollectionType || "percentage",
       status: goal.status,
     },
   });
@@ -192,6 +195,29 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dataCollectionType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data Collection Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select data collection type..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="frequency">Frequency</SelectItem>
+                      <SelectItem value="percentage">Attempts in Trials (Percentages)</SelectItem>
+                      <SelectItem value="duration">Duration</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

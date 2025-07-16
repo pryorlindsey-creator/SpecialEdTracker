@@ -54,6 +54,7 @@ export const goals = pgTable("goals", {
   description: text("description").notNull(),
   targetCriteria: text("target_criteria"), // e.g., "80% accuracy over 3 consecutive trials"
   levelOfSupport: varchar("level_of_support"), // independent, verbal-prompt, etc.
+  dataCollectionType: varchar("data_collection_type").notNull().default("percentage"), // frequency, percentage, duration
   status: varchar("status").notNull().default("active"), // active, mastered, discontinued
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

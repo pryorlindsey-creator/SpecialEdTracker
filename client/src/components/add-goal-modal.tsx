@@ -17,6 +17,7 @@ const addGoalSchema = z.object({
   description: z.string().min(1, "Goal description is required"),
   targetCriteria: z.string().optional(),
   levelOfSupport: z.string().optional(),
+  dataCollectionType: z.string().default("percentage"),
   status: z.string().default("active"),
 });
 
@@ -39,6 +40,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       description: "",
       targetCriteria: "",
       levelOfSupport: "",
+      dataCollectionType: "percentage",
       status: "active",
     },
   });
@@ -144,6 +146,29 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                       {...field} 
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="dataCollectionType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Data Collection Type</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select data collection type..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="frequency">Frequency</SelectItem>
+                      <SelectItem value="percentage">Attempts in Trials (Percentages)</SelectItem>
+                      <SelectItem value="duration">Duration</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
