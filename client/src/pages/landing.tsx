@@ -40,11 +40,12 @@ export default function Landing() {
     },
     onSuccess: (data) => {
       console.log("Frontend: Login successful, redirecting to home");
-      if (data.redirectTo) {
-        window.location.href = data.redirectTo;
-      } else {
-        window.location.href = '/';
-      }
+      console.log("Frontend: Response data:", data);
+      
+      // Force a page reload to refresh authentication state
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
     },
     onError: (error) => {
       console.error("Frontend: Login error:", error);

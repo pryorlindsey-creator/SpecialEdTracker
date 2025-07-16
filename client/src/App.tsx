@@ -13,6 +13,8 @@ import AdminPage from "@/pages/admin";
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
+  console.log("Router - isAuthenticated:", isAuthenticated, "isLoading:", isLoading);
+
   return (
     <Switch>
       {isLoading || !isAuthenticated ? (

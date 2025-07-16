@@ -154,6 +154,20 @@ export async function setupAuth(app: Express) {
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   const user = req.user as any;
 
+  // Check for admin cookie session as fallback
+  if (!req.isAuthenticated() && req.cookies?.admin_session) {
+    try {
+      const adminData = JSON.parse(req.cookies.admin_session);
+      if (adminData.expires_at && adminData.expires_at > Math.floor(Date.now() / 1000)) {
+        console.log("Using admin cookie session for user:", adminData.claims.sub);
+        req.user = adminData;
+        return next();
+      }
+    } catch (error) {
+      console.log("Invalid admin cookie:", error);
+    }
+  }
+
   console.log("Auth check - isAuthenticated:", req.isAuthenticated());
   console.log("Auth check - user exists:", !!user);
   console.log("Auth check - user expires_at:", user?.expires_at);
