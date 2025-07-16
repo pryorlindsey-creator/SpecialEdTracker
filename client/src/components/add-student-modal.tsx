@@ -9,14 +9,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Check, X } from "lucide-react";
+
+const RELATED_SERVICES_OPTIONS = [
+  "Speech-Language Therapy",
+  "Physical Therapy", 
+  "Occupational Therapy",
+  "Nursing",
+  "Hearing",
+  "Vision"
+];
 
 const addStudentSchema = z.object({
   name: z.string().min(1, "Student name is required"),
   grade: z.string().optional(),
   iepDueDate: z.string().optional(),
-  relatedServices: z.string().optional(),
+  relatedServices: z.array(z.string()).optional(),
 });
 
 type AddStudentFormData = z.infer<typeof addStudentSchema>;
@@ -29,6 +40,7 @@ interface AddStudentModalProps {
 
 export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStudentModalProps) {
   const { toast } = useToast();
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   const form = useForm<AddStudentFormData>({
     resolver: zodResolver(addStudentSchema),
@@ -36,14 +48,19 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
       name: "",
       grade: "",
       iepDueDate: "",
-      relatedServices: "",
+      relatedServices: [],
     },
   });
 
   const addStudentMutation = useMutation({
     mutationFn: async (data: AddStudentFormData) => {
-      console.log("Frontend: Sending student data:", data);
-      await apiRequest("POST", "/api/students", data);
+      // Convert array of services to comma-separated string for backend
+      const formattedData = {
+        ...data,
+        relatedServices: data.relatedServices?.join(", ") || "",
+      };
+      console.log("Frontend: Sending student data:", formattedData);
+      await apiRequest("POST", "/api/students", formattedData);
     },
     onSuccess: () => {
       // Invalidate the students cache to refresh the dashboard
@@ -54,6 +71,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
         description: "Student added successfully!",
       });
       form.reset();
+      setSelectedServices([]);
       onSuccess?.();
     },
     onError: (error) => {
@@ -84,6 +102,7 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
 
   const handleClose = () => {
     form.reset();
+    setSelectedServices([]);
     onClose();
   };
 
@@ -164,12 +183,29 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Related Services</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="e.g., Speech Therapy, Occupational Therapy, Physical Therapy" 
-                      {...field} 
-                    />
-                  </FormControl>
+                  <div className="space-y-2 mt-2">
+                    {RELATED_SERVICES_OPTIONS.map((service) => (
+                      <div key={service} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={service}
+                          checked={field.value?.includes(service) || false}
+                          onCheckedChange={(checked) => {
+                            const updatedServices = checked
+                              ? [...(field.value || []), service]
+                              : (field.value || []).filter((s) => s !== service);
+                            field.onChange(updatedServices);
+                            setSelectedServices(updatedServices);
+                          }}
+                        />
+                        <label 
+                          htmlFor={service} 
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {service}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
