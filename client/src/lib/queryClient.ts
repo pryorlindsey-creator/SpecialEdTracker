@@ -19,12 +19,18 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
+  console.log(`📡 [API REQUEST] ${method} ${url}`);
+  console.log("📡 [API REQUEST] Data being sent:", data);
+  
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
+
+  console.log(`📡 [API RESPONSE] Status: ${res.status} ${res.statusText}`);
+  console.log("📡 [API RESPONSE] Headers:", Object.fromEntries(res.headers.entries()));
 
   await throwIfResNotOk(res);
   return res;

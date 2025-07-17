@@ -139,7 +139,9 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       console.log("🚀 API endpoint:", `/api/goals/${data.goalId}/data-points`);
       console.log("🚀 About to make API request...");
       
+      console.log("🚀 Making API request now...");
       const result = await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
+      console.log("🚀 API request completed, checking result...");
       console.log("✅ API request successful, response status:", result.status);
       
       if (!result.ok) {
