@@ -101,10 +101,10 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
     },
     onSuccess: () => {
-      // Invalidate all related caches to refresh dashboard and progress data
-      queryClient.invalidateQueries({ queryKey: ["/api/students"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/goals/${form.getValues().goalId}/data-points`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/goals/${form.getValues().goalId}`] });
+      const goalId = form.getValues().goalId;
+      
+      // Clear all cache to force immediate refresh of all data
+      queryClient.clear();
       
       toast({
         title: "Success",

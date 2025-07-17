@@ -37,12 +37,16 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
   const { data: rawData, isLoading, error } = useQuery({
     queryKey: [`/api/students/${studentId}/data-points/all`],
     enabled: !!studentId,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: 'always',
   });
 
   // Fetch goals for filter dropdown
   const { data: goals } = useQuery({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: 'always',
   });
 
   if (isLoading) {

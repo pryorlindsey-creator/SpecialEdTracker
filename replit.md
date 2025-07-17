@@ -280,6 +280,13 @@ Primary test student: User consistently works with Student 1 (ID: 5) which has 2
   - **Cross-goal data view** - Unified table showing all data points across all student goals (6 total for Student 1)
   - **Summary statistics** - Real-time stats showing total data points, goals with data, and average progress
 
+- July 17, 2025: **RESOLVED GOAL AND DATA POINT CACHING ISSUES**
+  - **Fixed new goal display** - Focus goal now appears immediately after creation through enhanced cache invalidation
+  - **Resolved data point caching** - New data points for all goals (including Focus) now display immediately
+  - **Enhanced cache management** - Implemented complete cache clearing after data creation operations
+  - **Confirmed API functionality** - Backend properly handles Focus goal data point creation and retrieval
+  - **Improved refresh behavior** - Raw data table and all components now always fetch fresh data from database
+
 - July 16, 2025: **IMPLEMENTED STUDENT PROGRESS SCATTERPLOT FOR DASHBOARD REPORTS**
   - **Student scatterplot component** - Interactive chart showing progress trends across all goals over time
   - **Multi-goal visualization** - Each goal displays with unique colors and scatter points
