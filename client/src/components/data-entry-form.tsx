@@ -235,9 +235,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     
     // Check if form has validation errors
     if (Object.keys(form.formState.errors).length > 0) {
-      console.error("Form has validation errors - submission blocked:", form.formState.errors);
+      console.error("❌ FORM VALIDATION FAILED - submission blocked:", form.formState.errors);
       return;
     }
+    
+    console.log("✅ Form validation passed, proceeding with submission...");
     
     let finalData = { ...data };
 
@@ -247,13 +249,19 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       console.log("Converted fraction to percentage:", finalData.progressValue);
     }
 
-    console.log("Final data being sent to API:", finalData);
-    console.log("API endpoint will be:", `/api/goals/${data.goalId}/data-points`);
+    console.log("🎯 Final data being sent to API:", finalData);
+    console.log("🎯 API endpoint will be:", `/api/goals/${data.goalId}/data-points`);
     console.log("🎯 About to call addDataPointMutation.mutate...");
-    console.log("🎯 Mutation object:", addDataPointMutation);
-    console.log("🎯 Mutation status before call:", addDataPointMutation.status);
-    addDataPointMutation.mutate(finalData);
-    console.log("🎯 Mutation.mutate() called, new status:", addDataPointMutation.status);
+    console.log("🎯 Mutation isPending before call:", addDataPointMutation.isPending);
+    console.log("🎯 Mutation isError before call:", addDataPointMutation.isError);
+    console.log("🎯 Mutation error before call:", addDataPointMutation.error);
+    
+    try {
+      addDataPointMutation.mutate(finalData);
+      console.log("🎯 Mutation.mutate() called successfully");
+    } catch (mutationError) {
+      console.error("❌ MUTATION CALL FAILED:", mutationError);
+    }
   };
 
   const handleFractionChange = (numerator: string, denominator: string) => {
