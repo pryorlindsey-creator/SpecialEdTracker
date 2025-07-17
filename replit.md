@@ -236,6 +236,8 @@ Primary test student: User consistently works with Student 1 (ID: 5) which has 2
   - **Data validation** - Ensures start dates are before end dates and all periods are properly configured
   - **Calendar integration** - Reporting period start and end dates now display on main dashboard calendar with color-coded events
   - **Legend system** - Added visual legend to distinguish between IEP due dates, period starts, and period ends
+  - **Individual period editing** - Users can click on any period button to edit its start and end dates with validation
+  - **Real-time updates** - Calendar automatically refreshes when period dates are modified
 
 - July 16, 2025: **IMPLEMENTED STUDENT PROGRESS SCATTERPLOT FOR DASHBOARD REPORTS**
   - **Student scatterplot component** - Interactive chart showing progress trends across all goals over time

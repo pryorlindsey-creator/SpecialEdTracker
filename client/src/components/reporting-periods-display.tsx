@@ -1,8 +1,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, Edit } from "lucide-react";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 interface ReportingPeriod {
   periodNumber: number;
@@ -18,6 +23,11 @@ interface ReportingPeriodsData {
 
 export default function ReportingPeriodsDisplay() {
   const [reportingData, setReportingData] = useState<ReportingPeriodsData | null>(null);
+  const [editingPeriod, setEditingPeriod] = useState<ReportingPeriod | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editStartDate, setEditStartDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
+  const { toast } = useToast();
 
   useEffect(() => {
     const savedData = localStorage.getItem('reportingPeriods');
@@ -29,6 +39,67 @@ export default function ReportingPeriodsDisplay() {
       }
     }
   }, []);
+
+  const handleEditPeriod = (period: ReportingPeriod) => {
+    setEditingPeriod(period);
+    setEditStartDate(period.startDate);
+    setEditEndDate(period.endDate);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingPeriod || !reportingData) return;
+
+    if (!editStartDate || !editEndDate) {
+      toast({
+        title: "Error",
+        description: "Please fill in both start and end dates.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (new Date(editStartDate) >= new Date(editEndDate)) {
+      toast({
+        title: "Error",
+        description: "Start date must be before end date.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedPeriods = reportingData.periods.map(period =>
+      period.periodNumber === editingPeriod.periodNumber
+        ? { ...period, startDate: editStartDate, endDate: editEndDate }
+        : period
+    );
+
+    const updatedData = {
+      ...reportingData,
+      periods: updatedPeriods,
+      savedAt: new Date().toISOString()
+    };
+
+    localStorage.setItem('reportingPeriods', JSON.stringify(updatedData));
+    setReportingData(updatedData);
+    setIsEditModalOpen(false);
+    setEditingPeriod(null);
+
+    toast({
+      title: "Success",
+      description: `Period ${editingPeriod.periodNumber} has been updated successfully.`,
+    });
+
+    // Trigger a page refresh to update the calendar
+    window.location.reload();
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditModalOpen(false);
+    setEditingPeriod(null);
+    setEditStartDate("");
+    setEditEndDate("");
+  };
 
   if (!reportingData) {
     return (
@@ -88,21 +159,28 @@ export default function ReportingPeriodsDisplay() {
               const isPast = new Date() > new Date(period.endDate);
               
               return (
-                <div
+                <Button
                   key={period.periodNumber}
-                  className={`p-2 rounded border text-sm ${
+                  variant="ghost"
+                  onClick={() => handleEditPeriod(period)}
+                  className={`p-2 h-auto text-left justify-start hover:opacity-80 ${
                     isActive 
-                      ? 'bg-blue-50 border-blue-200 text-blue-900'
+                      ? 'bg-blue-50 border-blue-200 text-blue-900 hover:bg-blue-100'
                       : isPast
-                      ? 'bg-gray-50 border-gray-200 text-gray-600'
-                      : 'bg-green-50 border-green-200 text-green-900'
+                      ? 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                      : 'bg-green-50 border-green-200 text-green-900 hover:bg-green-100'
                   }`}
                 >
-                  <div className="font-medium">Period {period.periodNumber}</div>
-                  <div className="text-xs">
-                    {format(new Date(period.startDate), "MMM d")} - {format(new Date(period.endDate), "MMM d")}
+                  <div className="w-full">
+                    <div className="font-medium text-sm flex items-center justify-between">
+                      Period {period.periodNumber}
+                      <Edit className="h-3 w-3" />
+                    </div>
+                    <div className="text-xs">
+                      {format(new Date(period.startDate), "MMM d")} - {format(new Date(period.endDate), "MMM d")}
+                    </div>
                   </div>
-                </div>
+                </Button>
               );
             })}
           </div>
@@ -112,6 +190,49 @@ export default function ReportingPeriodsDisplay() {
           Configured on {format(new Date(reportingData.savedAt), "MMM d, yyyy 'at' h:mm a")}
         </div>
       </CardContent>
+
+      {/* Edit Period Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Period {editingPeriod?.periodNumber}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-start-date">Start Date</Label>
+              <Input
+                id="edit-start-date"
+                type="date"
+                value={editStartDate}
+                onChange={(e) => setEditStartDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-end-date">End Date</Label>
+              <Input
+                id="edit-end-date"
+                type="date"
+                value={editEndDate}
+                onChange={(e) => setEditEndDate(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button variant="outline" onClick={handleCancelEdit}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
