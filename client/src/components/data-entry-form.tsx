@@ -124,6 +124,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
   const addDataPointMutation = useMutation({
     mutationFn: async (data: DataEntryFormData) => {
+      console.log("🔥 === MUTATION FUNCTION CALLED ===");
       console.log("🚀 === FRONTEND DATA SUBMISSION START ===");
       console.log("🚀 Form data being submitted:", data);
       console.log("🚀 Form validation status:", form.formState.isValid);
@@ -240,7 +241,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
     console.log("Final data being sent to API:", finalData);
     console.log("API endpoint will be:", `/api/goals/${data.goalId}/data-points`);
+    console.log("🎯 About to call addDataPointMutation.mutate...");
+    console.log("🎯 Mutation object:", addDataPointMutation);
+    console.log("🎯 Mutation status before call:", addDataPointMutation.status);
     addDataPointMutation.mutate(finalData);
+    console.log("🎯 Mutation.mutate() called, new status:", addDataPointMutation.status);
   };
 
   const handleFractionChange = (numerator: string, denominator: string) => {
