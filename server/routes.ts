@@ -478,6 +478,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
+      // Check if student already has 10 goals (maximum limit)
+      const existingGoals = await storage.getGoalsByStudentId(studentId);
+      if (existingGoals.length >= 10) {
+        console.log("Student already has maximum goals:", existingGoals.length);
+        return res.status(400).json({ message: "Student already has maximum of 10 goals" });
+      }
+
       const goalData = insertGoalSchema.parse({
         ...req.body,
         studentId,
@@ -578,6 +585,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting goal:", error);
       res.status(500).json({ message: "Failed to delete goal" });
+    }
+  });
+
+  // Objectives routes
+  app.get('/api/goals/:goalId/objectives', async (req: any, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const goal = await storage.getGoalById(goalId);
+      
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      // Verify ownership through student
+      const student = await storage.getStudentById(goal.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const objectives = await storage.getObjectivesByGoalId(goalId);
+      res.json(objectives);
+    } catch (error) {
+      console.error("Error fetching objectives:", error);
+      res.status(500).json({ message: "Failed to fetch objectives" });
+    }
+  });
+
+  app.post('/api/goals/:goalId/objectives', async (req: any, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const goal = await storage.getGoalById(goalId);
+      
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      // Verify ownership through student
+      const student = await storage.getStudentById(goal.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Check if goal already has 5 objectives (limit)
+      const existingObjectives = await storage.getObjectivesByGoalId(goalId);
+      if (existingObjectives.length >= 5) {
+        return res.status(400).json({ message: "Goal already has maximum of 5 objectives" });
+      }
+
+      const objectiveData = insertObjectiveSchema.parse({
+        ...req.body,
+        goalId,
+      });
+      
+      const objective = await storage.createObjective(objectiveData);
+      res.status(201).json(objective);
+    } catch (error) {
+      console.error("Error creating objective:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid objective data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to create objective" });
+      }
+    }
+  });
+
+  app.put('/api/objectives/:id', async (req: any, res) => {
+    try {
+      const objectiveId = parseInt(req.params.id);
+      const existingObjective = await storage.getObjectiveById(objectiveId);
+      
+      if (!existingObjective) {
+        return res.status(404).json({ message: "Objective not found" });
+      }
+
+      // Verify ownership through goal and student
+      const goal = await storage.getGoalById(existingObjective.goalId);
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      const student = await storage.getStudentById(goal.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const updateData = insertObjectiveSchema.partial().parse(req.body);
+      const objective = await storage.updateObjective(objectiveId, updateData);
+      res.json(objective);
+    } catch (error) {
+      console.error("Error updating objective:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid objective data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update objective" });
+      }
+    }
+  });
+
+  app.delete('/api/objectives/:id', async (req: any, res) => {
+    try {
+      const objectiveId = parseInt(req.params.id);
+      const existingObjective = await storage.getObjectiveById(objectiveId);
+      
+      if (!existingObjective) {
+        return res.status(404).json({ message: "Objective not found" });
+      }
+
+      // Verify ownership through goal and student
+      const goal = await storage.getGoalById(existingObjective.goalId);
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+
+      const student = await storage.getStudentById(goal.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.deleteObjective(objectiveId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting objective:", error);
+      res.status(500).json({ message: "Failed to delete objective" });
     }
   });
 

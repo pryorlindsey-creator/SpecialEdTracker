@@ -536,6 +536,44 @@ export class DatabaseStorage implements IStorage {
     await db.delete(reportingPeriods).where(eq(reportingPeriods.userId, userId));
   }
 
+  // Objectives operations
+  async getObjectivesByGoalId(goalId: number): Promise<Objective[]> {
+    return await db
+      .select()
+      .from(objectives)
+      .where(eq(objectives.goalId, goalId))
+      .orderBy(asc(objectives.id));
+  }
+
+  async createObjective(objective: InsertObjective): Promise<Objective> {
+    const [newObjective] = await db
+      .insert(objectives)
+      .values(objective)
+      .returning();
+    return newObjective;
+  }
+
+  async updateObjective(id: number, objective: Partial<InsertObjective>): Promise<Objective> {
+    const [updatedObjective] = await db
+      .update(objectives)
+      .set({ ...objective, updatedAt: new Date() })
+      .where(eq(objectives.id, id))
+      .returning();
+    return updatedObjective;
+  }
+
+  async deleteObjective(id: number): Promise<void> {
+    await db.delete(objectives).where(eq(objectives.id, id));
+  }
+
+  async getObjectiveById(id: number): Promise<Objective | undefined> {
+    const [objective] = await db
+      .select()
+      .from(objectives)
+      .where(eq(objectives.id, id));
+    return objective;
+  }
+
   // Admin methods for database browsing
   async getAllSessions() {
     return await db.select().from(sessions);
