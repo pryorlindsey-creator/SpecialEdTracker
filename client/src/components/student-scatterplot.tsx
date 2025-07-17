@@ -48,7 +48,11 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
     enabled: !!studentId,
   });
 
-  // Debug logging removed - scatterplot working correctly
+  // Debug logging for data persistence issues
+  console.log(`[SCATTERPLOT DEBUG] Student ${studentId}, Goals: ${goals?.length || 0}, DataPoints: ${allDataPoints?.length || 0}`);
+  if (allDataPoints && allDataPoints.length > 0) {
+    console.log(`[SCATTERPLOT DEBUG] Data points retrieved:`, allDataPoints.map(dp => ({ id: dp.id, goalId: dp.goalId, date: dp.date, value: dp.progressValue })));
+  }
 
   if (goalsLoading || dataLoading) {
     return (

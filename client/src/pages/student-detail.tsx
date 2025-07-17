@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3 } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,6 +46,16 @@ export default function StudentDetail() {
     queryKey: [`/api/goals/${selectedGoalId}/data-points`],
     enabled: !!selectedGoalId,
   });
+
+  // Force refresh all data when component mounts to prevent cache issues
+  React.useEffect(() => {
+    if (studentId) {
+      console.log(`[STUDENT DETAIL] Force refreshing data for student ${studentId}`);
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
+    }
+  }, [studentId]);
 
   // No auth handling needed in development mode
 
@@ -124,6 +134,22 @@ export default function StudentDetail() {
             </div>
           </div>
           <div className="flex items-center space-x-3">
+            <Button 
+              variant="outline"
+              onClick={() => {
+                console.log(`[REFRESH] Manually refreshing all data for Student ${studentId}`);
+                queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}`] });
+                queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
+                queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
+                toast({
+                  title: "Data Refreshed",
+                  description: "All student data has been refreshed from the database.",
+                });
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Data
+            </Button>
             <Button variant="outline">
               <Printer className="h-4 w-4 mr-2" />
               Print Report
