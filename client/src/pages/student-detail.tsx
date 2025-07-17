@@ -40,11 +40,15 @@ export default function StudentDetail() {
   const { data: student, isLoading: studentLoading, error: studentError, refetch: refetchStudent } = useQuery({
     queryKey: [`/api/students/${studentId}`],
     enabled: !!studentId,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: 'always',
   });
 
   const { data: goals, isLoading: goalsLoading, error: goalsError, refetch: refetchGoals } = useQuery({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: 'always',
   });
 
   const { data: dataPoints, isLoading: dataPointsLoading, refetch: refetchDataPoints } = useQuery({
