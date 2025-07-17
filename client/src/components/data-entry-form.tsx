@@ -124,8 +124,10 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
   const addDataPointMutation = useMutation({
     mutationFn: async (data: DataEntryFormData) => {
-      console.log("=== API REQUEST PREPARATION ===");
-      console.log("Submitting data point data:", data);
+      console.log("🚀 === FRONTEND DATA SUBMISSION START ===");
+      console.log("🚀 Form data being submitted:", data);
+      console.log("🚀 Form validation status:", form.formState.isValid);
+      console.log("🚀 Form errors (if any):", form.formState.errors);
       
       // Convert the date string to ISO format for the server
       const payload = {
@@ -133,19 +135,29 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
         date: data.date, // Keep as string, server will parse it
       };
       
-      console.log("Final payload being sent:", payload);
-      console.log("API endpoint:", `/api/goals/${data.goalId}/data-points`);
-      console.log("About to make API request...");
+      console.log("🚀 Final payload being sent to server:", payload);
+      console.log("🚀 API endpoint:", `/api/goals/${data.goalId}/data-points`);
+      console.log("🚀 About to make API request...");
       
       const result = await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
-      console.log("API request successful, result:", result);
+      console.log("✅ API request successful, response status:", result.status);
+      
+      if (!result.ok) {
+        const errorText = await result.text();
+        console.error("❌ API request failed with status:", result.status, "Error:", errorText);
+        throw new Error(`API request failed: ${result.status} - ${errorText}`);
+      }
+      
       const savedDataPoint = await result.json();
       console.log("✅ Data point successfully saved with ID:", savedDataPoint.id);
+      console.log("✅ Saved data point details:", savedDataPoint);
       return savedDataPoint;
     },
-    onSuccess: () => {
+    onSuccess: (savedDataPoint) => {
       const goalId = form.getValues().goalId;
       const studentId = form.getValues().goalId ? goals.find(g => g.id === form.getValues().goalId)?.studentId : null;
+      
+      console.log("✅ Data point mutation succeeded with saved data:", savedDataPoint);
       
       // Clear all cache to force immediate refresh of all data
       queryClient.clear();
@@ -166,7 +178,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       
       toast({
         title: "Success",
-        description: "Data point added successfully!",
+        description: `Data point added successfully! ID: ${savedDataPoint.id}`,
       });
       form.reset();
       onSuccess?.();
