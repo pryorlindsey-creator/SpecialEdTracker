@@ -159,7 +159,7 @@ export default function ReportingPeriodsDisplay() {
   };
 
   const currentPeriod = getCurrentPeriod();
-  const periodLengthLabel = reportingData.periodLength === "4.5-weeks" ? "4.5 weeks" : "3 weeks";
+  const periodLengthLabel = reportingData.periodLength === "4.5weeks" || reportingData.periodLength === "4.5-weeks" ? "4.5 weeks" : "3 weeks";
 
   return (
     <Card>
