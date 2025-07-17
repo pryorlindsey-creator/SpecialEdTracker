@@ -49,15 +49,49 @@ export default function DashboardCalendar() {
     queryKey: ["/api/students"],
   });
 
-  // Load reporting periods from database
+  // Load reporting periods from database with fallback to localStorage
   const { data: reportingPeriodsFromDB } = useQuery({
     queryKey: ["/api/reporting-periods"],
   });
 
   useEffect(() => {
-    if (reportingPeriodsFromDB) {
+    if (reportingPeriodsFromDB && reportingPeriodsFromDB.periods && reportingPeriodsFromDB.periods.length > 0) {
       console.log('Loading reporting periods from database:', reportingPeriodsFromDB);
       setReportingData(reportingPeriodsFromDB);
+    } else {
+      // Check localStorage for existing data to migrate
+      const savedData = localStorage.getItem('reportingPeriods');
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          console.log('Found reporting periods in localStorage, migrating to database:', parsedData);
+          
+          // Migrate to database
+          fetch('/api/reporting-periods', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              periods: parsedData.periods || [],
+              periodLength: parsedData.periodLength || ''
+            }),
+          }).then(response => {
+            if (response.ok) {
+              console.log('Successfully migrated reporting periods to database');
+              setReportingData(parsedData);
+              // Clear localStorage after successful migration
+              localStorage.removeItem('reportingPeriods');
+            }
+          }).catch(error => {
+            console.error('Failed to migrate reporting periods:', error);
+            // Use localStorage data as fallback
+            setReportingData(parsedData);
+          });
+        } catch (error) {
+          console.error('Error parsing localStorage reporting periods:', error);
+        }
+      }
     }
   }, [reportingPeriodsFromDB]);
 
