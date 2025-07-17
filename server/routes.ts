@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./replitAuth";
+import { UserMigrationService } from "./userMigration";
 import { insertStudentSchema, insertGoalSchema, insertDataPointSchema, students } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
@@ -287,37 +288,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Student routes with direct fix for user 4201332
+  // Student routes with proper user ownership
   app.get('/api/students', async (req: any, res) => {
     try {
       const userId = '4201332'; // Development mode - use fixed user ID
       console.log("Fetching students for user ID:", userId);
       
-      // Direct fix: Always check for the known data under user 4201332 and 42813322
-      console.log("Checking for user data under both current user, 4201332, and 42813322");
-      let students = await storage.getStudentsByUserId(userId);
-      
-      // Also get students from test user 42813322 (includes Student 1)
-      const students2 = await storage.getStudentsByUserId('42813322');
-      students = [...students, ...students2];
-      
-      // If still no students found for current user, check under 4201332
-      if (students.length === 0) {
-        console.log("No students found for current user, checking 4201332");
-        const fallbackStudents = await storage.getStudentsByUserId('4201332');
-        if (fallbackStudents.length > 0) {
-          console.log("Found students under 4201332, returning those");
-          students = fallbackStudents;
-        }
-      }
-      
+      // Now that all students are migrated to one user, use standard ownership
+      const students = await storage.getStudentsByUserId(userId);
       console.log("Found students:", students.length);
       
       // Get summary data for each student
       const studentsWithSummary = await Promise.all(
         students.map(async (student) => {
           const summary = await storage.getStudentSummary(student.id);
-          console.log(`Student ${student.id} summary:`, summary);
           return {
             ...student,
             ...summary,
@@ -367,11 +351,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership with fallback for user 4201332 and 42813322
+      // Verify ownership - now all students belong to user 4201332
       const userId = '4201332';
       console.log(`Student ${studentId} belongs to ${student.userId}, current user is ${userId}`);
       
-      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+      if (student.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -964,6 +948,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting reporting periods:", error);
       res.status(500).json({ message: "Failed to delete reporting periods" });
+    }
+  });
+
+  // Migration endpoints for user ownership management
+  app.post('/api/admin/migrate-all-students/:targetUserId', async (req, res) => {
+    try {
+      const targetUserId = req.params.targetUserId;
+      console.log(`Starting migration of all students to user ${targetUserId}`);
+      
+      // Get all students from all users
+      const allUsers = ['4201332', '42813322']; // Known test users
+      let totalMigrated = 0;
+      
+      for (const sourceUserId of allUsers) {
+        if (sourceUserId !== targetUserId) {
+          console.log(`Migrating students from ${sourceUserId} to ${targetUserId}`);
+          const migrated = await UserMigrationService.migrateStudentsToUser(sourceUserId, targetUserId);
+          totalMigrated += migrated.length;
+        }
+      }
+      
+      // Verify final ownership
+      const validation = await UserMigrationService.validateUserOwnership(targetUserId);
+      
+      res.json({
+        success: true,
+        totalMigrated,
+        finalStudentCount: validation.studentCount,
+        message: `Successfully migrated ${totalMigrated} students to user ${targetUserId}`
+      });
+    } catch (error) {
+      console.error("Migration failed:", error);
+      res.status(500).json({ 
+        success: false,
+        message: "Migration failed",
+        error: error.message 
+      });
+    }
+  });
+
+  app.get('/api/admin/validate-ownership/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const validation = await UserMigrationService.validateUserOwnership(userId);
+      res.json(validation);
+    } catch (error) {
+      console.error("Validation failed:", error);
+      res.status(500).json({ message: "Validation failed", error: error.message });
     }
   });
 
