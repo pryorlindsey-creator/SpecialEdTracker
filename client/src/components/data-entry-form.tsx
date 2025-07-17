@@ -207,7 +207,12 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       <h3 className="text-xl font-semibold text-gray-900 mb-6">Add New Data Point</h3>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={(e) => {
+          console.log("=== FORM ONSUBMIT TRIGGERED ===");
+          console.log("Event:", e);
+          console.log("About to call form.handleSubmit...");
+          form.handleSubmit(onSubmit)(e);
+        }} className="space-y-6">
           {/* Goal Selection */}
           <FormField
             control={form.control}
@@ -459,6 +464,16 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             <Button 
               type="submit" 
               disabled={addDataPointMutation.isPending}
+              onClick={(e) => {
+                console.log("=== SUBMIT BUTTON CLICKED ===");
+                console.log("Form state:", form.formState);
+                console.log("Form values:", form.getValues());
+                console.log("Form errors:", form.formState.errors);
+                console.log("Is form valid?", form.formState.isValid);
+                console.log("Mutation pending?", addDataPointMutation.isPending);
+                
+                // Don't prevent default - let form handle submission
+              }}
             >
               {addDataPointMutation.isPending ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
