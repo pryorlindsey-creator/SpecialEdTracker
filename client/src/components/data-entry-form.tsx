@@ -91,7 +91,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       progressFormat: selectedGoal?.dataCollectionType === "duration" ? "duration" : 
                      selectedGoal?.dataCollectionType === "frequency" ? "frequency" : "percentage",
       progressValue: 0,
-      durationUnit: "minutes", // Default to minutes for duration
+      durationUnit: selectedGoal?.dataCollectionType === "duration" ? "minutes" : undefined, // Default to minutes for duration
       levelOfSupport: [],
       anecdotalInfo: "",
     },
@@ -286,15 +286,17 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                     control={form.control}
                     name="durationUnit"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select unit..." />
+                            <SelectValue placeholder="Select unit...">
+                              {field.value === "seconds" ? "seconds" : field.value === "minutes" ? "minutes" : "Select unit..."}
+                            </SelectValue>
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="seconds">Seconds</SelectItem>
-                          <SelectItem value="minutes">Minutes</SelectItem>
+                          <SelectItem value="seconds">seconds</SelectItem>
+                          <SelectItem value="minutes">minutes</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
