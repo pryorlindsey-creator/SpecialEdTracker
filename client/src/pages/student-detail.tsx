@@ -18,6 +18,7 @@ import AddGoalModal from "@/components/add-goal-modal";
 import EditGoalModal from "@/components/edit-goal-modal";
 import StudentInfoCard from "@/components/student-info-card";
 import StudentScatterplot from "@/components/student-scatterplot";
+import RawDataTable from "@/components/raw-data-table";
 import { format } from "date-fns";
 
 export default function StudentDetail() {
@@ -373,17 +374,7 @@ export default function StudentDetail() {
 
           {/* Raw Data Tab */}
           <TabsContent value="raw-data">
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center py-8">
-                  <Table className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Raw Data View</h3>
-                  <p className="text-gray-600">
-                    Raw data table functionality will be implemented in a future update.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <RawDataTable studentId={studentId!} />
           </TabsContent>
         </Tabs>
       </div>

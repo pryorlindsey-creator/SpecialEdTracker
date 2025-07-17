@@ -781,6 +781,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all data points for a student (for raw data table)
+  app.get('/api/students/:studentId/data-points/all', async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudentById(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Verify ownership
+      const userId = '4201332';
+      if (student.userId !== userId) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      // Get all goals for this student
+      const goals = await storage.getGoalsByStudentId(studentId);
+      
+      // Get all data points for all goals
+      const allDataPoints = [];
+      for (const goal of goals) {
+        const dataPoints = await storage.getDataPointsByGoalId(goal.id);
+        
+        // Add goal title to each data point
+        const dataPointsWithGoal = dataPoints.map(dp => ({
+          ...dp,
+          goalTitle: goal.title,
+          goalId: goal.id
+        }));
+        
+        allDataPoints.push(...dataPointsWithGoal);
+      }
+      
+      // Sort by date (newest first)
+      allDataPoints.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      
+      res.json(allDataPoints);
+    } catch (error) {
+      console.error("Error fetching all data points:", error);
+      res.status(500).json({ message: "Failed to fetch all data points" });
+    }
+  });
+
   // Admin routes (for database administrator)
   app.get('/api/admin/stats', async (req, res) => {
     try {
