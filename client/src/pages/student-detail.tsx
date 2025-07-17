@@ -16,6 +16,7 @@ import GoalChart from "@/components/goal-chart";
 import AddGoalModal from "@/components/add-goal-modal";
 import EditGoalModal from "@/components/edit-goal-modal";
 import StudentInfoCard from "@/components/student-info-card";
+import StudentScatterplot from "@/components/student-scatterplot";
 import { format } from "date-fns";
 
 export default function StudentDetail() {
@@ -296,6 +297,9 @@ export default function StudentDetail() {
               </Card>
             ) : (
               <>
+                {/* Student Scatterplot - Overview of all goals */}
+                <StudentScatterplot studentId={studentId || 0} />
+                
                 {/* Goal Selection */}
                 <Card>
                   <CardContent className="p-6">
@@ -318,7 +322,7 @@ export default function StudentDetail() {
                   </CardContent>
                 </Card>
 
-                {/* Chart Display */}
+                {/* Individual Goal Chart Display */}
                 {selectedGoalId && (
                   <GoalChart goalId={selectedGoalId} />
                 )}

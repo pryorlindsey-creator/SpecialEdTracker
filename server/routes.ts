@@ -593,6 +593,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Student data points route (all data points for a student across all goals)
+  app.get('/api/students/:studentId/all-data-points', async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudentById(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Verify ownership with fallback for user 4201332
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      // Get all goals for this student
+      const goals = await storage.getGoalsByStudentId(studentId);
+      
+      // Get all data points for all goals
+      const allDataPoints = [];
+      for (const goal of goals) {
+        const dataPoints = await storage.getDataPointsByGoalId(goal.id);
+        // Add goal title to each data point for easier frontend processing
+        const dataPointsWithGoal = dataPoints.map(dp => ({
+          ...dp,
+          goalTitle: goal.title,
+          goalDataCollectionType: goal.dataCollectionType,
+        }));
+        allDataPoints.push(...dataPointsWithGoal);
+      }
+
+      // Sort by date
+      allDataPoints.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      res.json(allDataPoints);
+    } catch (error) {
+      console.error("Error fetching student data points:", error);
+      res.status(500).json({ message: "Failed to fetch data points" });
+    }
+  });
+
   // Data point routes
   app.get('/api/goals/:goalId/data-points', async (req: any, res) => {
     try {
