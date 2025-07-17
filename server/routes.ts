@@ -684,7 +684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = '4201332';
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -696,6 +696,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         requestBody.levelOfSupport = requestBody.levelOfSupport.length > 0 
           ? JSON.stringify(requestBody.levelOfSupport) 
           : null;
+      }
+      
+      // Convert progressValue to number if it's a string
+      if (requestBody.progressValue && typeof requestBody.progressValue === 'string') {
+        requestBody.progressValue = parseFloat(requestBody.progressValue);
       }
       
       // The schema now handles date and number conversions automatically
@@ -742,7 +747,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = '4201332';
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -780,7 +785,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userId = '4201332';
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
