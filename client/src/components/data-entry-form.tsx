@@ -37,8 +37,9 @@ const dataEntrySchema = z.object({
         return false;
       }
     } else if (data.durationUnit === "minutes") {
-      // Minutes must be >= 1, decimal part between .01-.59 if present
-      if (data.progressValue < 1) {
+      // Minutes: whole number part 0-59, decimal part between .01-.59 if present
+      const wholePart = Math.floor(data.progressValue);
+      if (wholePart < 0 || wholePart > 59) {
         return false;
       }
       const decimalPart = Math.round((data.progressValue % 1) * 100) / 100; // Round to avoid floating point precision issues
@@ -314,7 +315,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 
                 <div className="flex-1">
                   <label className="block text-xs text-gray-600 mb-1">
-                    {form.watch("durationUnit") === "seconds" ? "Seconds (0-59)" : "Minutes (1.00+, decimal .01-.59)"}
+                    {form.watch("durationUnit") === "seconds" ? "Seconds (0-59)" : "Minutes (0-59, decimal .01-.59)"}
                   </label>
                   <FormField
                     control={form.control}
