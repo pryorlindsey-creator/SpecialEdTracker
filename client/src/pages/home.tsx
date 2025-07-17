@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Users, Target, BarChart3, Calendar } from "lucide-react";
+import { Plus, Users, Target, BarChart3, Calendar, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap } from "lucide-react";
@@ -107,7 +107,16 @@ export default function Home() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8 max-w-sm">
-          <Card className="hover:shadow-md transition-shadow">
+          <Card 
+            className="hover:shadow-md transition-shadow cursor-pointer hover:bg-gray-50"
+            onClick={() => {
+              // Scroll to the students section
+              const studentsSection = document.getElementById('students-section');
+              if (studentsSection) {
+                studentsSection.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+          >
             <CardContent className="p-6">
               <div className="flex items-center">
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -116,6 +125,9 @@ export default function Home() {
                 <div className="ml-4">
                   <p className="text-gray-600 text-sm">Total Students</p>
                   <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
+                </div>
+                <div className="ml-auto">
+                  <ChevronRight className="h-5 w-5 text-gray-400" />
                 </div>
               </div>
             </CardContent>
@@ -185,7 +197,7 @@ export default function Home() {
         </div>
 
         {/* Students Grid */}
-        <div>
+        <div id="students-section">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">All Students</h3>
           {!studentsArray || studentsArray.length === 0 ? (
             <Card className="p-12 text-center">
