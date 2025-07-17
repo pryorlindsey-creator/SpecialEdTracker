@@ -21,8 +21,17 @@ const dataEntrySchema = z.object({
   numerator: z.number().optional(),
   denominator: z.number().optional(),
   durationUnit: z.enum(["seconds", "minutes"]).optional(),
-  levelOfSupport: z.array(z.string()).optional(),
+  levelOfSupport: z.array(z.string()).min(1, "At least one level of support is required"),
   anecdotalInfo: z.string().optional(),
+}).refine((data) => {
+  // For duration goals, durationUnit is required
+  if (data.progressFormat === "duration" && (!data.durationUnit || data.durationUnit.trim() === "")) {
+    return false;
+  }
+  return true;
+}, {
+  message: "Duration unit is required for duration goals",
+  path: ["durationUnit"],
 });
 
 type DataEntryFormData = z.infer<typeof dataEntrySchema>;
@@ -62,7 +71,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       progressFormat: selectedGoal?.dataCollectionType === "duration" ? "duration" : 
                      selectedGoal?.dataCollectionType === "frequency" ? "frequency" : "percentage",
       progressValue: 0,
-      durationUnit: "seconds",
+      durationUnit: "minutes", // Default to minutes for duration
       levelOfSupport: [],
       anecdotalInfo: "",
     },
@@ -151,8 +160,15 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     console.log("=== DATA ENTRY FORM SUBMISSION ===");
     console.log("Form submitted with data:", data);
     console.log("Form validation errors:", form.formState.errors);
+    console.log("Form is valid:", form.formState.isValid);
     console.log("Selected goal:", selectedGoal);
     console.log("Progress input type:", progressInputType);
+    
+    // Check if form has validation errors
+    if (Object.keys(form.formState.errors).length > 0) {
+      console.error("Form has validation errors - submission blocked:", form.formState.errors);
+      return;
+    }
     
     let finalData = { ...data };
 
