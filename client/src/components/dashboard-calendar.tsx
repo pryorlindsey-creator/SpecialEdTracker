@@ -49,22 +49,17 @@ export default function DashboardCalendar() {
     queryKey: ["/api/students"],
   });
 
-  // Load reporting periods from localStorage
+  // Load reporting periods from database
+  const { data: reportingPeriodsFromDB } = useQuery({
+    queryKey: ["/api/reporting-periods"],
+  });
+
   useEffect(() => {
-    const savedData = localStorage.getItem('reportingPeriods');
-    console.log('Loading reporting periods from localStorage:', savedData);
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        console.log('Parsed reporting periods data:', parsedData);
-        setReportingData(parsedData);
-      } catch (error) {
-        console.error('Error parsing reporting periods data:', error);
-      }
-    } else {
-      console.log('No reporting periods found in localStorage');
+    if (reportingPeriodsFromDB) {
+      console.log('Loading reporting periods from database:', reportingPeriodsFromDB);
+      setReportingData(reportingPeriodsFromDB);
     }
-  }, []);
+  }, [reportingPeriodsFromDB]);
 
   // Convert student IEP due dates to calendar events
   const iepEvents: CalendarEvent[] = (students as Student[] || [])

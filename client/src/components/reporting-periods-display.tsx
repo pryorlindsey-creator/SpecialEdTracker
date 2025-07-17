@@ -29,15 +29,27 @@ export default function ReportingPeriodsDisplay() {
   const [editEndDate, setEditEndDate] = useState("");
   const { toast } = useToast();
 
+  // Load reporting periods from database
   useEffect(() => {
-    const savedData = localStorage.getItem('reportingPeriods');
-    if (savedData) {
+    const fetchReportingPeriods = async () => {
       try {
-        setReportingData(JSON.parse(savedData));
+        const response = await fetch('/api/reporting-periods');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.periods && data.periods.length > 0) {
+            setReportingData({
+              periodLength: data.periodLength,
+              periods: data.periods,
+              savedAt: new Date().toISOString()
+            });
+          }
+        }
       } catch (error) {
-        console.error('Error parsing reporting periods data:', error);
+        console.error('Error fetching reporting periods:', error);
       }
-    }
+    };
+
+    fetchReportingPeriods();
   }, []);
 
   const handleEditPeriod = (period: ReportingPeriod) => {
@@ -47,7 +59,7 @@ export default function ReportingPeriodsDisplay() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingPeriod || !reportingData) return;
 
     if (!editStartDate || !editEndDate) {
@@ -74,14 +86,38 @@ export default function ReportingPeriodsDisplay() {
         : period
     );
 
-    const updatedData = {
-      ...reportingData,
-      periods: updatedPeriods,
-      savedAt: new Date().toISOString()
-    };
+    // Save to database
+    try {
+      const response = await fetch('/api/reporting-periods', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          periods: updatedPeriods,
+          periodLength: reportingData.periodLength
+        }),
+      });
 
-    localStorage.setItem('reportingPeriods', JSON.stringify(updatedData));
-    setReportingData(updatedData);
+      if (!response.ok) {
+        throw new Error('Failed to save to database');
+      }
+
+      const updatedData = {
+        ...reportingData,
+        periods: updatedPeriods,
+        savedAt: new Date().toISOString()
+      };
+      setReportingData(updatedData);
+    } catch (error) {
+      console.error('Error saving updated period:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
     setIsEditModalOpen(false);
     setEditingPeriod(null);
 

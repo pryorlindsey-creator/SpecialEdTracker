@@ -3,6 +3,7 @@ import {
   students,
   goals,
   dataPoints,
+  reportingPeriods,
   type User,
   type UpsertUser,
   type Student,
@@ -11,6 +12,8 @@ import {
   type InsertGoal,
   type DataPoint,
   type InsertDataPoint,
+  type ReportingPeriod,
+  type InsertReportingPeriod,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql, and, inArray, asc } from "drizzle-orm";
@@ -71,6 +74,11 @@ export interface IStorage {
     trend: number;
     lastScore: number;
   }>;
+  
+  // Reporting periods operations
+  getReportingPeriodsByUserId(userId: string): Promise<ReportingPeriod[]>;
+  saveReportingPeriods(userId: string, periods: { periodNumber: number; startDate: string; endDate: string; }[], periodLength: string): Promise<void>;
+  deleteReportingPeriodsByUserId(userId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -467,6 +475,43 @@ export class DatabaseStorage implements IStorage {
         ]
       }
     };
+  }
+
+  // Reporting periods operations
+  async getReportingPeriodsByUserId(userId: string): Promise<ReportingPeriod[]> {
+    const periods = await db
+      .select()
+      .from(reportingPeriods)
+      .where(eq(reportingPeriods.userId, userId))
+      .orderBy(asc(reportingPeriods.periodNumber));
+    
+    return periods;
+  }
+
+  async saveReportingPeriods(
+    userId: string, 
+    periods: { periodNumber: number; startDate: string; endDate: string; }[], 
+    periodLength: string
+  ): Promise<void> {
+    // First, delete existing periods for this user
+    await this.deleteReportingPeriodsByUserId(userId);
+    
+    // Then insert new periods
+    if (periods.length > 0) {
+      const periodsToInsert = periods.map(period => ({
+        userId,
+        periodLength,
+        periodNumber: period.periodNumber,
+        startDate: period.startDate,
+        endDate: period.endDate,
+      }));
+
+      await db.insert(reportingPeriods).values(periodsToInsert);
+    }
+  }
+
+  async deleteReportingPeriodsByUserId(userId: string): Promise<void> {
+    await db.delete(reportingPeriods).where(eq(reportingPeriods.userId, userId));
   }
 }
 

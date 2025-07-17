@@ -9,6 +9,7 @@ import {
   integer,
   decimal,
   boolean,
+  date,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -167,6 +168,21 @@ export const insertDataPointSchema = createInsertSchema(dataPoints).omit({
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+// Reporting periods table for persistent storage
+export const reportingPeriods = pgTable("reporting_periods", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  periodLength: varchar("period_length").notNull(), // "4.5weeks" or "3weeks"
+  periodNumber: integer("period_number").notNull(),
+  startDate: date("start_date").notNull(),
+  endDate: date("end_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type ReportingPeriod = typeof reportingPeriods.$inferSelect;
+export type InsertReportingPeriod = typeof reportingPeriods.$inferInsert;
 export type InsertStudent = z.infer<typeof insertStudentSchema>;
 export type Student = typeof students.$inferSelect;
 export type InsertGoal = z.infer<typeof insertGoalSchema>;

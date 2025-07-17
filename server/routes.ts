@@ -900,6 +900,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Reporting periods routes
+  app.get('/api/reporting-periods', async (req: any, res) => {
+    try {
+      const userId = '4201332'; // Development mode - use fixed user ID
+      console.log("Fetching reporting periods for user ID:", userId);
+      
+      const periods = await storage.getReportingPeriodsByUserId(userId);
+      console.log("Found reporting periods:", periods.length);
+      
+      if (periods.length === 0) {
+        res.json({ periods: [], periodLength: null });
+        return;
+      }
+      
+      // Group periods by periodLength and return structured data
+      const periodLength = periods[0]?.periodLength || null;
+      res.json({
+        periods: periods.map(p => ({
+          periodNumber: p.periodNumber,
+          startDate: p.startDate,
+          endDate: p.endDate
+        })),
+        periodLength
+      });
+    } catch (error) {
+      console.error("Error fetching reporting periods:", error);
+      res.status(500).json({ message: "Failed to fetch reporting periods" });
+    }
+  });
+
+  app.post('/api/reporting-periods', async (req: any, res) => {
+    try {
+      const userId = '4201332'; // Development mode - use fixed user ID
+      const { periods, periodLength } = req.body;
+      
+      console.log("Saving reporting periods for user ID:", userId);
+      console.log("Periods data:", { periods: periods?.length, periodLength });
+      
+      if (!periods || !Array.isArray(periods) || !periodLength) {
+        return res.status(400).json({ message: "Invalid periods data" });
+      }
+      
+      await storage.saveReportingPeriods(userId, periods, periodLength);
+      console.log("Successfully saved reporting periods to database");
+      
+      res.json({ message: "Reporting periods saved successfully" });
+    } catch (error) {
+      console.error("Error saving reporting periods:", error);
+      res.status(500).json({ message: "Failed to save reporting periods" });
+    }
+  });
+
+  app.delete('/api/reporting-periods', async (req: any, res) => {
+    try {
+      const userId = '4201332'; // Development mode - use fixed user ID
+      console.log("Deleting reporting periods for user ID:", userId);
+      
+      await storage.deleteReportingPeriodsByUserId(userId);
+      console.log("Successfully deleted reporting periods from database");
+      
+      res.json({ message: "Reporting periods deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting reporting periods:", error);
+      res.status(500).json({ message: "Failed to delete reporting periods" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

@@ -49,7 +49,7 @@ export default function ReportingPeriodsModal({ isOpen, onClose, onSave }: Repor
     setPeriods(updatedPeriods);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!periodLength) {
       toast({
         title: "Error",
@@ -81,18 +81,26 @@ export default function ReportingPeriodsModal({ isOpen, onClose, onSave }: Repor
       }
     }
 
-    onSave(periods, periodLength);
-    toast({
-      title: "Success",
-      description: "Reporting periods have been saved successfully.",
-    });
-    
-    // Trigger a page refresh to update the calendar
-    setTimeout(() => {
-      window.location.reload();
-    }, 1000);
-    
-    onClose();
+    try {
+      await onSave(periods, periodLength);
+      toast({
+        title: "Success",
+        description: "Reporting periods have been saved successfully.",
+      });
+      
+      // Trigger a page refresh to update the calendar
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save reporting periods. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleReset = () => {
@@ -191,19 +199,32 @@ export function ReportingPeriodsButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleSavePeriods = (periods: any[], periodLength: string) => {
+  const handleSavePeriods = async (periods: any[], periodLength: string) => {
     const dataToSave = {
       periodLength,
       periods,
-      savedAt: new Date().toISOString()
     };
     
-    console.log("Saving reporting periods to localStorage:", dataToSave);
-    localStorage.setItem('reportingPeriods', JSON.stringify(dataToSave));
+    console.log("Saving reporting periods to database:", dataToSave);
     
-    // Verify it was saved
-    const saved = localStorage.getItem('reportingPeriods');
-    console.log("Verified saved data:", saved);
+    try {
+      const response = await fetch('/api/reporting-periods', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSave),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to save: ${response.statusText}`);
+      }
+      
+      console.log("Successfully saved reporting periods to database");
+    } catch (error) {
+      console.error("Error saving reporting periods:", error);
+      throw error;
+    }
   };
 
   return (
