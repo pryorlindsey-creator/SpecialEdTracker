@@ -643,9 +643,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Goal already has maximum of 5 objectives" });
       }
 
+      // Get student ID from the goal
+      const studentId = goal.studentId;
+
       const objectiveData = insertObjectiveSchema.parse({
         ...req.body,
         goalId,
+        studentId,
       });
       
       const objective = await storage.createObjective(objectiveData);
@@ -728,6 +732,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting objective:", error);
       res.status(500).json({ message: "Failed to delete objective" });
+    }
+  });
+
+  // Get all objectives for a student
+  app.get('/api/students/:studentId/objectives', async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudentById(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const objectives = await storage.getObjectivesByStudentId(studentId);
+      
+      // Enrich objectives with goal information
+      const objectivesWithGoals = await Promise.all(
+        objectives.map(async (objective) => {
+          const goal = await storage.getGoalById(objective.goalId);
+          return {
+            ...objective,
+            goalTitle: goal?.title || 'Unknown Goal',
+            goalDescription: goal?.description || '',
+          };
+        })
+      );
+
+      res.json(objectivesWithGoals);
+    } catch (error) {
+      console.error("Error fetching student objectives:", error);
+      res.status(500).json({ message: "Failed to fetch objectives" });
     }
   });
 

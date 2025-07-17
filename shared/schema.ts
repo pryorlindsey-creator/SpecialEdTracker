@@ -67,6 +67,7 @@ export const goals = pgTable("goals", {
 export const objectives = pgTable("objectives", {
   id: serial("id").primaryKey(),
   goalId: integer("goal_id").notNull().references(() => goals.id),
+  studentId: integer("student_id").notNull().references(() => students.id),
   title: varchar("title").notNull(),
   description: text("description").notNull(),
   targetCriteria: text("target_criteria"),
@@ -102,6 +103,7 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
     references: [users.id],
   }),
   goals: many(goals),
+  objectives: many(objectives),
 }));
 
 export const goalsRelations = relations(goals, ({ one, many }) => ({
@@ -117,6 +119,10 @@ export const objectivesRelations = relations(objectives, ({ one, many }) => ({
   goal: one(goals, {
     fields: [objectives.goalId],
     references: [goals.id],
+  }),
+  student: one(students, {
+    fields: [objectives.studentId],
+    references: [students.id],
   }),
   dataPoints: many(dataPoints),
 }));

@@ -2,6 +2,7 @@ import {
   users,
   students,
   goals,
+  objectives,
   dataPoints,
   reportingPeriods,
   type User,
@@ -10,6 +11,8 @@ import {
   type InsertStudent,
   type Goal,
   type InsertGoal,
+  type Objective,
+  type InsertObjective,
   type DataPoint,
   type InsertDataPoint,
   type ReportingPeriod,
@@ -551,6 +554,14 @@ export class DatabaseStorage implements IStorage {
       .values(objective)
       .returning();
     return newObjective;
+  }
+
+  async getObjectivesByStudentId(studentId: number): Promise<Objective[]> {
+    return await db
+      .select()
+      .from(objectives)
+      .where(eq(objectives.studentId, studentId))
+      .orderBy(asc(objectives.goalId), asc(objectives.id));
   }
 
   async updateObjective(id: number, objective: Partial<InsertObjective>): Promise<Objective> {
