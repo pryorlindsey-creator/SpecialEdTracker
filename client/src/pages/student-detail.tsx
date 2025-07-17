@@ -142,6 +142,35 @@ export default function StudentDetail() {
               <h1 className="text-xl font-bold text-gray-900">Special Education Data Collection</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <Button
+                onClick={async () => {
+                  console.log("🔄 Manual refresh triggered");
+                  
+                  // Clear all cache and force fresh fetch
+                  queryClient.clear();
+                  
+                  if (studentId) {
+                    // Force immediate fresh fetch of all data
+                    await Promise.all([
+                      refetchStudent(),
+                      refetchGoals(),
+                      queryClient.refetchQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] }),
+                    ]);
+                  }
+                  
+                  toast({
+                    title: "Data Refreshed",
+                    description: "All student data has been refreshed from the database.",
+                  });
+                  
+                  console.log("✅ Manual refresh completed");
+                }}
+                variant="outline"
+                size="sm"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh Data
+              </Button>
               <div className="text-sm text-gray-600">{(user as any)?.email || 'Development Mode'}</div>
               <Button 
                 variant="ghost"

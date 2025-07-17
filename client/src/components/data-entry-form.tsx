@@ -143,9 +143,24 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     },
     onSuccess: () => {
       const goalId = form.getValues().goalId;
+      const studentId = form.getValues().goalId ? goals.find(g => g.id === form.getValues().goalId)?.studentId : null;
       
       // Clear all cache to force immediate refresh of all data
       queryClient.clear();
+      
+      // Force immediate refetch of critical data
+      if (studentId) {
+        queryClient.prefetchQuery({
+          queryKey: [`/api/students/${studentId}/all-data-points`],
+          staleTime: 0,
+        });
+        queryClient.prefetchQuery({
+          queryKey: [`/api/goals/${goalId}/data-points`],
+          staleTime: 0,
+        });
+      }
+      
+      console.log("✅ Data point successfully added and cache cleared");
       
       toast({
         title: "Success",

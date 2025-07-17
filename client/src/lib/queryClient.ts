@@ -55,6 +55,7 @@ export const queryClient = new QueryClient({
       refetchInterval: false,
       refetchOnWindowFocus: true, // Allow refetch on window focus to get fresh data
       staleTime: 0, // Always consider data stale to prevent cache issues
+      cacheTime: 0, // Don't cache data to prevent stale data issues
       retry: false,
     },
     mutations: {
