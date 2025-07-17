@@ -93,24 +93,25 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
       const goal = goalsMap.get(dp.goalId);
       const dateObj = new Date(dp.date);
       
-      // Convert progress value to percentage for consistent display
-      let progressPercentage = 0;
+      // Convert progress value to appropriate display format
+      let displayValue = 0;
       let yAxisLabel = "Progress (%)";
       
       if (dp.progressFormat === 'percentage') {
-        progressPercentage = parseFloat(dp.progressValue);
+        displayValue = parseFloat(dp.progressValue);
         yAxisLabel = "Progress (%)";
       } else if (dp.progressFormat === 'frequency') {
-        progressPercentage = parseFloat(dp.progressValue);
+        displayValue = parseFloat(dp.progressValue);
         yAxisLabel = "Frequency (count)";
       } else if (dp.progressFormat === 'duration') {
-        progressPercentage = parseFloat(dp.progressValue);
-        yAxisLabel = "Duration (seconds)";
+        // For duration, keep the original value (already in correct format from data entry)
+        displayValue = parseFloat(dp.progressValue);
+        yAxisLabel = "Duration (minutes)";
       }
 
       return {
         x: dateObj.getTime(), // Use timestamp for x-axis
-        y: progressPercentage,
+        y: displayValue,
         goalId: dp.goalId,
         goalTitle: goal?.title || `Goal ${dp.goalId}`,
         date: dp.date,
@@ -118,6 +119,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         format: dp.progressFormat,
         color: goal?.color || GOAL_COLORS[0],
         yAxisLabel: yAxisLabel,
+        durationUnit: dp.durationUnit, // Include duration unit for tooltip
       };
     })
     .sort((a, b) => a.x - b.x);
@@ -147,11 +149,20 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
             Progress: {data.originalValue}
             {data.format === 'percentage' && '%'}
             {data.format === 'frequency' && ' times'}
-            {data.format === 'duration' && ' seconds'}
+            {data.format === 'duration' && (data.durationUnit === 'seconds' ? ' seconds' : ' minutes')}
           </p>
-          <p className="text-sm text-gray-600">
-            Display Value: {data.y.toFixed(1)}%
-          </p>
+          {data.format === 'duration' ? (
+            <p className="text-sm text-gray-600">
+              {data.durationUnit === 'seconds' ? 
+                `${data.y} seconds` : 
+                `${Math.floor(data.y)} minutes ${Math.round((data.y % 1) * 60)} seconds`
+              }
+            </p>
+          ) : (
+            <p className="text-sm text-gray-600">
+              Display Value: {data.y.toFixed(1)}{data.format === 'percentage' ? '%' : ''}
+            </p>
+          )}
         </div>
       );
     }
@@ -209,6 +220,15 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   name={yAxisLabel}
                   label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
                   domain={[0, 'dataMax']}
+                  tickFormatter={(value) => {
+                    // Format y-axis ticks for duration data
+                    if (yAxisLabel === "Duration (minutes)" && value >= 1) {
+                      const minutes = Math.floor(value);
+                      const seconds = Math.round((value % 1) * 60);
+                      return seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}:00`;
+                    }
+                    return value.toString();
+                  }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
