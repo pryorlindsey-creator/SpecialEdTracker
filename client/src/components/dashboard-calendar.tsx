@@ -55,18 +55,31 @@ export default function DashboardCalendar() {
   });
 
   useEffect(() => {
+    console.log('=== REPORTING PERIODS DEBUG ===');
+    console.log('Database response:', reportingPeriodsFromDB);
+    console.log('Current reportingData state:', reportingData);
+    
     if (reportingPeriodsFromDB && reportingPeriodsFromDB.periods && reportingPeriodsFromDB.periods.length > 0) {
-      console.log('Loading reporting periods from database:', reportingPeriodsFromDB);
+      console.log('✓ Loading reporting periods from database:', reportingPeriodsFromDB);
       setReportingData(reportingPeriodsFromDB);
     } else {
+      console.log('✗ No periods in database, checking localStorage...');
+      
       // Check localStorage for existing data to migrate
       const savedData = localStorage.getItem('reportingPeriods');
+      console.log('localStorage data:', savedData);
+      
       if (savedData) {
         try {
           const parsedData = JSON.parse(savedData);
-          console.log('Found reporting periods in localStorage, migrating to database:', parsedData);
+          console.log('✓ Found reporting periods in localStorage:', parsedData);
+          console.log('Periods array:', parsedData.periods);
+          console.log('Period length:', parsedData.periodLength);
           
-          // Migrate to database
+          // Use the localStorage data immediately
+          setReportingData(parsedData);
+          
+          // Migrate to database in background
           fetch('/api/reporting-periods', {
             method: 'POST',
             headers: {
@@ -78,21 +91,22 @@ export default function DashboardCalendar() {
             }),
           }).then(response => {
             if (response.ok) {
-              console.log('Successfully migrated reporting periods to database');
-              setReportingData(parsedData);
-              // Clear localStorage after successful migration
-              localStorage.removeItem('reportingPeriods');
+              console.log('✓ Successfully migrated reporting periods to database');
+              // Don't clear localStorage yet - keep as backup
+            } else {
+              console.error('✗ Failed to migrate to database:', response.status);
             }
           }).catch(error => {
-            console.error('Failed to migrate reporting periods:', error);
-            // Use localStorage data as fallback
-            setReportingData(parsedData);
+            console.error('✗ Migration request failed:', error);
           });
         } catch (error) {
-          console.error('Error parsing localStorage reporting periods:', error);
+          console.error('✗ Error parsing localStorage reporting periods:', error);
         }
+      } else {
+        console.log('✗ No reporting periods found in localStorage either');
       }
     }
+    console.log('=== END DEBUG ===');
   }, [reportingPeriodsFromDB]);
 
   // Convert student IEP due dates to calendar events
