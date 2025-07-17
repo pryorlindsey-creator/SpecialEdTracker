@@ -11,13 +11,39 @@ import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
 
 function Router() {
-  // Authentication disabled for development - direct access to all pages
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-900 mx-auto"></div>
+          <p className="mt-4 text-blue-800">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Switch>
-      <Route path="/" component={Home} />
-      <Route path="/students/:id" component={StudentDetail} />
-      <Route path="/admin" component={AdminPage} />
+      {/* Landing page for unauthenticated users or explicit landing route */}
       <Route path="/landing" component={Landing} />
+      
+      {/* Root path routing based on authentication */}
+      <Route path="/">
+        {isAuthenticated ? <Home /> : <Landing />}
+      </Route>
+      
+      {/* Protected routes - require authentication */}
+      <Route path="/students/:id">
+        {isAuthenticated ? <StudentDetail /> : <Landing />}
+      </Route>
+      
+      <Route path="/admin">
+        {isAuthenticated ? <AdminPage /> : <Landing />}
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );

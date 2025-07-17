@@ -18,31 +18,13 @@ export function useAuth() {
           setAuthState({ user: userData, isLoading: false, isAuthenticated: true });
         } else {
           console.log("Auth check failed - status:", response.status);
-          // For development mode, treat user as authenticated even if auth fails
-          setAuthState({ 
-            user: { 
-              id: '4201332', 
-              email: 'sandralindsey@speechpathai.com',
-              firstName: 'Sandra',
-              lastName: 'Lindsey' 
-            }, 
-            isLoading: false, 
-            isAuthenticated: true 
-          });
+          // Set as unauthenticated to show landing page
+          setAuthState({ user: null, isLoading: false, isAuthenticated: false });
         }
       } catch (error) {
         console.log("Auth check error:", error);
-        // For development mode, treat user as authenticated even on error
-        setAuthState({ 
-          user: { 
-            id: '4201332', 
-            email: 'sandralindsey@speechpathai.com',
-            firstName: 'Sandra',
-            lastName: 'Lindsey' 
-          }, 
-          isLoading: false, 
-          isAuthenticated: true 
-        });
+        // Set as unauthenticated to show landing page
+        setAuthState({ user: null, isLoading: false, isAuthenticated: false });
       }
     };
 
