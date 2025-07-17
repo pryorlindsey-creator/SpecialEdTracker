@@ -139,7 +139,9 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       
       const result = await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
       console.log("API request successful, result:", result);
-      return result;
+      const savedDataPoint = await result.json();
+      console.log("✅ Data point successfully saved with ID:", savedDataPoint.id);
+      return savedDataPoint;
     },
     onSuccess: () => {
       const goalId = form.getValues().goalId;
@@ -170,9 +172,10 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       onSuccess?.();
     },
     onError: (error) => {
-      console.error("Error adding data point:", error);
-      console.error("Error message:", error.message);
-      console.error("Full error object:", error);
+      console.error("❌ Error adding data point:", error);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Full error object:", error);
+      console.error("❌ Data point failed to save to database");
       
       // Handle unauthorized errors
       if (error.message.includes("401") || error.message.includes("Unauthorized")) {
