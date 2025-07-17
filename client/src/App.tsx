@@ -12,10 +12,15 @@ import AdminPage from "@/pages/admin";
 
 function Router() {
   // Authentication disabled for development - direct access to all pages
+  console.log('[ROUTER] Router component loaded');
+  
   return (
     <Switch>
       <Route path="/" component={Home} />
-      <Route path="/students/:id" component={StudentDetail} />
+      <Route path="/students/:id" component={(params) => {
+        console.log(`[ROUTER] Navigating to student detail with params:`, params);
+        return <StudentDetail />;
+      }} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/landing" component={Landing} />
       <Route component={NotFound} />

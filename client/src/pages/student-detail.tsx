@@ -31,6 +31,9 @@ export default function StudentDetail() {
   const [editingGoal, setEditingGoal] = useState<any>(null);
 
   const studentId = params.id ? parseInt(params.id) : null;
+  
+  console.log(`[STUDENT DETAIL] Component loaded with params:`, params);
+  console.log(`[STUDENT DETAIL] Parsed studentId:`, studentId);
 
   const { data: student, isLoading: studentLoading, error: studentError, refetch: refetchStudent } = useQuery({
     queryKey: [`/api/students/${studentId}`],
