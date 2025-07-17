@@ -87,6 +87,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
   const addDataPointMutation = useMutation({
     mutationFn: async (data: DataEntryFormData) => {
+      console.log("=== API REQUEST PREPARATION ===");
       console.log("Submitting data point data:", data);
       
       // Convert the date string to ISO format for the server
@@ -95,10 +96,13 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
         date: data.date, // Keep as string, server will parse it
       };
       
-      console.log("Final payload:", payload);
+      console.log("Final payload being sent:", payload);
       console.log("API endpoint:", `/api/goals/${data.goalId}/data-points`);
+      console.log("About to make API request...");
       
-      await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
+      const result = await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
+      console.log("API request successful, result:", result);
+      return result;
     },
     onSuccess: () => {
       const goalId = form.getValues().goalId;
@@ -116,6 +120,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     onError: (error) => {
       console.error("Error adding data point:", error);
       console.error("Error message:", error.message);
+      console.error("Full error object:", error);
       
       // Handle unauthorized errors
       if (error.message.includes("401") || error.message.includes("Unauthorized")) {
@@ -130,17 +135,24 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
         return;
       }
       
+      // Show detailed error message for debugging
+      const errorDetails = error.message || "Unknown error";
+      console.error("Detailed error for user:", errorDetails);
+      
       toast({
-        title: "Error",
-        description: `Failed to add data point: ${error.message}`,
+        title: "Error Adding Data Point",
+        description: `Failed to add data point: ${errorDetails}`,
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: DataEntryFormData) => {
+    console.log("=== DATA ENTRY FORM SUBMISSION ===");
     console.log("Form submitted with data:", data);
     console.log("Form validation errors:", form.formState.errors);
+    console.log("Selected goal:", selectedGoal);
+    console.log("Progress input type:", progressInputType);
     
     let finalData = { ...data };
 
@@ -150,7 +162,8 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       console.log("Converted fraction to percentage:", finalData.progressValue);
     }
 
-    console.log("Final data being sent:", finalData);
+    console.log("Final data being sent to API:", finalData);
+    console.log("API endpoint will be:", `/api/goals/${data.goalId}/data-points`);
     addDataPointMutation.mutate(finalData);
   };
 
