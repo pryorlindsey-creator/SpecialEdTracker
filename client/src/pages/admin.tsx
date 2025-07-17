@@ -341,37 +341,54 @@ export default function AdminPage() {
                       </div>
 
                       <div>
-                        <h4 className="font-semibold mb-2">Sample Data:</h4>
+                        <h4 className="font-semibold mb-2">Table Data ({tableData?.length || 0} records):</h4>
                         {tableData && tableData.length > 0 ? (
-                          <div className="max-h-64 overflow-auto">
+                          <div className="border rounded-md overflow-x-auto">
                             <Table>
                               <TableHeader>
                                 <TableRow>
                                   {Object.keys(tableData[0]).map((key) => (
-                                    <TableHead key={key}>{key}</TableHead>
+                                    <TableHead key={key} className="whitespace-nowrap">{key}</TableHead>
                                   ))}
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
-                                {tableData.slice(0, 5).map((row: any, index: number) => (
+                                {tableData.map((row: any, index: number) => (
                                   <TableRow key={index}>
                                     {Object.values(row).map((value: any, colIndex: number) => (
-                                      <TableCell key={colIndex} className="max-w-32 truncate">
-                                        {value?.toString() || 'NULL'}
+                                      <TableCell key={colIndex} className="max-w-xs truncate">
+                                        {value === null ? (
+                                          <span className="text-gray-400 italic">null</span>
+                                        ) : typeof value === 'object' ? (
+                                          <span className="text-blue-600 font-mono text-xs">
+                                            {JSON.stringify(value)}
+                                          </span>
+                                        ) : typeof value === 'boolean' ? (
+                                          <span className={`px-2 py-1 rounded text-xs ${value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                            {value.toString()}
+                                          </span>
+                                        ) : (
+                                          <span className="font-mono text-sm">
+                                            {String(value)}
+                                          </span>
+                                        )}
                                       </TableCell>
                                     ))}
                                   </TableRow>
                                 ))}
                               </TableBody>
                             </Table>
-                            {tableData.length > 5 && (
-                              <p className="text-sm text-gray-500 mt-2">
-                                Showing 5 of {tableData.length} records
-                              </p>
-                            )}
+                          </div>
+                        ) : tableData && tableData.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <Database className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No data found in this table</p>
                           </div>
                         ) : (
-                          <p className="text-gray-500">No data available</p>
+                          <div className="text-center py-8 text-gray-500">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                            <p>Loading table data...</p>
+                          </div>
                         )}
                       </div>
                     </div>
