@@ -925,7 +925,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data = await storage.getAllGoals();
           break;
         case 'data_points':
+        case 'dataPoints':
           data = await storage.getAllDataPoints();
+          break;
+        case 'sessions':
+          data = await storage.getAllSessions();
+          break;
+        case 'reporting_periods':
+        case 'reportingPeriods':
+          data = await storage.getAllReportingPeriods();
+          break;
+        case 'objectives':
+          data = await storage.getAllObjectives();
           break;
         default:
           return res.status(404).json({ message: "Table not found" });

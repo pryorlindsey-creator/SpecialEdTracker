@@ -450,20 +450,42 @@ export class DatabaseStorage implements IStorage {
           { name: "updatedAt", type: "timestamp" }
         ]
       },
-      dataPoints: {
+      data_points: {
         tableName: "data_points",
         fields: [
           { name: "id", type: "serial", isPrimary: true },
           { name: "goalId", type: "integer", isForeign: true, references: "goals.id" },
-          { name: "objectiveId", type: "integer", isForeign: true, references: "objectives.id" },
+          { name: "value", type: "decimal" },
+          { name: "notes", type: "text" },
+          { name: "levelOfSupport", type: "text" },
+          { name: "durationUnit", type: "varchar" },
           { name: "date", type: "timestamp" },
-          { name: "progressValue", type: "decimal" },
-          { name: "progressFormat", type: "varchar" },
-          { name: "numerator", type: "integer" },
-          { name: "denominator", type: "integer" },
-          { name: "levelOfSupport", type: "varchar" },
-          { name: "anecdotalInfo", type: "text" },
           { name: "createdAt", type: "timestamp" }
+        ]
+      },
+      reporting_periods: {
+        tableName: "reporting_periods",
+        fields: [
+          { name: "id", type: "serial", isPrimary: true },
+          { name: "userId", type: "varchar", isForeign: true, references: "users.id" },
+          { name: "periodNumber", type: "integer" },
+          { name: "startDate", type: "varchar" },
+          { name: "endDate", type: "varchar" },
+          { name: "periodLength", type: "varchar" },
+          { name: "createdAt", type: "timestamp" }
+        ]
+      },
+      objectives: {
+        tableName: "objectives",
+        fields: [
+          { name: "id", type: "serial", isPrimary: true },
+          { name: "goalId", type: "integer", isForeign: true, references: "goals.id" },
+          { name: "title", type: "varchar" },
+          { name: "description", type: "text" },
+          { name: "targetCriteria", type: "text" },
+          { name: "status", type: "varchar" },
+          { name: "createdAt", type: "timestamp" },
+          { name: "updatedAt", type: "timestamp" }
         ]
       },
       sessions: {
@@ -512,6 +534,19 @@ export class DatabaseStorage implements IStorage {
 
   async deleteReportingPeriodsByUserId(userId: string): Promise<void> {
     await db.delete(reportingPeriods).where(eq(reportingPeriods.userId, userId));
+  }
+
+  // Admin methods for database browsing
+  async getAllSessions() {
+    return await db.select().from(sessions);
+  }
+
+  async getAllReportingPeriods() {
+    return await db.select().from(reportingPeriods);
+  }
+
+  async getAllObjectives() {
+    return await db.select().from(objectives);
   }
 }
 
