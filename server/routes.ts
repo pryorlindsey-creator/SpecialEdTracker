@@ -672,6 +672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
+      console.log("=== DATA POINT CREATION REQUEST ===");
+      console.log("Goal ID:", goalId);
+      console.log("Request timestamp:", new Date().toISOString());
       console.log("Received data point request body:", req.body);
       
       // Convert level of support array to JSON string for storage
@@ -696,7 +699,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed data point data:", dataPointData);
       
       const dataPoint = await storage.createDataPoint(dataPointData);
-      console.log("Data point created successfully:", dataPoint.id);
+      console.log("✅ DATA POINT CREATED SUCCESSFULLY:");
+      console.log("   - ID:", dataPoint.id);
+      console.log("   - Goal ID:", dataPoint.goalId);
+      console.log("   - Progress Value:", dataPoint.progressValue);
+      console.log("   - Duration Unit:", dataPoint.durationUnit);
+      console.log("   - Date:", dataPoint.date);
+      console.log("   - Created At:", dataPoint.createdAt);
+      
       res.status(201).json(dataPoint);
     } catch (error: any) {
       console.error("Error creating data point:", error);
