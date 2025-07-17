@@ -297,35 +297,14 @@ export default function StudentDetail() {
               </Card>
             ) : (
               <>
-                {/* Student Scatterplot - Overview of all goals */}
-                <StudentScatterplot studentId={studentId || 0} />
-                
-                {/* Goal Selection */}
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Goal for Detailed Report</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {goals.map((goal) => (
-                        <Button
-                          key={goal.id}
-                          variant={selectedGoalId === goal.id ? "default" : "outline"}
-                          className="p-4 h-auto text-left justify-start"
-                          onClick={() => setSelectedGoalId(goal.id)}
-                        >
-                          <div>
-                            <h4 className="font-semibold">{goal.title}</h4>
-                            <p className="text-sm opacity-70 mt-1">{goal.dataPointsCount || 0} data points</p>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Individual Goal Chart Display */}
-                {selectedGoalId && (
-                  <GoalChart goalId={selectedGoalId} />
-                )}
+                {/* Individual Goal Charts */}
+                {goals.map((goal) => (
+                  <StudentScatterplot 
+                    key={goal.id} 
+                    studentId={studentId || 0} 
+                    goalId={goal.id}
+                  />
+                ))}
               </>
             )}
           </TabsContent>

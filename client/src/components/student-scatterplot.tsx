@@ -6,6 +6,7 @@ import { format } from "date-fns";
 
 interface StudentScatterplotProps {
   studentId: number;
+  goalId?: number; // Optional: if provided, show only this goal's data
 }
 
 interface DataPoint {
@@ -36,7 +37,7 @@ const GOAL_COLORS = [
   "#f97316", // orange
 ];
 
-export default function StudentScatterplot({ studentId }: StudentScatterplotProps) {
+export default function StudentScatterplot({ studentId, goalId }: StudentScatterplotProps) {
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
@@ -48,7 +49,8 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
   });
 
   // Debug logging
-  // console.log(`StudentScatterplot: studentId=${studentId}, goals=`, goals, `allDataPoints=`, allDataPoints);
+  console.log(`StudentScatterplot: studentId=${studentId}, goals=`, goals, `allDataPoints=`, allDataPoints);
+  console.log(`Filtered data points:`, allDataPoints?.filter((dp: DataPoint) => dp.progressValue && dp.date));
 
   if (goalsLoading || dataLoading) {
     return (
@@ -77,23 +79,31 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
     }
   ]));
 
+  // Filter data points by goal if goalId is provided
+  const filteredDataPoints = goalId 
+    ? allDataPoints?.filter((dp: DataPoint) => dp.goalId === goalId) || []
+    : allDataPoints || [];
+
   // Process data points for scatterplot
-  const scatterData = allDataPoints
-    .filter((dp: DataPoint) => dp.progressValue && dp.date)
+  const scatterData = filteredDataPoints
+    .filter((dp: DataPoint) => dp.progressValue !== null && dp.progressValue !== undefined && dp.date)
     .map((dp: DataPoint) => {
       const goal = goalsMap.get(dp.goalId);
       const dateObj = new Date(dp.date);
       
       // Convert progress value to percentage for consistent display
       let progressPercentage = 0;
+      let yAxisLabel = "Progress (%)";
+      
       if (dp.progressFormat === 'percentage') {
         progressPercentage = parseFloat(dp.progressValue);
+        yAxisLabel = "Progress (%)";
       } else if (dp.progressFormat === 'frequency') {
-        // For frequency, assume it's out of attempts (could be enhanced with denominator)
-        progressPercentage = parseFloat(dp.progressValue) * 10; // Scale for visibility
+        progressPercentage = parseFloat(dp.progressValue);
+        yAxisLabel = "Frequency (count)";
       } else if (dp.progressFormat === 'duration') {
-        // For duration, convert to a percentage scale (could be enhanced with target duration)
-        progressPercentage = Math.min(parseFloat(dp.progressValue) / 60 * 100, 100); // Convert seconds to percentage of a minute
+        progressPercentage = parseFloat(dp.progressValue);
+        yAxisLabel = "Duration (seconds)";
       }
 
       return {
@@ -105,22 +115,18 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
         originalValue: dp.progressValue,
         format: dp.progressFormat,
         color: goal?.color || GOAL_COLORS[0],
+        yAxisLabel: yAxisLabel,
       };
     })
     .sort((a, b) => a.x - b.x);
 
-  // Group data by goal for multiple scatter series
-  const goalGroups = scatterData.reduce((acc: any, point) => {
-    if (!acc[point.goalId]) {
-      acc[point.goalId] = {
-        goalTitle: point.goalTitle,
-        color: point.color,
-        data: [],
-      };
-    }
-    acc[point.goalId].data.push(point);
-    return acc;
-  }, {});
+  // Get the current goal information for title
+  const currentGoal = goalId ? goals?.find(g => g.id === goalId) : null;
+  const chartTitle = goalId && currentGoal 
+    ? `${currentGoal.title} Progress Chart`
+    : "Progress Scatterplot";
+  
+  const yAxisLabel = scatterData.length > 0 ? scatterData[0].yAxisLabel : "Progress";
 
   const hasData = scatterData.length > 0;
 
@@ -155,11 +161,11 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />
-          Progress Scatterplot
+          {chartTitle}
         </CardTitle>
         {hasData && (
           <p className="text-sm text-muted-foreground">
-            Track progress trends across all goals over time
+            {goalId ? `Track progress over time for ${currentGoal?.title}` : "Track progress trends across all goals over time"}
           </p>
         )}
       </CardHeader>
@@ -191,28 +197,20 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
                 <YAxis 
                   type="number" 
                   dataKey="y" 
-                  name="Progress %" 
-                  label={{ value: 'Progress (%)', angle: -90, position: 'insideLeft' }}
+                  name={yAxisLabel}
+                  label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
                   domain={[0, 'dataMax']}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend 
-                  verticalAlign="top" 
-                  height={36}
-                  iconType="circle"
-                />
                 
-                {Object.values(goalGroups).map((group: any, index) => (
-                  <Scatter
-                    key={group.goalTitle}
-                    name={group.goalTitle}
-                    data={group.data}
-                    fill={group.color}
-                    stroke={group.color}
-                    strokeWidth={2}
-                    r={6}
-                  />
-                ))}
+                <Scatter
+                  name={goalId ? currentGoal?.title : "Progress"}
+                  data={scatterData}
+                  fill={scatterData.length > 0 ? scatterData[0].color : "#8884d8"}
+                  stroke={scatterData.length > 0 ? scatterData[0].color : "#8884d8"}
+                  strokeWidth={2}
+                  r={6}
+                />
               </ScatterChart>
             </ResponsiveContainer>
           </div>
