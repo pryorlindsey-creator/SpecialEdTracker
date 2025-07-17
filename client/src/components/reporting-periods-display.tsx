@@ -71,7 +71,7 @@ export default function ReportingPeriodsDisplay() {
       return;
     }
 
-    if (new Date(editStartDate) >= new Date(editEndDate)) {
+    if (new Date(editStartDate + 'T12:00:00') >= new Date(editEndDate + 'T12:00:00')) {
       toast({
         title: "Error",
         description: "Start date must be before end date.",
@@ -182,7 +182,7 @@ export default function ReportingPeriodsDisplay() {
               <Badge className="bg-blue-500">Active</Badge>
             </div>
             <p className="text-sm text-blue-700 mt-1">
-              {format(new Date(currentPeriod.startDate), "MMM d")} - {format(new Date(currentPeriod.endDate), "MMM d, yyyy")}
+              {format(new Date(currentPeriod.startDate + 'T12:00:00'), "MMM d")} - {format(new Date(currentPeriod.endDate + 'T12:00:00'), "MMM d, yyyy")}
             </p>
           </div>
         )}
@@ -192,7 +192,7 @@ export default function ReportingPeriodsDisplay() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto">
             {reportingData.periods.map((period) => {
               const isActive = currentPeriod?.periodNumber === period.periodNumber;
-              const isPast = new Date() > new Date(period.endDate);
+              const isPast = new Date() > new Date(period.endDate + 'T12:00:00');
               
               return (
                 <Button
@@ -213,7 +213,7 @@ export default function ReportingPeriodsDisplay() {
                       <Edit className="h-3 w-3" />
                     </div>
                     <div className="text-xs">
-                      {format(new Date(period.startDate), "MMM d")} - {format(new Date(period.endDate), "MMM d")}
+                      {format(new Date(period.startDate + 'T12:00:00'), "MMM d")} - {format(new Date(period.endDate + 'T12:00:00'), "MMM d")}
                     </div>
                   </div>
                 </Button>
@@ -223,7 +223,7 @@ export default function ReportingPeriodsDisplay() {
         </div>
         
         <div className="text-xs text-gray-500 pt-2 border-t">
-          Configured on {format(new Date(reportingData.savedAt), "MMM d, yyyy 'at' h:mm a")}
+          Configured on {format(new Date(reportingData.savedAt || new Date()), "MMM d, yyyy 'at' h:mm a")}
         </div>
       </CardContent>
 

@@ -126,28 +126,34 @@ export default function DashboardCalendar() {
 
   // Convert reporting periods to calendar events
   console.log('Current reporting data for calendar:', reportingData);
-  const reportingEvents: CalendarEvent[] = reportingData ? reportingData.periods.flatMap(period => [
-    {
-      id: `period-${period.periodNumber}-start`,
-      title: `Period ${period.periodNumber} Starts`,
-      start: new Date(period.startDate),
-      end: new Date(period.startDate),
-      resource: {
-        periodNumber: period.periodNumber,
-        type: 'period-start' as const,
+  const reportingEvents: CalendarEvent[] = reportingData ? reportingData.periods.flatMap(period => {
+    // Create dates in local timezone to avoid timezone shift
+    const startDate = new Date(period.startDate + 'T12:00:00');
+    const endDate = new Date(period.endDate + 'T12:00:00');
+    
+    return [
+      {
+        id: `period-${period.periodNumber}-start`,
+        title: `Period ${period.periodNumber} Starts`,
+        start: startDate,
+        end: startDate,
+        resource: {
+          periodNumber: period.periodNumber,
+          type: 'period-start' as const,
+        },
       },
-    },
-    {
-      id: `period-${period.periodNumber}-end`,
-      title: `Period ${period.periodNumber} Ends`,
-      start: new Date(period.endDate),
-      end: new Date(period.endDate),
-      resource: {
-        periodNumber: period.periodNumber,
-        type: 'period-end' as const,
+      {
+        id: `period-${period.periodNumber}-end`,
+        title: `Period ${period.periodNumber} Ends`,
+        start: endDate,
+        end: endDate,
+        resource: {
+          periodNumber: period.periodNumber,
+          type: 'period-end' as const,
+        },
       },
-    },
-  ]) : [];
+    ];
+  }) : [];
 
   // Combine all events
   const events: CalendarEvent[] = [...iepEvents, ...reportingEvents];
