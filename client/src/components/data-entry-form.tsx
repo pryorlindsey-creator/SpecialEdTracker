@@ -461,6 +461,30 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             >
               Cancel
             </Button>
+            
+            {/* Test button for debugging */}
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => {
+                console.log("=== TEST BUTTON CLICKED ===");
+                const testData = {
+                  goalId: 7,
+                  date: "2025-07-17",
+                  progressValue: 5,
+                  progressFormat: "duration" as const,
+                  durationUnit: "minutes" as const,
+                  levelOfSupport: ["visual-prompt"],
+                  anecdotalInfo: "Test data point via bypass button"
+                };
+                console.log("Test data:", testData);
+                addDataPointMutation.mutate(testData);
+              }}
+              disabled={addDataPointMutation.isPending}
+            >
+              Test Submit (Bypass Form)
+            </Button>
+            
             <Button 
               type="submit" 
               disabled={addDataPointMutation.isPending}
