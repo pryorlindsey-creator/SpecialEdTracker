@@ -228,6 +228,13 @@ Primary test student: User consistently works with Student 1 (ID: 5) which has 2
   - **Quick actions panel** - Added convenient sidebar with shortcuts for adding students and accessing admin
   - **Dashboard reorganization** - Enhanced layout with calendar prominent on main dashboard for better workflow
 
+- July 17, 2025: **ADDED CONFIGURABLE REPORTING PERIODS SYSTEM**
+  - **Flexible period lengths** - Users can choose between 4.5 weeks (8 periods) or 3 weeks (12 periods) to match school district requirements
+  - **Date input interface** - Dynamic form generates appropriate number of date input fields based on selected period length
+  - **Current period tracking** - System automatically identifies and highlights the active reporting period
+  - **Visual period display** - Dashboard shows all periods with past, current, and future status indicators
+  - **Data validation** - Ensures start dates are before end dates and all periods are properly configured
+
 - July 16, 2025: **IMPLEMENTED STUDENT PROGRESS SCATTERPLOT FOR DASHBOARD REPORTS**
   - **Student scatterplot component** - Interactive chart showing progress trends across all goals over time
   - **Multi-goal visualization** - Each goal displays with unique colors and scatter points

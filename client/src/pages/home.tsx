@@ -10,6 +10,8 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import StudentOverviewCard from "@/components/student-overview-card";
 import AddStudentModal from "@/components/add-student-modal";
 import DashboardCalendar from "@/components/dashboard-calendar";
+import { ReportingPeriodsButton } from "@/components/reporting-periods-modal";
+import ReportingPeriodsDisplay from "@/components/reporting-periods-display";
 
 export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
@@ -189,9 +191,13 @@ export default function Home() {
                     <Users className="h-4 w-4 mr-2" />
                     Admin Panel
                   </Button>
+                  <ReportingPeriodsButton />
                 </div>
               </CardContent>
             </Card>
+
+            {/* Reporting Periods Display */}
+            <ReportingPeriodsDisplay />
           </div>
         </div>
 
