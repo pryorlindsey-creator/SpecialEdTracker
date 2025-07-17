@@ -70,6 +70,27 @@ export default function Home() {
               <Button 
                 variant="outline"
                 size="sm"
+                onClick={() => window.location.href = '/landing'}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                View Landing Page
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Clear session and reload to see customer experience
+                  fetch('/api/logout', { method: 'POST' })
+                    .then(() => window.location.reload())
+                    .catch(() => window.location.reload());
+                }}
+                className="text-gray-600 hover:text-gray-800"
+              >
+                Logout
+              </Button>
+              <Button 
+                variant="outline"
+                size="sm"
                 onClick={() => window.location.href = '/admin'}
                 className="text-gray-600 hover:text-gray-800"
               >
