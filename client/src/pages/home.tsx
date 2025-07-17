@@ -106,7 +106,7 @@ export default function Home() {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8 max-w-sm">
           <Card className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -116,48 +116,6 @@ export default function Home() {
                 <div className="ml-4">
                   <p className="text-gray-600 text-sm">Total Students</p>
                   <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Target className="h-6 w-6 text-secondary" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-gray-600 text-sm">Active Goals</p>
-                  <p className="text-2xl font-bold text-gray-900">{activeGoals}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-accent" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-gray-600 text-sm">Data Points</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalDataPoints}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Calendar className="h-6 w-6 text-yellow-600" />
-                </div>
-                <div className="ml-4">
-                  <p className="text-gray-600 text-sm">Total Goals</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalGoals}</p>
                 </div>
               </div>
             </CardContent>

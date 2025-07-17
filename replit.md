@@ -239,6 +239,11 @@ Primary test student: User consistently works with Student 1 (ID: 5) which has 2
   - **Individual period editing** - Users can click on any period button to edit its start and end dates with validation
   - **Real-time updates** - Calendar automatically refreshes when period dates are modified
 
+- July 17, 2025: **SIMPLIFIED DASHBOARD STATISTICS**
+  - **Removed unnecessary cards** - Removed Active Goals, Data Points, and Total Goals cards from main dashboard
+  - **Streamlined interface** - Dashboard now focuses on Total Students count and key functionality
+  - **Cleaner layout** - Reduced visual clutter to emphasize calendar and student management features
+
 - July 16, 2025: **IMPLEMENTED STUDENT PROGRESS SCATTERPLOT FOR DASHBOARD REPORTS**
   - **Student scatterplot component** - Interactive chart showing progress trends across all goals over time
   - **Multi-goal visualization** - Each goal displays with unique colors and scatter points
