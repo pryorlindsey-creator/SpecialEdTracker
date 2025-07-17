@@ -41,7 +41,7 @@ const dataEntrySchema = z.object({
       if (data.progressValue < 1) {
         return false;
       }
-      const decimalPart = data.progressValue % 1;
+      const decimalPart = Math.round((data.progressValue % 1) * 100) / 100; // Round to avoid floating point precision issues
       if (decimalPart !== 0 && (decimalPart < 0.01 || decimalPart > 0.59)) {
         return false;
       }
@@ -303,7 +303,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 
                 <div className="flex-1">
                   <label className="block text-xs text-gray-600 mb-1">
-                    {form.watch("durationUnit") === "seconds" ? "Seconds (0-59)" : "Minutes (1.00+)"}
+                    {form.watch("durationUnit") === "seconds" ? "Seconds (0-59)" : "Minutes (1.00+, decimal .01-.59)"}
                   </label>
                   <FormField
                     control={form.control}
@@ -330,16 +330,21 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                             type="number"
                             min="1"
                             step="0.01"
-                            placeholder="1.30"
+                            placeholder="1.30 (e.g., 5.45 = 5 minutes 45 seconds)"
                             {...field}
                             onChange={(e) => {
                               const value = parseFloat(e.target.value);
-                              if (value >= 1) {
-                                // Validate decimal portion is between .01-.59
-                                const decimalPart = value % 1;
+                              if (!isNaN(value) && value >= 1) {
+                                // Validate decimal portion represents seconds (01-59)
+                                const decimalPart = Math.round((value % 1) * 100) / 100;
                                 if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
                                   field.onChange(value);
+                                } else {
+                                  // Show error feedback but don't update field
+                                  console.log("Invalid decimal part for minutes - must be .01-.59");
                                 }
+                              } else if (value < 1) {
+                                console.log("Minutes must be >= 1.00");
                               }
                             }}
                           />
