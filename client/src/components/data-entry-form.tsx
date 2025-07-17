@@ -28,10 +28,30 @@ const dataEntrySchema = z.object({
   if (data.progressFormat === "duration" && (!data.durationUnit || data.durationUnit.trim() === "")) {
     return false;
   }
+  
+  // Validate duration values based on unit
+  if (data.progressFormat === "duration" && data.durationUnit) {
+    if (data.durationUnit === "seconds") {
+      // Seconds must be whole numbers 0-59
+      if (!Number.isInteger(data.progressValue) || data.progressValue < 0 || data.progressValue > 59) {
+        return false;
+      }
+    } else if (data.durationUnit === "minutes") {
+      // Minutes must be >= 1, decimal part between .01-.59 if present
+      if (data.progressValue < 1) {
+        return false;
+      }
+      const decimalPart = data.progressValue % 1;
+      if (decimalPart !== 0 && (decimalPart < 0.01 || decimalPart > 0.59)) {
+        return false;
+      }
+    }
+  }
+  
   return true;
 }, {
-  message: "Duration unit is required for duration goals",
-  path: ["durationUnit"],
+  message: "Invalid duration value for selected unit",
+  path: ["progressValue"],
 });
 
 type DataEntryFormData = z.infer<typeof dataEntrySchema>;
@@ -261,24 +281,6 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
               /* Duration Input with Time Unit Dropdown */
               <div className="flex space-x-3 items-end">
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-600 mb-1">Time Value</label>
-                  <FormField
-                    control={form.control}
-                    name="progressValue"
-                    render={({ field }) => (
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        placeholder="5"
-                        {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                      />
-                    )}
-                  />
-                </div>
-                
-                <div className="flex-1">
                   <label className="block text-xs text-gray-600 mb-1">Time Unit</label>
                   <FormField
                     control={form.control}
@@ -295,6 +297,54 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                           <SelectItem value="minutes">Minutes</SelectItem>
                         </SelectContent>
                       </Select>
+                    )}
+                  />
+                </div>
+                
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-600 mb-1">
+                    {form.watch("durationUnit") === "seconds" ? "Seconds (0-59)" : "Minutes (1.00+)"}
+                  </label>
+                  <FormField
+                    control={form.control}
+                    name="progressValue"
+                    render={({ field }) => (
+                      <>
+                        {form.watch("durationUnit") === "seconds" ? (
+                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select seconds..." />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="h-60">
+                              {Array.from({ length: 60 }, (_, i) => (
+                                <SelectItem key={i} value={i.toString()}>
+                                  {i} {i === 1 ? 'second' : 'seconds'}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input
+                            type="number"
+                            min="1"
+                            step="0.01"
+                            placeholder="1.30"
+                            {...field}
+                            onChange={(e) => {
+                              const value = parseFloat(e.target.value);
+                              if (value >= 1) {
+                                // Validate decimal portion is between .01-.59
+                                const decimalPart = value % 1;
+                                if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
+                                  field.onChange(value);
+                                }
+                              }
+                            }}
+                          />
+                        )}
+                      </>
                     )}
                   />
                 </div>
