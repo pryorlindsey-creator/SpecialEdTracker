@@ -286,6 +286,13 @@ Primary test student: User consistently works with Student 1 (ID: 5) which has 3
   - **Restored clean submission flow** - Standard React Hook Form submission process now works without interference
   - **Focus goal fully functional** - Teachers can now successfully add, view, and track progress for duration-type goals
 
+- July 17, 2025: **FIXED TIME UNIT DROPDOWN DISPLAY ISSUE**
+  - **Replaced problematic Select component** - Switched from Shadcn Select to native HTML select for reliable value display
+  - **Added state management** - Implemented local state tracking for duration unit selection
+  - **Enhanced visual feedback** - Time Unit dropdown now clearly shows selected option ("seconds" or "minutes")
+  - **Improved form integration** - Dual value binding ensures form state and UI stay synchronized
+  - **Consistent styling** - Native select matches other form inputs with proper CSS classes
+
 - July 17, 2025: **IMPLEMENTED RAW DATA TABLE FUNCTIONALITY**
   - **Comprehensive data table** - Replaced placeholder with fully functional spreadsheet-like view of all student data points
   - **Advanced filtering and sorting** - Search by goal/notes, filter by specific goals, sort by date/progress/goal name
