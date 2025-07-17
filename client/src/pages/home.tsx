@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import StudentOverviewCard from "@/components/student-overview-card";
 import AddStudentModal from "@/components/add-student-modal";
+import DashboardCalendar from "@/components/dashboard-calendar";
 
 export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
@@ -161,28 +162,64 @@ export default function Home() {
           </Card>
         </div>
 
-        {/* Students Grid */}
-        {!studentsArray || studentsArray.length === 0 ? (
-          <Card className="p-12 text-center">
-            <CardContent>
-              <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Students Yet</h3>
-              <p className="text-gray-600 mb-6">
-                Get started by adding your first student to begin tracking IEP goals and progress.
-              </p>
-              <Button onClick={() => setIsAddStudentModalOpen(true)}>
-                <Plus className="h-5 w-5 mr-2" />
-                Add Your First Student
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {studentsArray.map((student: any) => (
-              <StudentOverviewCard key={student.id} student={student} />
-            ))}
+        {/* Calendar and Students Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="lg:col-span-2">
+            <DashboardCalendar />
           </div>
-        )}
+          <div className="space-y-6">
+            {/* Quick Actions */}
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div className="space-y-3">
+                  <Button 
+                    onClick={() => setIsAddStudentModalOpen(true)}
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Student
+                  </Button>
+                  <Button 
+                    onClick={() => window.location.href = '/admin'}
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Admin Panel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Students Grid */}
+        <div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">All Students</h3>
+          {!studentsArray || studentsArray.length === 0 ? (
+            <Card className="p-12 text-center">
+              <CardContent>
+                <Users className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Students Yet</h3>
+                <p className="text-gray-600 mb-6">
+                  Get started by adding your first student to begin tracking IEP goals and progress.
+                </p>
+                <Button onClick={() => setIsAddStudentModalOpen(true)}>
+                  <Plus className="h-5 w-5 mr-2" />
+                  Add Your First Student
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {studentsArray.map((student: any) => (
+                <StudentOverviewCard key={student.id} student={student} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Add Student Modal */}
