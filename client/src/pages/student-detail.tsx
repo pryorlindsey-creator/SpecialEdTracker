@@ -124,25 +124,7 @@ export default function StudentDetail() {
     ? format(new Date((student as any).lastDataPoint.date), "MMM d, yyyy")
     : "No data yet";
 
-  // Simple render test to debug blank screen
-  if (studentId === 5) {
-    console.log(`[STUDENT DETAIL] Rendering simple test for Student 1`);
-    return (
-      <div className="min-h-screen bg-white p-8">
-        <h1 className="text-2xl font-bold text-black">Student Detail Page</h1>
-        <p className="text-lg text-gray-700">Student ID: {studentId}</p>
-        <p className="text-lg text-gray-700">Student Name: {student.name}</p>
-        <p className="text-lg text-gray-700">Total Goals: {student.totalGoals}</p>
-        <p className="text-lg text-gray-700">Total Data Points: {student.totalDataPoints}</p>
-        <button 
-          onClick={() => navigate("/")}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Back to Students
-        </button>
-      </div>
-    );
-  }
+  // Navigation confirmed working - proceeding with full interface
 
   return (
     <div className="min-h-screen bg-surface">

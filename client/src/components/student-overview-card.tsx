@@ -37,11 +37,7 @@ export default function StudentOverviewCard({ student }: StudentOverviewCardProp
     <Card className="hover:shadow-md transition-shadow cursor-pointer group">
       <CardContent 
         className="p-6"
-        onClick={() => {
-          console.log(`[NAVIGATION] Clicking on student card: ${student.name} (ID: ${student.id})`);
-          console.log(`[NAVIGATION] Navigating to: /students/${student.id}`);
-          navigate(`/students/${student.id}`);
-        }}
+        onClick={() => navigate(`/students/${student.id}`)}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary transition-colors">
@@ -80,8 +76,6 @@ export default function StudentOverviewCard({ student }: StudentOverviewCardProp
             className="text-primary hover:text-blue-700 font-medium p-0"
             onClick={(e) => {
               e.stopPropagation();
-              console.log(`[NAVIGATION] Clicking View Details button for: ${student.name} (ID: ${student.id})`);
-              console.log(`[NAVIGATION] Navigating to: /students/${student.id}`);
               navigate(`/students/${student.id}`);
             }}
           >
