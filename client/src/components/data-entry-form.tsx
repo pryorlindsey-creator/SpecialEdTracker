@@ -311,7 +311,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                     render={({ field }) => (
                       <>
                         {form.watch("durationUnit") === "seconds" ? (
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                          <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString() || ""}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select seconds..." />
