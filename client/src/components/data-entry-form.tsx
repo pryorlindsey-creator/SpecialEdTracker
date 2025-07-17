@@ -311,43 +311,58 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                     render={({ field }) => (
                       <>
                         {form.watch("durationUnit") === "seconds" ? (
-                          <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString() || ""}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select seconds..." />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent className="h-60">
-                              {Array.from({ length: 60 }, (_, i) => (
-                                <SelectItem key={i} value={i.toString()}>
-                                  {i} {i === 1 ? 'second' : 'seconds'}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="relative">
+                            <Select onValueChange={(value) => field.onChange(Number(value))} value={field.value?.toString() || ""}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select seconds..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent className="h-60">
+                                {Array.from({ length: 60 }, (_, i) => (
+                                  <SelectItem key={i} value={i.toString()}>
+                                    {i} {i === 1 ? 'second' : 'seconds'}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {field.value !== undefined && field.value !== null && (
+                              <span className="absolute right-10 top-3 text-gray-500 text-sm pointer-events-none">
+                                seconds
+                              </span>
+                            )}
+                          </div>
                         ) : (
-                          <Input
-                            type="number"
-                            min="1"
-                            step="0.01"
-                            placeholder="1.30 (e.g., 5.45 = 5 minutes 45 seconds)"
-                            {...field}
-                            onChange={(e) => {
-                              const value = parseFloat(e.target.value);
-                              if (!isNaN(value) && value >= 1) {
-                                // Validate decimal portion represents seconds (01-59)
-                                const decimalPart = Math.round((value % 1) * 100) / 100;
-                                if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
-                                  field.onChange(value);
-                                } else {
-                                  // Show error feedback but don't update field
-                                  console.log("Invalid decimal part for minutes - must be .01-.59");
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min="1"
+                              step="0.01"
+                              placeholder="1.30 (e.g., 5.45 = 5 minutes 45 seconds)"
+                              {...field}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value);
+                                if (!isNaN(value) && value >= 1) {
+                                  // Validate decimal portion represents seconds (01-59)
+                                  const decimalPart = Math.round((value % 1) * 100) / 100;
+                                  if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
+                                    field.onChange(value);
+                                  } else {
+                                    // Show error feedback but don't update field
+                                    console.log("Invalid decimal part for minutes - must be .01-.59");
+                                  }
+                                } else if (value < 1) {
+                                  console.log("Minutes must be >= 1.00");
                                 }
-                              } else if (value < 1) {
-                                console.log("Minutes must be >= 1.00");
-                              }
-                            }}
-                          />
+                              }}
+                              className="pr-20"
+                            />
+                            {field.value !== undefined && field.value !== null && field.value > 0 && (
+                              <span className="absolute right-3 top-3 text-gray-500 text-sm pointer-events-none">
+                                minutes
+                              </span>
+                            )}
+                          </div>
                         )}
                       </>
                     )}
