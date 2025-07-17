@@ -346,38 +346,40 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                           </div>
                         ) : (
                           <div className="relative">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="59.59"
-                              step="0.01"
-                              placeholder="5.45 (❌ 5.90 or 56.62 invalid)"
-                              {...field}
+                            <input
+                              type="text"
+                              pattern="[0-5]?[0-9](\.[0-5][0-9])?"
+                              placeholder="5.45 (whole: 0-59, decimal: .01-.59)"
+                              value={field.value || ""}
                               onChange={(e) => {
                                 const inputValue = e.target.value;
-                                const value = parseFloat(inputValue);
                                 
-                                if (inputValue === "" || isNaN(value)) {
+                                // Allow empty input
+                                if (inputValue === "") {
                                   field.onChange(0);
                                   return;
                                 }
                                 
-                                // Update the field value
-                                field.onChange(value);
+                                // Validate input format: whole number 0-59, decimal .01-.59
+                                const regex = /^([0-5]?[0-9])(\.[0-5][0-9])?$/;
                                 
-                                // Validate and provide immediate feedback
-                                const wholePart = Math.floor(value);
-                                const decimalPart = Math.round((value % 1) * 100) / 100;
-                                
-                                if (wholePart > 59) {
-                                  console.log(`❌ Invalid: ${wholePart} exceeds max 59`);
-                                } else if (decimalPart !== 0 && (decimalPart < 0.01 || decimalPart > 0.59)) {
-                                  console.log(`❌ Invalid: .${String(decimalPart).split('.')[1] || '00'} must be .01-.59`);
+                                if (regex.test(inputValue)) {
+                                  const value = parseFloat(inputValue);
+                                  const wholePart = Math.floor(value);
+                                  const decimalPart = Math.round((value % 1) * 100) / 100;
+                                  
+                                  // Additional validation for decimal range
+                                  if (wholePart <= 59 && (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59))) {
+                                    field.onChange(value);
+                                    console.log(`✅ Valid: ${value} minutes`);
+                                  } else {
+                                    console.log(`❌ Invalid decimal: must be .01-.59`);
+                                  }
                                 } else {
-                                  console.log(`✅ Valid: ${value} minutes`);
+                                  console.log(`❌ Invalid format: use whole number 0-59 with optional .01-.59`);
                                 }
                               }}
-                              className="pr-20"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-20"
                             />
                             {field.value !== undefined && field.value !== null && field.value > 0 && (
                               <span className="absolute right-3 top-3 text-gray-500 text-sm pointer-events-none">
