@@ -131,7 +131,7 @@ This is a full-stack web application designed specifically for special education
 
 Preferred communication style: Simple, everyday language.
 
-Primary test student: User consistently works with Student 1 (ID: 5) which has 2 goals ("Literacy" and "Behavior") for testing and data entry.
+Primary test student: User consistently works with Student 1 (ID: 5) which has 2 goals ("Literacy" and "Behavior") for testing and data entry. Currently has 7 data points for Literacy goal with confirmed data persistence.
 
 ## Recent Changes
 
