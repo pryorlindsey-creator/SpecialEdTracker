@@ -51,7 +51,7 @@ const dataEntrySchema = z.object({
   
   return true;
 }, {
-  message: "Invalid duration value for selected unit",
+  message: "Minutes: whole number 0-59, decimal .00 or .01-.59 only (e.g., 5.45 not 5.90)",
   path: ["progressValue"],
 });
 
@@ -351,7 +351,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                               min="0"
                               max="59.59"
                               step="0.01"
-                              placeholder="5.45 (decimal .01-.59 only)"
+                              placeholder="5.45 (❌ 5.90 or 56.62 invalid)"
                               {...field}
                               onChange={(e) => {
                                 const inputValue = e.target.value;
@@ -370,11 +370,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                                 const decimalPart = Math.round((value % 1) * 100) / 100;
                                 
                                 if (wholePart > 59) {
-                                  console.log(`Invalid: Whole number ${wholePart} exceeds maximum of 59`);
+                                  console.log(`❌ Invalid: ${wholePart} exceeds max 59`);
                                 } else if (decimalPart !== 0 && (decimalPart < 0.01 || decimalPart > 0.59)) {
-                                  console.log(`Invalid: Decimal part .${Math.round(decimalPart * 100)} must be between .01 and .59`);
+                                  console.log(`❌ Invalid: .${String(decimalPart).split('.')[1] || '00'} must be .01-.59`);
                                 } else {
-                                  console.log(`Valid minutes: ${value}`);
+                                  console.log(`✅ Valid: ${value} minutes`);
                                 }
                               }}
                               className="pr-20"
