@@ -462,27 +462,24 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
               Cancel
             </Button>
             
-            {/* Test button for debugging */}
+            {/* Debug button to show current form values */}
             <Button 
               type="button" 
               variant="secondary"
               onClick={() => {
-                console.log("=== TEST BUTTON CLICKED ===");
-                const testData = {
-                  goalId: 7,
-                  date: "2025-07-17",
-                  progressValue: 5,
-                  progressFormat: "duration" as const,
-                  durationUnit: "minutes" as const,
-                  levelOfSupport: ["visual-prompt"],
-                  anecdotalInfo: "Test data point via bypass button"
-                };
-                console.log("Test data:", testData);
-                addDataPointMutation.mutate(testData);
+                console.log("=== CURRENT FORM VALUES ===");
+                const formValues = form.getValues();
+                console.log("Form values:", formValues);
+                console.log("Form errors:", form.formState.errors);
+                console.log("Form is valid:", form.formState.isValid);
+                
+                // Try to submit the actual form values
+                console.log("Attempting to submit form values...");
+                addDataPointMutation.mutate(formValues);
               }}
               disabled={addDataPointMutation.isPending}
             >
-              Test Submit (Bypass Form)
+              Submit Current Form Data
             </Button>
             
             <Button 
