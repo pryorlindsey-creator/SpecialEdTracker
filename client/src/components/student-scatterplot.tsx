@@ -83,7 +83,6 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
     .map((dp: DataPoint) => {
       const goal = goalsMap.get(dp.goalId);
       const dateObj = new Date(dp.date);
-      const daysSinceStart = Math.floor((dateObj.getTime() - new Date('2025-01-01').getTime()) / (1000 * 60 * 60 * 24));
       
       // Convert progress value to percentage for consistent display
       let progressPercentage = 0;
@@ -98,7 +97,7 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
       }
 
       return {
-        x: daysSinceStart,
+        x: dateObj.getTime(), // Use timestamp for x-axis
         y: progressPercentage,
         goalId: dp.goalId,
         goalTitle: goal?.title || `Goal ${dp.goalId}`,
@@ -128,14 +127,13 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
-      const date = new Date('2025-01-01');
-      date.setDate(date.getDate() + data.x);
+      const date = new Date(data.x);
       
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-semibold">{data.goalTitle}</p>
           <p className="text-sm text-gray-600">
-            Date: {format(date, "MMM dd, yyyy")}
+            Date: {date.toLocaleDateString()}
           </p>
           <p className="text-sm">
             Progress: {data.originalValue}
@@ -182,9 +180,13 @@ export default function StudentScatterplot({ studentId }: StudentScatterplotProp
                 <XAxis 
                   type="number" 
                   dataKey="x" 
-                  name="Days Since Start"
-                  label={{ value: 'Days Since January 1st', position: 'insideBottom', offset: -10 }}
+                  name="Date"
+                  label={{ value: 'Date', position: 'insideBottom', offset: -10 }}
                   domain={['dataMin', 'dataMax']}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString();
+                  }}
                 />
                 <YAxis 
                   type="number" 
