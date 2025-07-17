@@ -346,41 +346,45 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                           </div>
                         ) : (
                           <div className="relative">
-                            <input
-                              type="text"
-                              pattern="[0-5]?[0-9](\.[0-5][0-9])?"
-                              placeholder="5.45 (whole: 0-59, decimal: .01-.59)"
-                              value={field.value || ""}
+                            <select
+                              value={field.value?.toString() || ""}
                               onChange={(e) => {
-                                const inputValue = e.target.value;
-                                
-                                // Allow empty input
-                                if (inputValue === "") {
-                                  field.onChange(0);
-                                  return;
-                                }
-                                
-                                // Validate input format: whole number 0-59, decimal .01-.59
-                                const regex = /^([0-5]?[0-9])(\.[0-5][0-9])?$/;
-                                
-                                if (regex.test(inputValue)) {
-                                  const value = parseFloat(inputValue);
-                                  const wholePart = Math.floor(value);
-                                  const decimalPart = Math.round((value % 1) * 100) / 100;
-                                  
-                                  // Additional validation for decimal range
-                                  if (wholePart <= 59 && (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59))) {
-                                    field.onChange(value);
-                                    console.log(`✅ Valid: ${value} minutes`);
-                                  } else {
-                                    console.log(`❌ Invalid decimal: must be .01-.59`);
-                                  }
-                                } else {
-                                  console.log(`❌ Invalid format: use whole number 0-59 with optional .01-.59`);
-                                }
+                                const value = parseFloat(e.target.value);
+                                field.onChange(value);
+                                console.log(`✅ Selected: ${value} minutes`);
                               }}
-                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-20"
-                            />
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 pr-20"
+                            >
+                              <option value="">Select minutes...</option>
+                              {/* Generate options: whole minutes 0-59, then decimals .01-.59 for each */}
+                              {Array.from({ length: 60 }, (_, wholeMinute) => {
+                                const options = [];
+                                
+                                // Add exact whole minute (e.g., 1.00, 2.00, etc.)
+                                if (wholeMinute > 0) {
+                                  options.push(
+                                    <option key={`${wholeMinute}.00`} value={wholeMinute}>
+                                      {wholeMinute}.00 ({wholeMinute} minutes exactly)
+                                    </option>
+                                  );
+                                }
+                                
+                                // Add decimal options .01-.59 for this whole minute
+                                if (wholeMinute >= 1) {
+                                  for (let decimal = 1; decimal <= 59; decimal++) {
+                                    const value = wholeMinute + (decimal / 100);
+                                    const formattedValue = value.toFixed(2);
+                                    options.push(
+                                      <option key={formattedValue} value={formattedValue}>
+                                        {formattedValue} ({wholeMinute}m {decimal}s)
+                                      </option>
+                                    );
+                                  }
+                                }
+                                
+                                return options;
+                              }).flat()}
+                            </select>
                             {field.value !== undefined && field.value !== null && field.value > 0 && (
                               <span className="absolute right-3 top-3 text-gray-500 text-sm pointer-events-none">
                                 minutes
