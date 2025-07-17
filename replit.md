@@ -195,6 +195,7 @@ Preferred communication style: Simple, everyday language.
   - **Appropriate y-axis labels** - Charts adapt labels based on data collection type (percentage, frequency, duration)
   - **All data point dates on x-axis** - Every data point date is labeled on x-axis for precise tracking
   - **Optimized chart layout** - Angled date labels and proper spacing for better readability
+  - **Trend line visualization** - Added dashed trend line connecting data points to show progress trajectory
 
 - July 17, 2025: **FIXED CROSS-USER DATA ACCESS AND DATA POINT CREATION**
   - **Resolved access control issues** - Fixed Student 1 data accessibility by updating all route permissions for user 42813322

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, LineChart } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Calendar } from "lucide-react";
 import { format } from "date-fns";
@@ -179,7 +179,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         ) : (
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <ScatterChart margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+              <ComposedChart data={scatterData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
                   type="number" 
@@ -208,6 +208,19 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
+                {/* Trend Line */}
+                <Line
+                  type="monotone"
+                  dataKey="y"
+                  stroke={scatterData.length > 0 ? scatterData[0].color : "#8884d8"}
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={false}
+                  connectNulls={true}
+                  name="Trend"
+                />
+                
+                {/* Scatter Points */}
                 <Scatter
                   name={goalId ? currentGoal?.title : "Progress"}
                   data={scatterData}
@@ -216,7 +229,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   strokeWidth={2}
                   r={6}
                 />
-              </ScatterChart>
+              </ComposedChart>
             </ResponsiveContainer>
           </div>
         )}
