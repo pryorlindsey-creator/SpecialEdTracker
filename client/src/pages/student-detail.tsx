@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
@@ -49,6 +50,14 @@ export default function StudentDetail() {
     queryKey: [`/api/goals/${selectedGoalId}/data-points`],
     enabled: !!selectedGoalId,
   });
+  
+  // Add error logging for debugging blank screen
+  useEffect(() => {
+    console.log(`[STUDENT DETAIL] Component mounted, studentId: ${studentId}`);
+    console.log(`[STUDENT DETAIL] Student loading: ${studentLoading}`);
+    console.log(`[STUDENT DETAIL] Student data:`, student);
+    console.log(`[STUDENT DETAIL] Student error:`, studentError);
+  }, [studentId, studentLoading, student, studentError]);
 
   // Force refresh all data when component mounts to prevent cache issues
   React.useEffect(() => {
@@ -63,6 +72,7 @@ export default function StudentDetail() {
   // No auth handling needed in development mode
 
   if (studentLoading) {
+    console.log(`[STUDENT DETAIL] Rendering loading state for student ${studentId}`);
     return (
       <div className="min-h-screen bg-surface">
         <div className="flex items-center justify-center min-h-screen">
@@ -72,7 +82,26 @@ export default function StudentDetail() {
     );
   }
 
+  if (studentError) {
+    console.log(`[STUDENT DETAIL] Student error occurred:`, studentError);
+    return (
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <Card className="p-8 text-center">
+          <CardContent>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Student</h2>
+            <p className="text-gray-600 mb-4">There was an error loading the student data: {studentError.message}</p>
+            <Button onClick={() => navigate("/")} variant="outline">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Students
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (!student) {
+    console.log(`[STUDENT DETAIL] No student data found for ID: ${studentId}`);
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <Card className="p-8 text-center">
@@ -89,9 +118,31 @@ export default function StudentDetail() {
     );
   }
 
+  console.log(`[STUDENT DETAIL] Rendering student page for: ${student.name} (ID: ${student.id})`);
+
   const lastUpdateText = (student as any)?.lastDataPoint 
     ? format(new Date((student as any).lastDataPoint.date), "MMM d, yyyy")
     : "No data yet";
+
+  // Simple render test to debug blank screen
+  if (studentId === 5) {
+    console.log(`[STUDENT DETAIL] Rendering simple test for Student 1`);
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <h1 className="text-2xl font-bold text-black">Student Detail Page</h1>
+        <p className="text-lg text-gray-700">Student ID: {studentId}</p>
+        <p className="text-lg text-gray-700">Student Name: {student.name}</p>
+        <p className="text-lg text-gray-700">Total Goals: {student.totalGoals}</p>
+        <p className="text-lg text-gray-700">Total Data Points: {student.totalDataPoints}</p>
+        <button 
+          onClick={() => navigate("/")}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Back to Students
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface">
