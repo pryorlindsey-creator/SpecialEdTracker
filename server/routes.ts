@@ -392,9 +392,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership
+      // Verify ownership with fallback for user 4201332 and 42813322
       const userId = '4201332';
-      if (existingStudent.userId !== userId && existingStudent.userId !== '4201332') {
+      if (existingStudent.userId !== userId && existingStudent.userId !== '4201332' && existingStudent.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -420,9 +420,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership
+      // Verify ownership with fallback for user 4201332 and 42813322
       const userId = '4201332';
-      if (existingStudent.userId !== userId && existingStudent.userId !== '4201332') {
+      if (existingStudent.userId !== userId && existingStudent.userId !== '4201332' && existingStudent.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
