@@ -3,27 +3,27 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(248, 39%, 98%);
-  --foreground: hsl(20, 14.3%, 4.1%);
-  --muted: hsl(210, 40%, 96%);
-  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(221, 80%, 20%);
+  --muted: hsl(210, 40%, 98%);
+  --muted-foreground: hsl(221, 39%, 45%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --popover-foreground: hsl(221, 80%, 20%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(20, 14.3%, 4.1%);
-  --border: hsl(20, 5.9%, 90%);
-  --input: hsl(20, 5.9%, 90%);
-  --primary: hsl(221, 83%, 53%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(221, 83%, 53%);
-  --secondary-foreground: hsl(210, 40%, 98%);
-  --accent: hsl(262, 83%, 58%);
-  --accent-foreground: hsl(210, 40%, 98%);
+  --card-foreground: hsl(221, 80%, 20%);
+  --border: hsl(214, 32%, 91%);
+  --input: hsl(214, 32%, 91%);
+  --primary: hsl(221, 83%, 25%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(221, 83%, 35%);
+  --secondary-foreground: hsl(0, 0%, 100%);
+  --accent: hsl(221, 70%, 45%);
+  --accent-foreground: hsl(0, 0%, 100%);
   --destructive: hsl(0, 84.2%, 60.2%);
   --destructive-foreground: hsl(60, 9.1%, 97.8%);
-  --ring: hsl(20, 14.3%, 4.1%);
+  --ring: hsl(221, 83%, 25%);
   --radius: 0.5rem;
-  --surface: hsl(248, 20%, 98%);
+  --surface: hsl(0, 0%, 100%);
 }
 
 .dark {

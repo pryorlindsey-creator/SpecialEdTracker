@@ -1,311 +1,197 @@
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { GraduationCap, BarChart3, Users, Target, Lock } from "lucide-react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { GraduationCap, BarChart3, Users, Target } from "lucide-react";
 
 export default function Landing() {
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const { toast } = useToast();
 
-  const adminLoginMutation = useMutation({
-    mutationFn: async () => {
-      console.log("Frontend: Attempting admin login with credentials:", { username, password: password ? "[PROVIDED]" : "[MISSING]" });
-      
-      const response = await fetch("/api/auth/admin-login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password })
-      });
-      
-      console.log("Frontend: Login response status:", response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.log("Frontend: Login error response:", errorData);
-        throw new Error(errorData.message || "Login failed");
-      }
-      
-      const data = await response.json();
-      console.log("Frontend: Login success response:", data);
-      return data;
-    },
-    onSuccess: (data) => {
-      console.log("Frontend: Login successful, redirecting to home");
-      console.log("Frontend: Response data:", data);
-      
-      // Invalidate auth query to force refresh
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      
-      // The new useAuth hook will automatically detect the change
-    },
-    onError: (error) => {
-      console.error("Frontend: Login error:", error);
-      toast({
-        title: "Login Failed",
-        description: error.message || "Invalid admin credentials",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    adminLoginMutation.mutate();
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-surface via-background to-muted/30">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200">
+      <header className="bg-white shadow-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center">
-              <GraduationCap className="h-8 w-8 text-primary mr-3" />
-              <h1 className="text-xl font-bold text-gray-900">Special Education Data Collection</h1>
+              <GraduationCap className="h-10 w-10 text-blue-900 mr-4" />
+              <h1 className="text-2xl font-bold text-blue-900">Special Education Data Collection App</h1>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-4">
               <Button 
-                variant="outline" 
-                onClick={() => setShowAdminLogin(true)}
+                onClick={() => window.location.href = '/api/login'} 
                 size="lg"
+                className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-3"
               >
-                <Lock className="h-4 w-4 mr-2" />
-                Admin Access
+                Get Started
               </Button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Admin Login Modal */}
-      {showAdminLogin && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-900">Admin Access</h2>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setShowAdminLogin(false)}
-                >
-                  ×
-                </Button>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                Use your admin credentials to access the Special Education Data Collection system.
-              </p>
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <div>
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    placeholder="sandralindsey"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    placeholder="Enter your password"
-                  />
-                </div>
-                <Button 
-                  type="button"
-                  variant="outline"
-                  onClick={async () => {
-                    console.log("Testing server connection...");
-                    try {
-                      const response = await fetch("/api/test", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ test: true })
-                      });
-                      const data = await response.json();
-                      console.log("Server test result:", data);
-                      toast({
-                        title: "Server Test",
-                        description: response.ok ? "✅ Server connected" : "❌ Server error",
-                      });
-                    } catch (error) {
-                      console.error("Server test failed:", error);
-                      toast({
-                        title: "Server Test", 
-                        description: "❌ Connection failed",
-                        variant: "destructive"
-                      });
-                    }
-                  }}
-                  className="w-full mb-2"
-                >
-                  Test Connection
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={adminLoginMutation.isPending}
-                >
-                  {adminLoginMutation.isPending ? "Logging in..." : "Login"}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+      {/* Hero Section */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center py-20">
+          <h2 className="text-5xl font-bold text-blue-900 mb-6">
             Streamline Your IEP Goal Tracking
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-blue-800 max-w-4xl mx-auto mb-10">
             A comprehensive data collection platform designed specifically for special education teachers 
-            to track student progress, manage IEP goals, and generate meaningful reports.
+            to track student progress, manage IEP goals, and generate meaningful reports with ease and precision.
           </p>
+          <Button 
+            onClick={() => window.location.href = '/api/login'} 
+            size="lg"
+            className="bg-blue-900 hover:bg-blue-800 text-white px-12 py-4 text-lg font-semibold"
+          >
+            Start Tracking Progress Today
+          </Button>
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center mb-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 ml-4">Student Management</h3>
-              </div>
-              <p className="text-gray-600">
-                Easily create and manage student profiles with individual goal tracking and progress monitoring.
-              </p>
-            </CardContent>
-          </Card>
+        <div className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 className="text-3xl font-bold text-blue-900 text-center mb-12">Powerful Features for Special Education</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <Card className="hover:shadow-lg transition-shadow bg-white border-gray-200">
+                <CardContent className="pt-8 pb-6">
+                  <div className="text-center mb-6">
+                    <div className="p-4 bg-blue-100 rounded-full inline-flex">
+                      <Users className="h-8 w-8 text-blue-900" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">Student Management</h3>
+                  <p className="text-blue-800 text-center">
+                    Easily create and manage student profiles with individual goal tracking and comprehensive progress monitoring.
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center mb-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Target className="h-6 w-6 text-secondary" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 ml-4">Goal-Specific Tracking</h3>
-              </div>
-              <p className="text-gray-600">
-                Track each IEP goal individually with detailed progress bars and performance analytics.
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="hover:shadow-lg transition-shadow bg-white border-gray-200">
+                <CardContent className="pt-8 pb-6">
+                  <div className="text-center mb-6">
+                    <div className="p-4 bg-blue-100 rounded-full inline-flex">
+                      <Target className="h-8 w-8 text-blue-900" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">Goal-Specific Tracking</h3>
+                  <p className="text-blue-800 text-center">
+                    Track each IEP goal individually with detailed progress bars, performance analytics, and trend analysis.
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center mb-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-accent" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 ml-4">Data Visualization</h3>
-              </div>
-              <p className="text-gray-600">
-                Generate comprehensive reports and charts for IEP meetings and progress reviews.
-              </p>
-            </CardContent>
-          </Card>
+              <Card className="hover:shadow-lg transition-shadow bg-white border-gray-200">
+                <CardContent className="pt-8 pb-6">
+                  <div className="text-center mb-6">
+                    <div className="p-4 bg-blue-100 rounded-full inline-flex">
+                      <BarChart3 className="h-8 w-8 text-blue-900" />
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-semibold text-blue-900 mb-4 text-center">Data Visualization</h3>
+                  <p className="text-blue-800 text-center">
+                    Generate comprehensive reports and interactive charts for IEP meetings and progress reviews.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
 
         {/* Key Features */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 mb-16">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Key Features</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+        <div className="py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white rounded-2xl shadow-lg p-12">
+              <h3 className="text-3xl font-bold text-blue-900 mb-8 text-center">Comprehensive IEP Data Management</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 text-lg mb-2">Individual Goal Progress Tracking</h4>
+                      <p className="text-blue-800">Separate progress monitoring for each IEP goal with detailed analytics and no data aggregation</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 text-lg mb-2">Flexible Data Entry</h4>
+                      <p className="text-blue-800">Support for percentage, fraction, frequency, and duration-based data collection methods</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 text-lg mb-2">Interactive Dashboard</h4>
+                      <p className="text-blue-800">Comprehensive overview with goal counts, data points, and real-time progress updates</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Individual Goal Progress Bars</h4>
-                  <p className="text-gray-600 text-sm">Separate progress tracking for each IEP goal with no overall aggregation</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Comprehensive Data Entry</h4>
-                  <p className="text-gray-600 text-sm">Flexible forms supporting percentage and fraction-based scoring</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Student Overview Dashboard</h4>
-                  <p className="text-gray-600 text-sm">Quick access to goal counts, data points, and last update timestamps</p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Goal-Specific Reports</h4>
-                  <p className="text-gray-600 text-sm">Individual charts and analytics for each goal with trend analysis</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Support Level Tracking</h4>
-                  <p className="text-gray-600 text-sm">Document the level of support needed for each data point</p>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <div className="flex-shrink-0 w-6 h-6 bg-primary rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900">Anecdotal Information</h4>
-                  <p className="text-gray-600 text-sm">Capture detailed observations and notes for each data collection session</p>
+                <div className="space-y-6">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 text-lg mb-2">Detailed Progress Reports</h4>
+                      <p className="text-blue-800">Individual charts and scatterplots for each goal with trend analysis and performance insights</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 text-lg mb-2">Support Level Documentation</h4>
+                      <p className="text-blue-800">Track and document the level of support provided during each data collection session</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 bg-blue-900 rounded-full flex items-center justify-center mr-4 mt-1">
+                      <div className="w-3 h-3 bg-white rounded-full"></div>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-blue-900 text-lg mb-2">Detailed Observations</h4>
+                      <p className="text-blue-800">Capture comprehensive anecdotal notes and observations for each data point</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Get Started?</h3>
-          <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join special education teachers who are already using our platform to streamline their IEP goal tracking and data collection.
-          </p>
-          <Button 
-            onClick={() => window.location.href = '/api/login'} 
-            size="lg"
-            className="px-8 py-3 text-lg"
-          >
-            Sign In to Begin
-          </Button>
+        {/* Call to Action */}
+        <div className="bg-blue-900 py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h3 className="text-3xl font-bold text-white mb-6">Ready to Transform Your IEP Data Management?</h3>
+            <p className="text-blue-100 mb-10 max-w-3xl mx-auto text-xl">
+              Join special education teachers who are already using our platform to streamline their IEP goal tracking, improve data accuracy, and save valuable time.
+            </p>
+            <Button 
+              onClick={() => window.location.href = '/api/login'} 
+              size="lg"
+              className="bg-white hover:bg-gray-100 text-blue-900 px-12 py-4 text-lg font-semibold"
+            >
+              Start Your Free Trial Today
+            </Button>
+          </div>
         </div>
+
+        {/* Footer */}
+        <footer className="bg-white py-8 border-t border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p className="text-blue-800">
+              © 2025 Special Education Data Collection App. Designed for special education professionals.
+            </p>
+          </div>
+        </footer>
       </main>
     </div>
   );
