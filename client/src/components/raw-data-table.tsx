@@ -35,7 +35,7 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
 
   // Fetch all data points for this student
   const { data: rawData, isLoading, error } = useQuery({
-    queryKey: [`/api/students/${studentId}/data-points/all`],
+    queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: 'always',
