@@ -351,7 +351,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                               min="0"
                               max="59.59"
                               step="0.01"
-                              placeholder="5.45 (e.g., 5 minutes 45 seconds)"
+                              placeholder="5.45 (decimal .01-.59 only)"
                               {...field}
                               onChange={(e) => {
                                 const inputValue = e.target.value;
@@ -362,8 +362,20 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                                   return;
                                 }
                                 
-                                // Always allow the user to type and update the field
+                                // Update the field value
                                 field.onChange(value);
+                                
+                                // Validate and provide immediate feedback
+                                const wholePart = Math.floor(value);
+                                const decimalPart = Math.round((value % 1) * 100) / 100;
+                                
+                                if (wholePart > 59) {
+                                  console.log(`Invalid: Whole number ${wholePart} exceeds maximum of 59`);
+                                } else if (decimalPart !== 0 && (decimalPart < 0.01 || decimalPart > 0.59)) {
+                                  console.log(`Invalid: Decimal part .${Math.round(decimalPart * 100)} must be between .01 and .59`);
+                                } else {
+                                  console.log(`Valid minutes: ${value}`);
+                                }
                               }}
                               className="pr-20"
                             />
