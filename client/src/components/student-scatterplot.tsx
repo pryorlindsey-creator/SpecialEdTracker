@@ -48,9 +48,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
     enabled: !!studentId,
   });
 
-  // Debug logging
-  console.log(`StudentScatterplot: studentId=${studentId}, goals=`, goals, `allDataPoints=`, allDataPoints);
-  console.log(`Filtered data points:`, allDataPoints?.filter((dp: DataPoint) => dp.progressValue && dp.date));
+  // Debug logging removed - scatterplot working correctly
 
   if (goalsLoading || dataLoading) {
     return (
@@ -189,10 +187,17 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   name="Date"
                   label={{ value: 'Date', position: 'insideBottom', offset: -10 }}
                   domain={['dataMin', 'dataMax']}
+                  ticks={scatterData.map(point => point.x)}
                   tickFormatter={(value) => {
                     const date = new Date(value);
-                    return date.toLocaleDateString();
+                    return date.toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric' 
+                    });
                   }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
                 />
                 <YAxis 
                   type="number" 

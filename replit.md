@@ -189,6 +189,13 @@ Preferred communication style: Simple, everyday language.
   - **Enhanced database schema** - Added duration_unit field to data points table
   - **Improved user experience** - Form labels and inputs adapt to match the selected goal type
 
+- July 17, 2025: **ENHANCED INDIVIDUAL GOAL PROGRESS VISUALIZATION**
+  - **Individual goal scatterplots** - Each goal now displays its own dedicated progress chart in Reports tab
+  - **Goal-specific data filtering** - Scatterplots show only data points for the selected goal
+  - **Appropriate y-axis labels** - Charts adapt labels based on data collection type (percentage, frequency, duration)
+  - **All data point dates on x-axis** - Every data point date is labeled on x-axis for precise tracking
+  - **Optimized chart layout** - Angled date labels and proper spacing for better readability
+
 - July 17, 2025: **FIXED CROSS-USER DATA ACCESS AND DATA POINT CREATION**
   - **Resolved access control issues** - Fixed Student 1 data accessibility by updating all route permissions for user 42813322
   - **Fixed data point creation** - Resolved "Failed to add data point. 403: Access denied" error for Student 1
