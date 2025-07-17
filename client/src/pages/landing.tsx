@@ -187,9 +187,15 @@ export default function Landing() {
         {/* Footer */}
         <footer className="bg-white py-8 border-t border-gray-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-blue-800">
+            <p className="text-blue-800 mb-4">
               © 2025 Special Education Data Collection App. Designed for special education professionals.
             </p>
+            <a 
+              href="/admin" 
+              className="text-sm text-gray-500 hover:text-blue-800 transition-colors"
+            >
+              website administrator Sandra Lindsey
+            </a>
           </div>
         </footer>
       </main>

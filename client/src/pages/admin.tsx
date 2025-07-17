@@ -36,7 +36,7 @@ export default function AdminPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (creds: { username: string; password: string }) => {
-      if (creds.username === "sandralindsey" && creds.password === "IsabelShea@1998") {
+      if (creds.username === "SandraLindsey@speechpathai" && creds.password === "IsabelShea@1998") {
         return { success: true };
       }
       throw new Error("Invalid credentials");
