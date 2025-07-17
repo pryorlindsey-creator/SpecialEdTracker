@@ -110,6 +110,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
         const format = goal.dataCollectionType === "duration" ? "duration" : 
                       goal.dataCollectionType === "frequency" ? "frequency" : "percentage";
         form.setValue("progressFormat", format as any);
+        
+        // Set default duration unit for duration goals
+        if (goal.dataCollectionType === "duration") {
+          form.setValue("durationUnit", "minutes");
+        }
       }
     }
   }, [selectedGoalIdValue, goals, form]);
@@ -286,7 +291,15 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                     control={form.control}
                     name="durationUnit"
                     render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Force form to update and re-render
+                          form.trigger("durationUnit");
+                        }} 
+                        value={field.value}
+                        defaultValue="minutes"
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select unit..." />
