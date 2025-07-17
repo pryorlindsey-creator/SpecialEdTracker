@@ -52,12 +52,17 @@ export default function DashboardCalendar() {
   // Load reporting periods from localStorage
   useEffect(() => {
     const savedData = localStorage.getItem('reportingPeriods');
+    console.log('Loading reporting periods from localStorage:', savedData);
     if (savedData) {
       try {
-        setReportingData(JSON.parse(savedData));
+        const parsedData = JSON.parse(savedData);
+        console.log('Parsed reporting periods data:', parsedData);
+        setReportingData(parsedData);
       } catch (error) {
         console.error('Error parsing reporting periods data:', error);
       }
+    } else {
+      console.log('No reporting periods found in localStorage');
     }
   }, []);
 
@@ -77,6 +82,7 @@ export default function DashboardCalendar() {
     }));
 
   // Convert reporting periods to calendar events
+  console.log('Current reporting data for calendar:', reportingData);
   const reportingEvents: CalendarEvent[] = reportingData ? reportingData.periods.flatMap(period => [
     {
       id: `period-${period.periodNumber}-start`,

@@ -86,6 +86,12 @@ export default function ReportingPeriodsModal({ isOpen, onClose, onSave }: Repor
       title: "Success",
       description: "Reporting periods have been saved successfully.",
     });
+    
+    // Trigger a page refresh to update the calendar
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+    
     onClose();
   };
 
@@ -186,15 +192,18 @@ export function ReportingPeriodsButton() {
   const { toast } = useToast();
 
   const handleSavePeriods = (periods: any[], periodLength: string) => {
-    // Here you would typically save to backend/localStorage
-    console.log("Saving reporting periods:", { periods, periodLength });
-    
-    // For now, save to localStorage
-    localStorage.setItem('reportingPeriods', JSON.stringify({
+    const dataToSave = {
       periodLength,
       periods,
       savedAt: new Date().toISOString()
-    }));
+    };
+    
+    console.log("Saving reporting periods to localStorage:", dataToSave);
+    localStorage.setItem('reportingPeriods', JSON.stringify(dataToSave));
+    
+    // Verify it was saved
+    const saved = localStorage.getItem('reportingPeriods');
+    console.log("Verified saved data:", saved);
   };
 
   return (
