@@ -141,20 +141,28 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       console.log("🚀 About to make API request...");
       
       console.log("🚀 Making API request now...");
-      const result = await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
-      console.log("🚀 API request completed, checking result...");
-      console.log("✅ API request successful, response status:", result.status);
       
-      if (!result.ok) {
-        const errorText = await result.text();
-        console.error("❌ API request failed with status:", result.status, "Error:", errorText);
-        throw new Error(`API request failed: ${result.status} - ${errorText}`);
+      try {
+        const result = await apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
+        console.log("🚀 API request completed successfully");
+        console.log("🚀 Result status:", result.status);
+        
+        if (!result.ok) {
+          console.error("❌ API request failed with status:", result.status);
+          throw new Error(`API request failed: ${result.status}`);
+        }
+        
+        const responseData = await result.json();
+        console.log("✅ API response data:", responseData);
+        return responseData;
+      } catch (apiError) {
+        console.error("❌ API REQUEST FAILED:");
+        console.error("❌ Error type:", typeof apiError);
+        console.error("❌ Error message:", apiError.message);
+        console.error("❌ Full error:", apiError);
+        throw apiError;
       }
-      
-      const savedDataPoint = await result.json();
-      console.log("✅ Data point successfully saved with ID:", savedDataPoint.id);
-      console.log("✅ Saved data point details:", savedDataPoint);
-      return savedDataPoint;
+
     },
     onSuccess: (savedDataPoint) => {
       const goalId = form.getValues().goalId;
