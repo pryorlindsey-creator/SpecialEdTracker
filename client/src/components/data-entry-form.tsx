@@ -74,6 +74,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   const { toast } = useToast();
   const [progressInputType, setProgressInputType] = useState<"percentage" | "fraction">("percentage");
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [durationUnit, setDurationUnit] = useState<string>("minutes");
 
   // Find the selected goal to get its data collection type
   useEffect(() => {
@@ -114,6 +115,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
         // Set default duration unit for duration goals
         if (goal.dataCollectionType === "duration") {
           form.setValue("durationUnit", "minutes");
+          setDurationUnit("minutes");
         }
       }
     }
@@ -291,25 +293,21 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                     control={form.control}
                     name="durationUnit"
                     render={({ field }) => (
-                      <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          // Force form to update and re-render
-                          form.trigger("durationUnit");
-                        }} 
-                        value={field.value}
-                        defaultValue="minutes"
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select unit..." />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="seconds">seconds</SelectItem>
-                          <SelectItem value="minutes">minutes</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-1">
+                        <select
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                          value={field.value || durationUnit}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value);
+                            setDurationUnit(value);
+                            form.trigger("durationUnit");
+                          }}
+                        >
+                          <option value="minutes">minutes</option>
+                          <option value="seconds">seconds</option>
+                        </select>
+                      </div>
                     )}
                   />
                 </div>
