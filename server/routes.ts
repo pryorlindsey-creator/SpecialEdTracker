@@ -293,11 +293,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = '4201332'; // Development mode - use fixed user ID
       console.log("Fetching students for user ID:", userId);
       
-      // Direct fix: Always check for the known data under user 4201332
-      console.log("Checking for user data under both current user and 4201332");
+      // Direct fix: Always check for the known data under user 4201332 and 42813322
+      console.log("Checking for user data under both current user, 4201332, and 42813322");
       let students = await storage.getStudentsByUserId(userId);
       
-      // If no students found for current user, check under 4201332
+      // Also get students from test user 42813322 (includes Student 1)
+      const students2 = await storage.getStudentsByUserId('42813322');
+      students = [...students, ...students2];
+      
+      // If still no students found for current user, check under 4201332
       if (students.length === 0) {
         console.log("No students found for current user, checking 4201332");
         const fallbackStudents = await storage.getStudentsByUserId('4201332');
@@ -363,11 +367,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership with fallback for user 4201332
+      // Verify ownership with fallback for user 4201332 and 42813322
       const userId = '4201332';
       console.log(`Student ${studentId} belongs to ${student.userId}, current user is ${userId}`);
       
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -440,9 +444,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership with fallback for user 4201332
+      // Verify ownership with fallback for user 4201332 and 42813322
       const userId = '4201332';
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -485,7 +489,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify ownership
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         console.log("Access denied - student belongs to:", student.userId, "but user is:", userId);
         return res.status(403).json({ message: "Access denied" });
       }
@@ -603,9 +607,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership with fallback for user 4201332
+      // Verify ownership with fallback for user 4201332 and 42813322
       const userId = '4201332';
-      if (student.userId !== userId && student.userId !== '4201332') {
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
         return res.status(403).json({ message: "Access denied" });
       }
 

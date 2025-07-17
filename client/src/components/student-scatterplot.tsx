@@ -38,14 +38,17 @@ const GOAL_COLORS = [
 
 export default function StudentScatterplot({ studentId }: StudentScatterplotProps) {
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
-    queryKey: ["/api/students", studentId, "goals"],
+    queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
   });
 
   const { data: allDataPoints = [], isLoading: dataLoading } = useQuery({
-    queryKey: ["/api/students", studentId, "all-data-points"],
+    queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
   });
+
+  // Debug logging
+  // console.log(`StudentScatterplot: studentId=${studentId}, goals=`, goals, `allDataPoints=`, allDataPoints);
 
   if (goalsLoading || dataLoading) {
     return (
