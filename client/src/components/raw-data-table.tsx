@@ -183,7 +183,7 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Table className="h-5 w-5" />
-            Raw Data Table
+            <span className="whitespace-nowrap">Raw Data Table</span>
           </div>
           <Button 
             variant="outline" 
