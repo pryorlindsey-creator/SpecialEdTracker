@@ -348,23 +348,30 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                           <div className="relative">
                             <Input
                               type="number"
-                              min="1"
+                              min="0"
+                              max="59.59"
                               step="0.01"
-                              placeholder="1.30 (e.g., 5.45 = 5 minutes 45 seconds)"
+                              placeholder="5.45 (e.g., 5 minutes 45 seconds)"
                               {...field}
                               onChange={(e) => {
                                 const value = parseFloat(e.target.value);
-                                if (!isNaN(value) && value >= 1) {
-                                  // Validate decimal portion represents seconds (01-59)
-                                  const decimalPart = Math.round((value % 1) * 100) / 100;
-                                  if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
-                                    field.onChange(value);
+                                if (!isNaN(value) && value >= 0) {
+                                  // Check whole number part is 0-59
+                                  const wholePart = Math.floor(value);
+                                  if (wholePart <= 59) {
+                                    // Validate decimal portion represents seconds (01-59)
+                                    const decimalPart = Math.round((value % 1) * 100) / 100;
+                                    if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
+                                      field.onChange(value);
+                                    } else {
+                                      // Show error feedback but don't update field
+                                      console.log("Invalid decimal part for minutes - must be .01-.59");
+                                    }
                                   } else {
-                                    // Show error feedback but don't update field
-                                    console.log("Invalid decimal part for minutes - must be .01-.59");
+                                    console.log("Minutes whole number must be 0-59");
                                   }
-                                } else if (value < 1) {
-                                  console.log("Minutes must be >= 1.00");
+                                } else if (value < 0) {
+                                  console.log("Minutes must be >= 0.00");
                                 }
                               }}
                               className="pr-20"
