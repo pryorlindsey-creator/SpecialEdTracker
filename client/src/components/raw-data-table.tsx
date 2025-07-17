@@ -243,7 +243,7 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{filteredData.length}</div>
             <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
@@ -258,17 +258,6 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
             <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
               <Target className="h-4 w-4" />
               Goals with Data
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">
-              {filteredData.length > 0 
-                ? Math.round(filteredData.reduce((sum: number, item: DataPoint) => sum + parseFloat(item.progressValue), 0) / filteredData.length)
-                : 0}%
-            </div>
-            <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
-              <TrendingUp className="h-4 w-4" />
-              Average Progress
             </div>
           </div>
         </div>
