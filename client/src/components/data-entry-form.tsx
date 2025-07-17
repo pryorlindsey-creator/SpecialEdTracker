@@ -354,28 +354,16 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                               placeholder="5.45 (e.g., 5 minutes 45 seconds)"
                               {...field}
                               onChange={(e) => {
-                                const value = parseFloat(e.target.value) || 0;
-                                // Always update the field first for user feedback
-                                field.onChange(value);
+                                const inputValue = e.target.value;
+                                const value = parseFloat(inputValue);
                                 
-                                // Validation logic for display only
-                                if (value >= 0 && value <= 59.59) {
-                                  const wholePart = Math.floor(value);
-                                  const decimalPart = Math.round((value % 1) * 100) / 100;
-                                  
-                                  if (wholePart >= 0 && wholePart <= 59) {
-                                    if (decimalPart === 0 || (decimalPart >= 0.01 && decimalPart <= 0.59)) {
-                                      // Valid input
-                                      console.log("Valid minutes input:", value);
-                                    } else {
-                                      console.log("Invalid decimal part - must be .01-.59 or .00");
-                                    }
-                                  } else {
-                                    console.log("Whole number must be 0-59");
-                                  }
-                                } else {
-                                  console.log("Value must be between 0.00 and 59.59");
+                                if (inputValue === "" || isNaN(value)) {
+                                  field.onChange(0);
+                                  return;
                                 }
+                                
+                                // Always allow the user to type and update the field
+                                field.onChange(value);
                               }}
                               className="pr-20"
                             />
