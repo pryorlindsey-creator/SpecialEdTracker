@@ -414,7 +414,6 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                 size="lg" 
                 onClick={() => addTrial(true)}
                 className="bg-green-600 hover:bg-green-700 h-16 px-8"
-                disabled={!isCollecting}
               >
                 ✓ Correct
               </Button>
@@ -422,7 +421,6 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                 size="lg" 
                 onClick={() => addTrial(false)}
                 className="bg-red-600 hover:bg-red-700 h-16 px-8"
-                disabled={!isCollecting}
               >
                 ✗ Incorrect
               </Button>
@@ -432,7 +430,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                 variant="outline" 
                 size="sm"
                 onClick={removeTrial}
-                disabled={!isCollecting || percentageTrials.total === 0}
+                disabled={percentageTrials.total === 0}
               >
                 Remove Last Trial
               </Button>
@@ -504,7 +502,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         <Button 
           size="lg" 
           onClick={saveData}
-          disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0)}
+          disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0) || (dataType === 'percentage' && percentageTrials.total === 0)}
           className="bg-blue-600 hover:bg-blue-700 px-8"
         >
           <Save className="h-5 w-5 mr-2" />
