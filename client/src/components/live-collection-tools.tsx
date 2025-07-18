@@ -175,11 +175,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}`
       };
 
-      await apiRequest(`/api/goals/${goalId}/data-points`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataPoint),
-      });
+      await apiRequest('POST', `/api/goals/${goalId}/data-points`, dataPoint);
 
       toast({
         title: "Data Saved!",
