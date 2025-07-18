@@ -3,7 +3,7 @@ import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,7 @@ import EditGoalModal from "@/components/edit-goal-modal";
 import StudentInfoCard from "@/components/student-info-card";
 import StudentScatterplot from "@/components/student-scatterplot";
 import RawDataTable from "@/components/raw-data-table";
+import LiveCollectionTools from "@/components/live-collection-tools";
 import { format } from "date-fns";
 
 export default function StudentDetail() {
@@ -229,7 +230,7 @@ export default function StudentDetail() {
 
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 bg-white shadow-sm">
+          <TabsList className="grid w-full grid-cols-6 bg-white shadow-sm">
             <TabsTrigger value="overview" className="flex items-center">
               <BarChart3 className="h-4 w-4 mr-2" />
               Overview
@@ -237,6 +238,10 @@ export default function StudentDetail() {
             <TabsTrigger value="goals" className="flex items-center">
               <Target className="h-4 w-4 mr-2" />
               Goals & Progress
+            </TabsTrigger>
+            <TabsTrigger value="live-collection" className="flex items-center">
+              <Zap className="h-4 w-4 mr-2" />
+              Live Collection
             </TabsTrigger>
             <TabsTrigger value="data-entry" className="flex items-center">
               <Edit className="h-4 w-4 mr-2" />
@@ -349,6 +354,67 @@ export default function StudentDetail() {
                     <p className="text-gray-600">Create a new IEP goal for this student</p>
                   </CardContent>
                 </Card>
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Live Collection Tab */}
+          <TabsContent value="live-collection" className="space-y-6">
+            {!goals || goals.length === 0 ? (
+              <Card className="p-12 text-center">
+                <CardContent>
+                  <Timer className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Goals for Live Collection</h3>
+                  <p className="text-gray-600 mb-6">
+                    Add some goals first to use real-time data collection tools.
+                  </p>
+                  <Button onClick={() => setActiveTab("goals")}>
+                    <Target className="h-5 w-5 mr-2" />
+                    Go to Goals
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-6">
+                <div className="text-center mb-8">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Real-Time Data Collection</h3>
+                  <p className="text-gray-600">Quick tools for collecting data during observations</p>
+                </div>
+                
+                {/* Goal Selection for Live Collection */}
+                <Card>
+                  <CardContent className="p-6">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Select Goal for Live Collection</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {goals.map((goal) => (
+                        <Button
+                          key={goal.id}
+                          variant={selectedGoalId === goal.id ? "default" : "outline"}
+                          className="h-auto p-4 text-left flex flex-col items-start"
+                          onClick={() => setSelectedGoalId(goal.id)}
+                        >
+                          <div className="font-semibold mb-1">{goal.title}</div>
+                          <div className="text-xs opacity-70 capitalize">
+                            {goal.dataCollectionType} tracking
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Live Collection Tools */}
+                {selectedGoalId && (
+                  <LiveCollectionTools 
+                    goalId={selectedGoalId}
+                    studentId={studentId!}
+                    goals={goals}
+                    onDataCollected={() => {
+                      refetchStudent();
+                      refetchGoals();
+                    }}
+                  />
+                )}
               </div>
             )}
           </TabsContent>
