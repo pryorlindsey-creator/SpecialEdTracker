@@ -292,7 +292,7 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
   - **Added Live Collection tab** - New dedicated interface for real-time classroom data collection
   - **Session-based data collection** - Start/stop timer functionality for observation periods
   - **Frequency counter tools** - Large touch-friendly buttons for behavior tracking with increment/decrement
-  - **Duration tracking tools** - Minutes and seconds input with visual controls for time-based measurements
+  - **Duration tracking tools** - Real-time timer with start/stop functionality for precise time measurement
   - **Percentage trial counters** - Correct/incorrect buttons with live percentage calculation and trial removal
   - **Mobile-optimized design** - Large buttons and clear displays for classroom tablet/phone use
   - **Level of support tracking** - Multi-select support levels (independent, verbal prompt, visual prompt, etc.)
@@ -300,7 +300,8 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
   - **Seamless database integration** - One-click save functionality that integrates with existing progress tracking
   - **Real-time data visibility** - Saved data immediately appears in Raw Data Table, Reports charts, and goal progress cards
   - **Professional classroom workflow** - Complete data collection process from session start to database storage
-  - **User testing successful** - Live Collection system tested and confirmed working for Behavior goal frequency tracking
+  - **Streamlined duration goals** - Removed redundant session controls for duration goals, using dedicated timer interface
+  - **User testing successful** - Live Collection system tested and confirmed working for all goal types (frequency, duration, percentage)
 
 - July 17, 2025: **RESOLVED TIMEZONE DATE DISPLAY ISSUES**
   - **Fixed calendar date shifting** - Reporting periods now display on exact dates entered by user
