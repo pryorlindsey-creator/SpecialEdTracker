@@ -36,6 +36,7 @@ const editGoalSchema = z.object({
   description: z.string().min(1, "Description is required"),
   targetCriteria: z.string().optional(),
   dataCollectionType: z.string().optional(),
+  frequencyDirection: z.string().optional(),
   status: z.string().optional(),
 });
 
@@ -47,6 +48,7 @@ interface Goal {
   description: string;
   targetCriteria: string | null;
   dataCollectionType: string | null;
+  frequencyDirection: string | null;
   status: string;
   levelOfSupport: string | null;
 }
@@ -85,6 +87,7 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
       description: goal.description,
       targetCriteria: goal.targetCriteria || "",
       dataCollectionType: goal.dataCollectionType || "percentage",
+      frequencyDirection: goal.frequencyDirection || "",
       status: goal.status,
     },
   });
@@ -222,6 +225,30 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
                 </FormItem>
               )}
             />
+
+            {form.watch("dataCollectionType") === "frequency" && (
+              <FormField
+                control={form.control}
+                name="frequencyDirection"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frequency Direction</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Is this goal to increase or decrease frequency?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="increase">Increase Frequency</SelectItem>
+                        <SelectItem value="decrease">Decrease Frequency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

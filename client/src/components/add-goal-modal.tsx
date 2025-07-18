@@ -18,6 +18,7 @@ const addGoalSchema = z.object({
   targetCriteria: z.string().optional(),
   levelOfSupport: z.string().optional(),
   dataCollectionType: z.string().default("percentage"),
+  frequencyDirection: z.string().optional(),
   status: z.string().default("active"),
 });
 
@@ -41,6 +42,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       targetCriteria: "",
       levelOfSupport: "",
       dataCollectionType: "percentage",
+      frequencyDirection: "",
       status: "active",
     },
   });
@@ -171,6 +173,30 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                 </FormItem>
               )}
             />
+
+            {form.watch("dataCollectionType") === "frequency" && (
+              <FormField
+                control={form.control}
+                name="frequencyDirection"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Frequency Direction</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Is this goal to increase or decrease frequency?" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="increase">Increase Frequency</SelectItem>
+                        <SelectItem value="decrease">Decrease Frequency</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
