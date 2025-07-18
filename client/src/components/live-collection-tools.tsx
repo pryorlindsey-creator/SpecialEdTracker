@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, Plus, Minus, Save, RotateCcw, Clock, Hash, Percent } from "lucide-react";
+import { Timer, Plus, Minus, Save, RotateCcw, Clock, Hash, Percent, Target } from "lucide-react";
 import { format } from "date-fns";
 
 interface LiveCollectionToolsProps {
@@ -203,8 +203,8 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
 
   return (
     <div className="space-y-6">
-      {/* Session Timer - Only show for frequency and percentage goals */}
-      {dataType !== 'duration' && (
+      {/* Session Timer - Only show for frequency goals */}
+      {dataType === 'frequency' && (
         <Card className="border-2 border-blue-200 bg-blue-50">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center text-blue-900">
@@ -242,7 +242,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         </Card>
       )}
 
-      {/* Duration Goal Header - Show for duration goals only */}
+      {/* Goal Type Headers - Show for duration and percentage goals */}
       {dataType === 'duration' && (
         <Card className="border-2 border-green-200 bg-green-50">
           <CardHeader className="pb-4">
@@ -253,6 +253,20 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
           </CardHeader>
           <CardContent>
             <p className="text-green-800">Use the duration tracker below to record the time for this goal. Click "Save Data Point" when finished.</p>
+          </CardContent>
+        </Card>
+      )}
+      
+      {dataType === 'percentage' && (
+        <Card className="border-2 border-purple-200 bg-purple-50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-purple-900">
+              <Target className="h-5 w-5 mr-2" />
+              Percentage Collection - {selectedGoal?.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-purple-800">Use the trial counter below to track correct and incorrect attempts. Click "Save Data Point" when finished.</p>
           </CardContent>
         </Card>
       )}
@@ -479,7 +493,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add notes about this observation session..."
               className="mt-1"
-              disabled={dataType !== 'duration' && !isCollecting}
+              disabled={dataType === 'frequency' && !isCollecting}
             />
           </div>
         </CardContent>
@@ -490,18 +504,18 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         <Button 
           size="lg" 
           onClick={saveData}
-          disabled={(dataType !== 'duration' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0)}
+          disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0)}
           className="bg-blue-600 hover:bg-blue-700 px-8"
         >
           <Save className="h-5 w-5 mr-2" />
           Save Data Point
         </Button>
-        {isCollecting && dataType !== 'duration' && (
+        {isCollecting && dataType === 'frequency' && (
           <p className="text-sm text-gray-600 mt-2">
             Stop the session to save your data
           </p>
         )}
-        {(dataType === 'duration' || !isCollecting) && (
+        {(dataType !== 'frequency' || !isCollecting) && (
           <p className="text-sm text-gray-600 mt-2">
             {dataType === 'frequency' && frequencyCount === 0 && "Add at least one occurrence to save"}
             {dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0 && "Set duration time to save"}
