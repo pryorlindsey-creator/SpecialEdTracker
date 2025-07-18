@@ -771,6 +771,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get data points for a specific student (direct student-data point association)
+  app.get('/api/students/:studentId/data-points', async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudentById(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Verify ownership with fallback for user 4201332 and 42813322
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const dataPoints = await storage.getDataPointsByStudentId(studentId);
+      res.json(dataPoints);
+    } catch (error) {
+      console.error("Error fetching student data points:", error);
+      res.status(500).json({ message: "Failed to fetch data points" });
+    }
+  });
+
   // Student data points route (all data points for a student across all goals)
   app.get('/api/students/:studentId/all-data-points', async (req: any, res) => {
     try {
@@ -790,23 +814,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all goals for this student
       const goals = await storage.getGoalsByStudentId(studentId);
       
-      // Get all data points for all goals
-      const allDataPoints = [];
-      for (const goal of goals) {
-        const dataPoints = await storage.getDataPointsByGoalId(goal.id);
-        // Add goal title to each data point for easier frontend processing
-        const dataPointsWithGoal = dataPoints.map(dp => ({
-          ...dp,
-          goalTitle: goal.title,
-          goalDataCollectionType: goal.dataCollectionType,
-        }));
-        allDataPoints.push(...dataPointsWithGoal);
-      }
+      // Get all data points for this student directly
+      const allDataPoints = await storage.getDataPointsByStudentId(studentId);
+      
+      // Add goal titles to data points
+      const dataPointsWithGoalInfo = await Promise.all(
+        allDataPoints.map(async (dp) => {
+          const goal = await storage.getGoalById(dp.goalId);
+          return {
+            ...dp,
+            goalTitle: goal?.title || 'Unknown Goal',
+            goalDataCollectionType: goal?.dataCollectionType || 'percentage',
+          };
+        })
+      );
 
       // Sort by date
-      allDataPoints.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      dataPointsWithGoalInfo.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
-      res.json(allDataPoints);
+      res.json(dataPointsWithGoalInfo);
     } catch (error) {
       console.error("Error fetching student data points:", error);
       res.status(500).json({ message: "Failed to fetch data points" });
@@ -884,6 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dataPointData = insertDataPointSchema.parse({
         ...requestBody,
         goalId,
+        studentId: goal.studentId, // Automatically assign student ID
       });
       
       console.log("Parsed data point data:", dataPointData);

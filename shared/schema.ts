@@ -81,6 +81,7 @@ export const dataPoints = pgTable("data_points", {
   id: serial("id").primaryKey(),
   goalId: integer("goal_id").notNull().references(() => goals.id),
   objectiveId: integer("objective_id").references(() => objectives.id), // optional - can be for goal or specific objective
+  studentId: integer("student_id").notNull().references(() => students.id),
   date: timestamp("date").notNull(),
   progressValue: decimal("progress_value", { precision: 5, scale: 2 }).notNull(), // percentage or score
   progressFormat: varchar("progress_format").notNull().default("percentage"), // percentage or fraction
@@ -104,6 +105,7 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
   }),
   goals: many(goals),
   objectives: many(objectives),
+  dataPoints: many(dataPoints),
 }));
 
 export const goalsRelations = relations(goals, ({ one, many }) => ({
@@ -135,6 +137,10 @@ export const dataPointsRelations = relations(dataPoints, ({ one }) => ({
   objective: one(objectives, {
     fields: [dataPoints.objectiveId],
     references: [objectives.id],
+  }),
+  student: one(students, {
+    fields: [dataPoints.studentId],
+    references: [students.id],
   }),
 }));
 
