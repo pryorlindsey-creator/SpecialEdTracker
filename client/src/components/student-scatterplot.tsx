@@ -23,6 +23,7 @@ interface Goal {
   id: number;
   title: string;
   dataCollectionType: string;
+  frequencyDirection?: string;
 }
 
 // Color palette for different goals
@@ -93,20 +94,30 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
       const goal = goalsMap.get(dp.goalId);
       const dateObj = new Date(dp.date);
       
-      // Convert progress value to appropriate display format
+      // For frequency and duration goals, use the original value instead of progress value
       let displayValue = 0;
       let yAxisLabel = "Progress (%)";
+      let originalValue = dp.progressValue;
+      
+      // Query the allDataPoints to get the actual 'value' field for frequency/duration
+      const fullDataPoint = allDataPoints?.find((fullDp: any) => 
+        fullDp.id === dp.id || 
+        (fullDp.goalId === dp.goalId && fullDp.date === dp.date)
+      );
       
       if (dp.progressFormat === 'percentage') {
         displayValue = parseFloat(dp.progressValue);
         yAxisLabel = "Progress (%)";
       } else if (dp.progressFormat === 'frequency') {
-        displayValue = parseFloat(dp.progressValue);
+        // Use the original frequency value, not the progress percentage
+        displayValue = fullDataPoint?.value ? parseFloat(fullDataPoint.value) : parseFloat(dp.progressValue);
+        originalValue = displayValue.toString();
         yAxisLabel = "Frequency (count)";
       } else if (dp.progressFormat === 'duration') {
-        // For duration, keep the original value (already in correct format from data entry)
-        displayValue = parseFloat(dp.progressValue);
-        yAxisLabel = "Duration (minutes)";
+        // Use the original duration value, not the progress percentage
+        displayValue = fullDataPoint?.value ? parseFloat(fullDataPoint.value) : parseFloat(dp.progressValue);
+        originalValue = displayValue.toString();
+        yAxisLabel = "Duration (seconds)";
       }
 
       return {
@@ -115,11 +126,12 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         goalId: dp.goalId,
         goalTitle: goal?.title || `Goal ${dp.goalId}`,
         date: dp.date,
-        originalValue: dp.progressValue,
+        originalValue: originalValue,
         format: dp.progressFormat,
         color: goal?.color || GOAL_COLORS[0],
         yAxisLabel: yAxisLabel,
-        durationUnit: dp.durationUnit, // Include duration unit for tooltip
+        durationUnit: fullDataPoint?.durationUnit || dp.durationUnit,
+        goal: goal, // Include goal info for frequency direction
       };
     })
     .sort((a, b) => a.x - b.x);
@@ -131,6 +143,50 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
     : "Progress Scatterplot";
   
   const yAxisLabel = scatterData.length > 0 ? scatterData[0].yAxisLabel : "Progress";
+
+  // Calculate Y-axis configuration based on data type and frequency direction
+  let yAxisConfig = {
+    domain: [0, 'dataMax'] as [number, string],
+    tickFormatter: (value: number) => value.toString(),
+    allowDecimals: true,
+    reversed: false
+  };
+
+  if (scatterData.length > 0) {
+    const firstDataPoint = scatterData[0];
+    const goal = firstDataPoint.goal;
+    
+    if (firstDataPoint.format === 'frequency') {
+      const frequencyValues = scatterData.map(d => d.y);
+      const minValue = Math.min(...frequencyValues, 0);
+      const maxValue = Math.max(...frequencyValues, 1);
+      const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
+      
+      yAxisConfig = {
+        domain: [Math.max(0, minValue - padding), maxValue + padding] as [number, number],
+        tickFormatter: (value: number) => Math.round(value).toString(),
+        allowDecimals: false,
+        reversed: goal?.frequencyDirection === 'decrease'
+      };
+    } else if (firstDataPoint.format === 'duration') {
+      const durationValues = scatterData.map(d => d.y);
+      const minValue = Math.min(...durationValues, 0);
+      const maxValue = Math.max(...durationValues, 1);
+      const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
+      
+      yAxisConfig = {
+        domain: [Math.max(0, minValue - padding), maxValue + padding] as [number, number],
+        tickFormatter: (value: number) => {
+          if (value < 60) return `${Math.round(value)}s`;
+          const minutes = Math.floor(value / 60);
+          const seconds = Math.round(value % 60);
+          return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        },
+        allowDecimals: false,
+        reversed: false
+      };
+    }
+  }
 
   const hasData = scatterData.length > 0;
 
@@ -219,16 +275,9 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   dataKey="y" 
                   name={yAxisLabel}
                   label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
-                  domain={[0, 'dataMax']}
-                  tickFormatter={(value) => {
-                    // Format y-axis ticks for duration data
-                    if (yAxisLabel === "Duration (minutes)" && value >= 1) {
-                      const minutes = Math.floor(value);
-                      const seconds = Math.round((value % 1) * 60);
-                      return seconds > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${minutes}:00`;
-                    }
-                    return value.toString();
-                  }}
+                  domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                  tickFormatter={yAxisConfig.tickFormatter}
+                  allowDecimals={yAxisConfig.allowDecimals}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 
@@ -236,7 +285,11 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                 <Line
                   type="monotone"
                   dataKey="y"
-                  stroke={scatterData.length > 0 ? scatterData[0].color : "#8884d8"}
+                  stroke={
+                    scatterData.length > 0 && scatterData[0].format === 'frequency' && scatterData[0].goal?.frequencyDirection === 'decrease'
+                      ? "#DC2626" // red for decrease frequency goals
+                      : scatterData.length > 0 ? scatterData[0].color : "#8884d8"
+                  }
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   dot={false}
@@ -248,8 +301,16 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                 <Scatter
                   name={goalId ? currentGoal?.title : "Progress"}
                   data={scatterData}
-                  fill={scatterData.length > 0 ? scatterData[0].color : "#8884d8"}
-                  stroke={scatterData.length > 0 ? scatterData[0].color : "#8884d8"}
+                  fill={
+                    scatterData.length > 0 && scatterData[0].format === 'frequency' && scatterData[0].goal?.frequencyDirection === 'decrease'
+                      ? "#DC2626" // red for decrease frequency goals
+                      : scatterData.length > 0 ? scatterData[0].color : "#8884d8"
+                  }
+                  stroke={
+                    scatterData.length > 0 && scatterData[0].format === 'frequency' && scatterData[0].goal?.frequencyDirection === 'decrease'
+                      ? "#DC2626" // red for decrease frequency goals
+                      : scatterData.length > 0 ? scatterData[0].color : "#8884d8"
+                  }
                   strokeWidth={2}
                   r={6}
                 />
