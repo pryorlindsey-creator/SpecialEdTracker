@@ -196,42 +196,59 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
 
   return (
     <div className="space-y-6">
-      {/* Session Timer */}
-      <Card className="border-2 border-blue-200 bg-blue-50">
-        <CardHeader className="pb-4">
-          <CardTitle className="flex items-center text-blue-900">
-            <Clock className="h-5 w-5 mr-2" />
-            Live Collection Session - {selectedGoal?.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-900 mb-1">
-                {formatTime(currentTimer)}
+      {/* Session Timer - Only show for frequency and percentage goals */}
+      {dataType !== 'duration' && (
+        <Card className="border-2 border-blue-200 bg-blue-50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-blue-900">
+              <Clock className="h-5 w-5 mr-2" />
+              Live Collection Session - {selectedGoal?.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-900 mb-1">
+                  {formatTime(currentTimer)}
+                </div>
+                <div className="text-sm text-blue-700">Session Duration</div>
               </div>
-              <div className="text-sm text-blue-700">Session Duration</div>
-            </div>
-            <div className="flex space-x-2">
-              {!isCollecting ? (
-                <Button onClick={startSession} className="bg-green-600 hover:bg-green-700">
-                  <Timer className="h-4 w-4 mr-2" />
-                  Start Session
+              <div className="flex space-x-2">
+                {!isCollecting ? (
+                  <Button onClick={startSession} className="bg-green-600 hover:bg-green-700">
+                    <Timer className="h-4 w-4 mr-2" />
+                    Start Session
+                  </Button>
+                ) : (
+                  <Button onClick={stopSession} variant="destructive">
+                    <Timer className="h-4 w-4 mr-2" />
+                    Stop Session
+                  </Button>
+                )}
+                <Button onClick={resetSession} variant="outline">
+                  <RotateCcw className="h-4 w-4 mr-2" />
+                  Reset
                 </Button>
-              ) : (
-                <Button onClick={stopSession} variant="destructive">
-                  <Timer className="h-4 w-4 mr-2" />
-                  Stop Session
-                </Button>
-              )}
-              <Button onClick={resetSession} variant="outline">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Duration Goal Header - Show for duration goals only */}
+      {dataType === 'duration' && (
+        <Card className="border-2 border-green-200 bg-green-50">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center text-green-900">
+              <Timer className="h-5 w-5 mr-2" />
+              Duration Collection - {selectedGoal?.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-green-800">Use the duration tracker below to record the time for this goal. Click "Save Data Point" when finished.</p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Data Collection Tools */}
       {dataType === 'frequency' && (
@@ -295,7 +312,6 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                     size="sm" 
                     variant="outline"
                     onClick={() => setDurationMinutes(Math.max(0, durationMinutes - 1))}
-                    disabled={!isCollecting}
                   >
                     -
                   </Button>
@@ -304,13 +320,11 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                     value={durationMinutes}
                     onChange={(e) => setDurationMinutes(Math.max(0, parseInt(e.target.value) || 0))}
                     className="text-center"
-                    disabled={!isCollecting}
                   />
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => setDurationMinutes(durationMinutes + 1)}
-                    disabled={!isCollecting}
                   >
                     +
                   </Button>
@@ -323,7 +337,6 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                     size="sm" 
                     variant="outline"
                     onClick={() => setDurationSeconds(Math.max(0, durationSeconds - 1))}
-                    disabled={!isCollecting}
                   >
                     -
                   </Button>
@@ -332,13 +345,11 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                     value={durationSeconds}
                     onChange={(e) => setDurationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
                     className="text-center"
-                    disabled={!isCollecting}
                   />
                   <Button 
                     size="sm" 
                     variant="outline"
                     onClick={() => setDurationSeconds(Math.min(59, durationSeconds + 1))}
-                    disabled={!isCollecting}
                   >
                     +
                   </Button>
@@ -413,7 +424,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                   setLevelOfSupport([...levelOfSupport, value]);
                 }
               }}
-              disabled={!isCollecting}
+              disabled={dataType !== 'duration' && !isCollecting}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Add support level" />
@@ -451,7 +462,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add notes about this observation session..."
               className="mt-1"
-              disabled={!isCollecting}
+              disabled={dataType !== 'duration' && !isCollecting}
             />
           </div>
         </CardContent>
@@ -462,18 +473,18 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         <Button 
           size="lg" 
           onClick={saveData}
-          disabled={isCollecting || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0)}
+          disabled={(dataType !== 'duration' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0)}
           className="bg-blue-600 hover:bg-blue-700 px-8"
         >
           <Save className="h-5 w-5 mr-2" />
           Save Data Point
         </Button>
-        {isCollecting && (
+        {isCollecting && dataType !== 'duration' && (
           <p className="text-sm text-gray-600 mt-2">
             Stop the session to save your data
           </p>
         )}
-        {!isCollecting && (
+        {(dataType === 'duration' || !isCollecting) && (
           <p className="text-sm text-gray-600 mt-2">
             {dataType === 'frequency' && frequencyCount === 0 && "Add at least one occurrence to save"}
             {dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0 && "Set duration time to save"}
