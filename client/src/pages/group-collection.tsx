@@ -300,7 +300,7 @@ export default function GroupCollection() {
           anecdotalInfo: `Group collection session: ${sessionStartTime ? new Date().toISOString().split('T')[1].slice(0, 5) : 'Unknown time'}`
         };
 
-        return apiRequest(`/api/goals/${data.goalId}/data-points`, payload);
+        return apiRequest("POST", `/api/goals/${data.goalId}/data-points`, payload);
       });
 
       await Promise.all(savePromises.filter(p => p !== null));
