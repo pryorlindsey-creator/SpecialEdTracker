@@ -39,7 +39,14 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
   useEffect(() => {
     if (isCollecting && sessionStartTime) {
       timerRef.current = setInterval(() => {
-        setCurrentTimer(Math.floor((Date.now() - sessionStartTime.getTime()) / 1000));
+        const totalSeconds = Math.floor((Date.now() - sessionStartTime.getTime()) / 1000);
+        setCurrentTimer(totalSeconds);
+        
+        // For duration goals, update the duration display in real-time
+        if (dataType === 'duration') {
+          setDurationMinutes(Math.floor(totalSeconds / 60));
+          setDurationSeconds(totalSeconds % 60);
+        }
       }, 1000);
     } else {
       if (timerRef.current) {
@@ -52,7 +59,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         clearInterval(timerRef.current);
       }
     };
-  }, [isCollecting, sessionStartTime]);
+  }, [isCollecting, sessionStartTime, dataType]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -299,62 +306,72 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
           </CardHeader>
           <CardContent>
             <div className="text-center mb-6">
-              <div className="text-4xl font-bold text-green-600 mb-2">
-                {durationMinutes}:{durationSeconds.toString().padStart(2, '0')}
+              <div className="text-6xl font-bold text-green-600 mb-2">
+                {Math.floor((durationMinutes * 60 + durationSeconds) / 60)}:{((durationMinutes * 60 + durationSeconds) % 60).toString().padStart(2, '0')}
               </div>
-              <div className="text-lg text-gray-600">Minutes:Seconds</div>
+              <div className="text-lg text-gray-600">Duration Timer</div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <Label>Minutes</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setDurationMinutes(Math.max(0, durationMinutes - 1))}
-                  >
-                    -
-                  </Button>
-                  <Input 
-                    type="number" 
-                    value={durationMinutes}
-                    onChange={(e) => setDurationMinutes(Math.max(0, parseInt(e.target.value) || 0))}
-                    className="text-center"
-                  />
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setDurationMinutes(durationMinutes + 1)}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-              <div>
-                <Label>Seconds</Label>
-                <div className="flex items-center space-x-2 mt-1">
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setDurationSeconds(Math.max(0, durationSeconds - 1))}
-                  >
-                    -
-                  </Button>
-                  <Input 
-                    type="number" 
-                    value={durationSeconds}
-                    onChange={(e) => setDurationSeconds(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)))}
-                    className="text-center"
-                  />
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={() => setDurationSeconds(Math.min(59, durationSeconds + 1))}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
+            <div className="flex justify-center space-x-4">
+              {!isCollecting ? (
+                <Button 
+                  onClick={() => {
+                    setIsCollecting(true);
+                    setSessionStartTime(new Date());
+                    setDurationMinutes(0);
+                    setDurationSeconds(0);
+                    toast({
+                      title: "Duration Timer Started",
+                      description: "Timing the duration for this goal.",
+                    });
+                  }}
+                  className="bg-green-600 hover:bg-green-700 h-16 px-8"
+                >
+                  <Timer className="h-5 w-5 mr-2" />
+                  Start Timer
+                </Button>
+              ) : (
+                <Button 
+                  onClick={() => {
+                    setIsCollecting(false);
+                    const totalSeconds = Math.floor((Date.now() - (sessionStartTime?.getTime() || 0)) / 1000);
+                    setDurationMinutes(Math.floor(totalSeconds / 60));
+                    setDurationSeconds(totalSeconds % 60);
+                    if (timerRef.current) {
+                      clearInterval(timerRef.current);
+                    }
+                    toast({
+                      title: "Duration Timer Stopped",
+                      description: `Recorded ${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`,
+                    });
+                  }}
+                  variant="destructive" 
+                  className="h-16 px-8"
+                >
+                  <Timer className="h-5 w-5 mr-2" />
+                  Stop Timer
+                </Button>
+              )}
+              <Button 
+                onClick={() => {
+                  setIsCollecting(false);
+                  setSessionStartTime(null);
+                  setDurationMinutes(0);
+                  setDurationSeconds(0);
+                  setCurrentTimer(0);
+                  if (timerRef.current) {
+                    clearInterval(timerRef.current);
+                  }
+                  toast({
+                    title: "Timer Reset",
+                    description: "Duration timer has been reset to 0:00",
+                  });
+                }}
+                variant="outline" 
+                className="h-16 px-8"
+              >
+                <RotateCcw className="h-5 w-5 mr-2" />
+                Reset
+              </Button>
             </div>
           </CardContent>
         </Card>
