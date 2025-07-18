@@ -220,13 +220,34 @@ export default function Home() {
           ) : (
             <div className="space-y-8">
               {(() => {
-                // Group students by grade level
+                // Normalize grade function to standardize grade formats
+                const normalizeGrade = (grade: string) => {
+                  if (!grade) return 'No Grade Assigned';
+                  const g = grade.trim();
+                  if (g === 'PreK') return 'PreK';
+                  if (g === 'K' || g === 'Kindergarten') return 'Kindergarten';
+                  if (g === '1' || g === '1st' || g === '1st Grade') return '1st Grade';
+                  if (g === '2' || g === '2nd' || g === '2nd Grade') return '2nd Grade';
+                  if (g === '3' || g === '3rd' || g === '3rd Grade') return '3rd Grade';
+                  if (g === '4' || g === '4th' || g === '4th Grade') return '4th Grade';
+                  if (g === '5' || g === '5th' || g === '5th Grade') return '5th Grade';
+                  if (g === '6' || g === '6th' || g === '6th Grade') return '6th Grade';
+                  if (g === '7' || g === '7th' || g === '7th Grade') return '7th Grade';
+                  if (g === '8' || g === '8th' || g === '8th Grade') return '8th Grade';
+                  if (g === '9' || g === '9th' || g === '9th Grade') return '9th Grade';
+                  if (g === '10' || g === '10th' || g === '10th Grade') return '10th Grade';
+                  if (g === '11' || g === '11th' || g === '11th Grade') return '11th Grade';
+                  if (g === '12' || g === '12th' || g === '12th Grade') return '12th Grade';
+                  return g; // Return as-is for other formats
+                };
+
+                // Group students by normalized grade level
                 const gradeGroups = studentsArray.reduce((groups: any, student: any) => {
-                  const grade = student.grade || 'No Grade Assigned';
-                  if (!groups[grade]) {
-                    groups[grade] = [];
+                  const normalizedGrade = normalizeGrade(student.grade);
+                  if (!groups[normalizedGrade]) {
+                    groups[normalizedGrade] = [];
                   }
-                  groups[grade].push(student);
+                  groups[normalizedGrade].push(student);
                   return groups;
                 }, {});
 
@@ -236,8 +257,8 @@ export default function Home() {
                   if (b === 'No Grade Assigned') return -1;
                   if (a === 'PreK') return -1;
                   if (b === 'PreK') return 1;
-                  if (a === 'K' || a === 'Kindergarten') return -1;
-                  if (b === 'K' || b === 'Kindergarten') return 1;
+                  if (a === 'Kindergarten') return -1;
+                  if (b === 'Kindergarten') return 1;
                   
                   // Extract numbers from grade strings for numerical sorting
                   const aNum = parseInt(a.match(/\d+/)?.[0] || '999');
