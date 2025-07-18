@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import StudentDetail from "@/pages/student-detail";
+import GroupCollection from "@/pages/group-collection";
 import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
 
@@ -38,6 +39,10 @@ function Router() {
       {/* Protected routes - require authentication */}
       <Route path="/students/:id">
         {isAuthenticated ? <StudentDetail /> : <Landing />}
+      </Route>
+      
+      <Route path="/group-collection">
+        {isAuthenticated ? <GroupCollection /> : <Landing />}
       </Route>
       
       <Route path="/admin">

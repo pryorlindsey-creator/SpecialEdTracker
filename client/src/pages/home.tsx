@@ -165,6 +165,14 @@ export default function Home() {
                     Add New Student
                   </Button>
                   <Button 
+                    onClick={() => window.location.href = '/group-collection'}
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Group Data Collection
+                  </Button>
+                  <Button 
                     onClick={() => window.location.href = '/admin'}
                     className="w-full justify-start"
                     variant="outline"
@@ -173,31 +181,6 @@ export default function Home() {
                     Admin Panel
                   </Button>
                   <ReportingPeriodsButton />
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      console.log('=== MANUAL LOCALSTORAGE CHECK ===');
-                      const data = localStorage.getItem('reportingPeriods');
-                      console.log('localStorage reportingPeriods:', data);
-                      if (data) {
-                        try {
-                          const parsed = JSON.parse(data);
-                          console.log('Parsed data:', parsed);
-                          alert(`Found ${parsed.periods?.length || 0} periods in localStorage. Check console for details.`);
-                        } catch (e) {
-                          console.error('Parse error:', e);
-                          alert('Invalid data in localStorage');
-                        }
-                      } else {
-                        alert('No reporting periods found in localStorage');
-                      }
-                      console.log('=== END MANUAL CHECK ===');
-                    }}
-                    className="w-full justify-start"
-                  >
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Check Old Data
-                  </Button>
                 </div>
               </CardContent>
             </Card>
