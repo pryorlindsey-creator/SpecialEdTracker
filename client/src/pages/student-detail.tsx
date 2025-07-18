@@ -224,10 +224,6 @@ export default function StudentDetail() {
               <Printer className="h-4 w-4 mr-2" />
               Print Report
             </Button>
-            <Button onClick={() => setActiveTab("data-entry")}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Data
-            </Button>
           </div>
         </div>
 
