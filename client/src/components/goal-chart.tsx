@@ -126,35 +126,52 @@ export default function GoalChart({ goalId }: GoalChartProps) {
             </div>
 
             {/* Chart Statistics */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-100">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">
-                  {goalProgress.currentProgress.toFixed(0)}%
-                </p>
-                <p className="text-sm text-gray-600">Current Progress</p>
+            {goal.dataCollectionType === 'percentage' ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-100">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {goalProgress.currentProgress.toFixed(0)}%
+                  </p>
+                  <p className="text-sm text-gray-600">Current Progress</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {goalProgress.averageScore.toFixed(0)}%
+                  </p>
+                  <p className="text-sm text-gray-600">Average Score</p>
+                </div>
+                <div className="text-center">
+                  <p className={`text-2xl font-bold ${
+                    goalProgress.trend > 0 ? 'text-green-600' : 
+                    goalProgress.trend < 0 ? 'text-red-600' : 'text-gray-900'
+                  }`}>
+                    {goalProgress.trend > 0 ? '+' : ''}{goalProgress.trend.toFixed(1)}%
+                  </p>
+                  <p className="text-sm text-gray-600">Trend</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dataPoints.length}
+                  </p>
+                  <p className="text-sm text-gray-600">Data Points</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">
-                  {goalProgress.averageScore.toFixed(0)}%
-                </p>
-                <p className="text-sm text-gray-600">Average Score</p>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {goalProgress.currentProgress.toFixed(0)}%
+                  </p>
+                  <p className="text-sm text-gray-600">Current Progress</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-gray-900">
+                    {dataPoints.length}
+                  </p>
+                  <p className="text-sm text-gray-600">Data Points</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className={`text-2xl font-bold ${
-                  goalProgress.trend > 0 ? 'text-green-600' : 
-                  goalProgress.trend < 0 ? 'text-red-600' : 'text-gray-900'
-                }`}>
-                  {goalProgress.trend > 0 ? '+' : ''}{goalProgress.trend.toFixed(1)}%
-                </p>
-                <p className="text-sm text-gray-600">Trend</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-gray-900">
-                  {dataPoints.length}
-                </p>
-                <p className="text-sm text-gray-600">Data Points</p>
-              </div>
-            </div>
+            )}
           </>
         )}
 

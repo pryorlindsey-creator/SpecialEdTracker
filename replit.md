@@ -267,7 +267,14 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
   - **Direct student-data point queries** - Added /api/students/:studentId/data-points endpoint for efficient data retrieval
   - **Improved relationships** - Students now have direct associations with their data points for better data organization
   - **Enhanced API performance** - Direct student queries eliminate need for complex joins through goals table
-  - **Database consistency** - All 13 existing data points now properly associated with their respective students
+  - **Database consistency** - All existing data points now properly associated with their respective students
+
+- July 18, 2025: **STREAMLINED DASHBOARD STATISTICS FOR DURATION AND FREQUENCY GOALS**
+  - **Conditional statistics display** - Average Score, Trend, and Last Score now hidden for duration and frequency data types
+  - **Enhanced goal progress cards** - Only show Data Points count for non-percentage goals
+  - **Simplified goal charts** - Chart statistics reduced to Current Progress and Data Points for duration/frequency goals
+  - **Clean interface** - Dashboard focuses on relevant metrics for each data collection type
+  - **Improved user experience** - Teachers see appropriate statistics based on their goal types without confusion
 
 - July 17, 2025: **RESOLVED TIMEZONE DATE DISPLAY ISSUES**
   - **Fixed calendar date shifting** - Reporting periods now display on exact dates entered by user

@@ -12,6 +12,7 @@ interface Goal {
   title: string;
   description: string;
   status: string;
+  dataCollectionType: string;
   currentProgress: number;
   averageScore: number;
   trend: number;
@@ -82,26 +83,35 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddDa
         </div>
 
         {/* Goal Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">{goal.dataPointsCount || 0}</p>
-            <p className="text-xs text-gray-600">Data Points</p>
+        {goal.dataCollectionType === 'percentage' ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">{goal.dataPointsCount || 0}</p>
+              <p className="text-xs text-gray-600">Data Points</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">{goal.averageScore?.toFixed(0) || 0}%</p>
+              <p className="text-xs text-gray-600">Average Score</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className={`text-2xl font-bold ${goal.trend > 0 ? 'text-green-600' : goal.trend < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                {formatTrend(goal.trend || 0)}
+              </p>
+              <p className="text-xs text-gray-600">Trend</p>
+            </div>
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">{goal.lastScore?.toFixed(0) || 0}%</p>
+              <p className="text-xs text-gray-600">Last Score</p>
+            </div>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">{goal.averageScore?.toFixed(0) || 0}%</p>
-            <p className="text-xs text-gray-600">Average Score</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div className="text-center p-3 bg-gray-50 rounded-lg">
+              <p className="text-2xl font-bold text-gray-900">{goal.dataPointsCount || 0}</p>
+              <p className="text-xs text-gray-600">Data Points</p>
+            </div>
           </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className={`text-2xl font-bold ${goal.trend > 0 ? 'text-green-600' : goal.trend < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-              {formatTrend(goal.trend || 0)}
-            </p>
-            <p className="text-xs text-gray-600">Trend</p>
-          </div>
-          <div className="text-center p-3 bg-gray-50 rounded-lg">
-            <p className="text-2xl font-bold text-gray-900">{goal.lastScore?.toFixed(0) || 0}%</p>
-            <p className="text-xs text-gray-600">Last Score</p>
-          </div>
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t border-gray-100">
