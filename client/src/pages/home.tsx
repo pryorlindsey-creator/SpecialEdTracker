@@ -218,10 +218,50 @@ export default function Home() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {studentsArray.map((student: any) => (
-                <StudentOverviewCard key={student.id} student={student} />
-              ))}
+            <div className="space-y-8">
+              {(() => {
+                // Group students by grade level
+                const gradeGroups = studentsArray.reduce((groups: any, student: any) => {
+                  const grade = student.grade || 'No Grade Assigned';
+                  if (!groups[grade]) {
+                    groups[grade] = [];
+                  }
+                  groups[grade].push(student);
+                  return groups;
+                }, {});
+
+                // Sort grades logically (PreK, K, 1st, 2nd, etc., then unassigned)
+                const sortedGrades = Object.keys(gradeGroups).sort((a, b) => {
+                  if (a === 'No Grade Assigned') return 1;
+                  if (b === 'No Grade Assigned') return -1;
+                  if (a === 'PreK') return -1;
+                  if (b === 'PreK') return 1;
+                  if (a === 'K' || a === 'Kindergarten') return -1;
+                  if (b === 'K' || b === 'Kindergarten') return 1;
+                  
+                  // Extract numbers from grade strings for numerical sorting
+                  const aNum = parseInt(a.match(/\d+/)?.[0] || '999');
+                  const bNum = parseInt(b.match(/\d+/)?.[0] || '999');
+                  return aNum - bNum;
+                });
+
+                return sortedGrades.map(grade => (
+                  <div key={grade} className="space-y-4">
+                    <div className="flex items-center">
+                      <GraduationCap className="h-5 w-5 text-blue-600 mr-2" />
+                      <h4 className="text-lg font-medium text-gray-800">{grade}</h4>
+                      <div className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-sm rounded-full">
+                        {gradeGroups[grade].length} student{gradeGroups[grade].length !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {gradeGroups[grade].map((student: any) => (
+                        <StudentOverviewCard key={student.id} student={student} />
+                      ))}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </div>
