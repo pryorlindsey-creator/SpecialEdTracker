@@ -466,7 +466,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         <Button 
           size="lg" 
           onClick={saveData}
-          disabled={!sessionStartTime || isCollecting}
+          disabled={isCollecting || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0)}
           className="bg-blue-600 hover:bg-blue-700 px-8"
         >
           <Save className="h-5 w-5 mr-2" />
@@ -475,6 +475,16 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         {isCollecting && (
           <p className="text-sm text-gray-600 mt-2">
             Stop the session to save your data
+          </p>
+        )}
+        {!isCollecting && (
+          <p className="text-sm text-gray-600 mt-2">
+            {dataType === 'frequency' && frequencyCount === 0 && "Add at least one occurrence to save"}
+            {dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0 && "Set duration time to save"}
+            {dataType === 'percentage' && percentageTrials.total === 0 && "Add at least one trial to save"}
+            {dataType === 'frequency' && frequencyCount > 0 && "Ready to save frequency data"}
+            {dataType === 'duration' && (durationMinutes > 0 || durationSeconds > 0) && "Ready to save duration data"}
+            {dataType === 'percentage' && percentageTrials.total > 0 && "Ready to save percentage data"}
           </p>
         )}
       </div>
