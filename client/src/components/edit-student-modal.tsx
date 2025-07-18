@@ -75,9 +75,9 @@ export default function EditStudentModal({ student, isOpen, onClose, onSuccess }
       await apiRequest("PUT", `/api/students/${student.id}`, formattedData);
     },
     onSuccess: () => {
-      // Invalidate relevant caches to refresh the data
+      // Invalidate relevant caches to refresh the data - use exact query key format
       queryClient.invalidateQueries({ queryKey: ["/api/students"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/students", student.id] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${student.id}`] });
       
       toast({
         title: "Success",
