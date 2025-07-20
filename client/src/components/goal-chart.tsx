@@ -53,9 +53,31 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     .reverse() // Show oldest to newest
     .slice(-10); // Show last 10 data points
 
+  // Helper function to calculate evenly spaced ticks
+  const calculateEvenTicks = (min: number, max: number, idealCount: number = 5): number[] => {
+    if (min === max) return [min];
+    
+    const range = max - min;
+    const step = Math.ceil(range / (idealCount - 1));
+    const ticks = [];
+    
+    for (let i = 0; i < idealCount; i++) {
+      const tick = min + (i * step);
+      if (tick <= max) ticks.push(tick);
+    }
+    
+    // Ensure max value is included
+    if (ticks[ticks.length - 1] !== max) {
+      ticks.push(max);
+    }
+    
+    return ticks;
+  };
+
   // Calculate Y-axis configuration based on data collection type
   let yAxisConfig = {
     domain: [0, 100] as [number, number],
+    ticks: [0, 25, 50, 75, 100] as number[],
     tickFormatter: (value: number) => `${value}%`,
     tooltipFormatter: (value: number) => `${value.toFixed(1)}%`,
     isFrequency: false,
@@ -67,9 +89,12 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     const minValue = Math.min(...frequencyValues, 0);
     const maxValue = Math.max(...frequencyValues, 1);
     const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
+    const domainMin = Math.max(0, minValue - padding);
+    const domainMax = maxValue + padding;
     
     yAxisConfig = {
-      domain: [Math.max(0, minValue - padding), maxValue + padding] as [number, number],
+      domain: [domainMin, domainMax] as [number, number],
+      ticks: calculateEvenTicks(domainMin, domainMax, 5),
       tickFormatter: (value: number) => Math.round(value).toString(),
       tooltipFormatter: (value: number) => Math.round(value).toString(),
       isFrequency: true,
@@ -80,9 +105,12 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     const minValue = Math.min(...durationValues, 0);
     const maxValue = Math.max(...durationValues, 1);
     const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
+    const domainMin = Math.max(0, minValue - padding);
+    const domainMax = maxValue + padding;
     
     yAxisConfig = {
-      domain: [Math.max(0, minValue - padding), maxValue + padding] as [number, number],
+      domain: [domainMin, domainMax] as [number, number],
+      ticks: calculateEvenTicks(domainMin, domainMax, 5),
       tickFormatter: (value: number) => {
         if (value < 60) return `${Math.round(value)}s`;
         const minutes = Math.floor(value / 60);
@@ -143,6 +171,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                   />
                   <YAxis 
                     domain={yAxisConfig.isReversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                    ticks={yAxisConfig.isReversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
                     stroke="#666"
                     fontSize={12}
                     tickFormatter={yAxisConfig.tickFormatter}

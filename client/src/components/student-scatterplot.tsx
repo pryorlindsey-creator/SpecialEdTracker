@@ -144,9 +144,31 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
   
   const yAxisLabel = scatterData.length > 0 ? scatterData[0].yAxisLabel : "Progress";
 
+  // Helper function to calculate evenly spaced ticks
+  const calculateEvenTicks = (min: number, max: number, idealCount: number = 5): number[] => {
+    if (min === max) return [min];
+    
+    const range = max - min;
+    const step = Math.ceil(range / (idealCount - 1));
+    const ticks = [];
+    
+    for (let i = 0; i < idealCount; i++) {
+      const tick = min + (i * step);
+      if (tick <= max) ticks.push(tick);
+    }
+    
+    // Ensure max value is included
+    if (ticks[ticks.length - 1] !== max) {
+      ticks.push(max);
+    }
+    
+    return ticks;
+  };
+
   // Calculate Y-axis configuration based on data type and frequency direction
   let yAxisConfig = {
-    domain: [0, 'dataMax'] as [number, string],
+    domain: [0, 100] as [number, number],
+    ticks: [0, 25, 50, 75, 100] as number[],
     tickFormatter: (value: number) => value.toString(),
     allowDecimals: true,
     reversed: false
@@ -157,25 +179,31 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
     const goal = firstDataPoint.goal;
     
     if (firstDataPoint.format === 'frequency') {
-      const frequencyValues = scatterData.map(d => d.y);
+      const frequencyValues = scatterData.map((d: any) => d.y);
       const minValue = Math.min(...frequencyValues, 0);
       const maxValue = Math.max(...frequencyValues, 1);
       const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
+      const domainMin = Math.max(0, minValue - padding);
+      const domainMax = maxValue + padding;
       
       yAxisConfig = {
-        domain: [Math.max(0, minValue - padding), maxValue + padding] as [number, number],
+        domain: [domainMin, domainMax] as [number, number],
+        ticks: calculateEvenTicks(domainMin, domainMax, 5),
         tickFormatter: (value: number) => Math.round(value).toString(),
         allowDecimals: false,
         reversed: goal?.frequencyDirection === 'decrease'
       };
     } else if (firstDataPoint.format === 'duration') {
-      const durationValues = scatterData.map(d => d.y);
+      const durationValues = scatterData.map((d: any) => d.y);
       const minValue = Math.min(...durationValues, 0);
       const maxValue = Math.max(...durationValues, 1);
       const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
+      const domainMin = Math.max(0, minValue - padding);
+      const domainMax = maxValue + padding;
       
       yAxisConfig = {
-        domain: [Math.max(0, minValue - padding), maxValue + padding] as [number, number],
+        domain: [domainMin, domainMax] as [number, number],
+        ticks: calculateEvenTicks(domainMin, domainMax, 5),
         tickFormatter: (value: number) => {
           if (value < 60) return `${Math.round(value)}s`;
           const minutes = Math.floor(value / 60);
@@ -183,6 +211,15 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
           return `${minutes}:${seconds.toString().padStart(2, '0')}`;
         },
         allowDecimals: false,
+        reversed: false
+      };
+    } else {
+      // Percentage type - use default 0-100 with even ticks
+      yAxisConfig = {
+        domain: [0, 100] as [number, number],
+        ticks: [0, 20, 40, 60, 80, 100],
+        tickFormatter: (value: number) => `${value}%`,
+        allowDecimals: true,
         reversed: false
       };
     }
@@ -276,6 +313,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   name={yAxisLabel}
                   label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
                   domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                  ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
                   tickFormatter={yAxisConfig.tickFormatter}
                   allowDecimals={yAxisConfig.allowDecimals}
                 />
