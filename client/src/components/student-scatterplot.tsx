@@ -251,7 +251,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
             <p className="text-sm text-gray-600">
               {data.durationUnit === 'seconds' ? 
                 `${data.y} seconds` : 
-                `${Math.floor(data.y)} minutes ${Math.round((data.y % 1) * 60)} seconds`
+                `${Math.floor(data.y)} min ${Math.round((data.y - Math.floor(data.y)) * 100)} sec`
               }
             </p>
           ) : (
