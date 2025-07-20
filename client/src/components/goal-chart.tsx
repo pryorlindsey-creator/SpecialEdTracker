@@ -13,7 +13,11 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   const { data: goalProgress, isLoading, error } = useQuery({
     queryKey: [`/api/goals/${goalId}`],
     enabled: !!goalId,
+    staleTime: 0,
+    gcTime: 0,
   });
+
+
 
   if (isLoading) {
     return (
@@ -112,16 +116,22 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       domain: [domainMin, domainMax] as [number, number],
       ticks: calculateEvenTicks(domainMin, domainMax, 5),
       tickFormatter: (value: number) => {
-        if (value < 60) return `${Math.round(value)}s`;
-        const minutes = Math.floor(value / 60);
-        const seconds = Math.round(value % 60);
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
+        const totalMinutes = Math.floor(value);
+        const seconds = Math.round((value - totalMinutes) * 100); // Convert decimal to seconds
+        if (totalMinutes === 0 && seconds < 60) {
+          return `${seconds}s`;
+        }
+        return `${totalMinutes}:${seconds.toString().padStart(2, '0')}`;
       },
       tooltipFormatter: (value: number) => {
-        if (value < 60) return `${Math.round(value)} seconds`;
-        const minutes = Math.floor(value / 60);
-        const seconds = Math.round(value % 60);
-        return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
+        const totalMinutes = Math.floor(value);
+        const seconds = Math.round((value - totalMinutes) * 100); // Convert decimal to seconds
+        if (totalMinutes === 0 && seconds < 60) {
+          return `${seconds} seconds`;
+        }
+        return `${totalMinutes} min ${seconds} sec`;
       },
       isFrequency: false,
       isReversed: false

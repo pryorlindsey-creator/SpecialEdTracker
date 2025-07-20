@@ -40,6 +40,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: "Server is working", received: req.body });
   });
 
+  // Debug endpoint to test Focus goal data specifically
+  app.get('/api/debug/goal-74', async (req, res) => {
+    try {
+      console.log("=== TESTING GOAL 74 (FOCUS GOAL) ===");
+      const goalId = 74;
+      
+      // Direct data points query
+      const directDataPoints = await storage.getDataPointsByGoalId(goalId);
+      console.log(`Direct query result: ${directDataPoints.length} data points`);
+      
+      // Goal progress query
+      const progress = await storage.getGoalProgress(goalId);
+      console.log(`Goal progress result: ${progress.dataPoints.length} data points`);
+      
+      res.json({
+        directDataPoints: directDataPoints.length,
+        progressDataPoints: progress.dataPoints.length,
+        latestDataPoints: directDataPoints.slice(0, 5).map(dp => ({
+          id: dp.id,
+          date: dp.date,
+          value: dp.progressValue
+        }))
+      });
+    } catch (error) {
+      console.error("Goal 74 test error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Auth middleware - this sets up sessions first
   await setupAuth(app);
 
