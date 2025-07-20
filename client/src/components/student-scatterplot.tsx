@@ -117,7 +117,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         // Use the original duration value, not the progress percentage
         displayValue = fullDataPoint?.value ? parseFloat(fullDataPoint.value) : parseFloat(dp.progressValue);
         originalValue = displayValue.toString();
-        yAxisLabel = "Duration (seconds)";
+        yAxisLabel = "Duration (mm:ss)";
       }
 
       return {
@@ -205,10 +205,13 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         domain: [domainMin, domainMax] as [number, number],
         ticks: calculateEvenTicks(domainMin, domainMax, 5),
         tickFormatter: (value: number) => {
-          if (value < 60) return `${Math.round(value)}s`;
-          const minutes = Math.floor(value / 60);
-          const seconds = Math.round(value % 60);
-          return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+          // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
+          const totalMinutes = Math.floor(value);
+          const seconds = Math.round((value - totalMinutes) * 100); // Convert decimal to seconds
+          if (value === 0) {
+            return "0:00";
+          }
+          return `${totalMinutes}:${seconds.toString().padStart(2, '0')}`;
         },
         allowDecimals: false,
         reversed: false

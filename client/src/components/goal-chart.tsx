@@ -116,18 +116,14 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       domain: [domainMin, domainMax] as [number, number],
       ticks: calculateEvenTicks(domainMin, domainMax, 5),
       tickFormatter: (value: number) => {
-        console.log(`[DURATION TICK DEBUG] Input value: ${value}`);
         // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
         const totalMinutes = Math.floor(value);
         const seconds = Math.round((value - totalMinutes) * 100); // Convert decimal to seconds
         // For duration goals, always show in minutes:seconds format unless it's 0
         if (value === 0) {
-          console.log(`[DURATION TICK DEBUG] Returning: 0:00`);
           return "0:00";
         }
-        const result = `${totalMinutes}:${seconds.toString().padStart(2, '0')}`;
-        console.log(`[DURATION TICK DEBUG] ${value} -> ${totalMinutes}min ${seconds}sec -> ${result}`);
-        return result;
+        return `${totalMinutes}:${seconds.toString().padStart(2, '0')}`;
       },
       tooltipFormatter: (value: number) => {
         // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
