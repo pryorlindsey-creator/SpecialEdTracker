@@ -119,8 +119,9 @@ export default function GoalChart({ goalId }: GoalChartProps) {
         // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
         const totalMinutes = Math.floor(value);
         const seconds = Math.round((value - totalMinutes) * 100); // Convert decimal to seconds
-        if (totalMinutes === 0 && seconds < 60) {
-          return `${seconds}s`;
+        // For duration goals, always show in minutes:seconds format unless it's 0
+        if (value === 0) {
+          return "0:00";
         }
         return `${totalMinutes}:${seconds.toString().padStart(2, '0')}`;
       },
@@ -128,8 +129,8 @@ export default function GoalChart({ goalId }: GoalChartProps) {
         // Value is in minutes (e.g., 1.10 = 1 minute 10 seconds)
         const totalMinutes = Math.floor(value);
         const seconds = Math.round((value - totalMinutes) * 100); // Convert decimal to seconds
-        if (totalMinutes === 0 && seconds < 60) {
-          return `${seconds} seconds`;
+        if (value === 0) {
+          return "0 minutes 0 seconds";
         }
         return `${totalMinutes} min ${seconds} sec`;
       },
