@@ -296,6 +296,13 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
   - **Professional visualization** - Charts provide cleaner, more readable data trends across all measurement types
   - **Unified scatterplot enhancement** - Both individual goal Reports and main dashboard charts use identical spacing logic
 
+- July 20, 2025: **FULLY RESOLVED DURATION CHART DISPLAY ISSUES**
+  - **Fixed y-axis labeling** - Changed from "Duration (seconds)" to "Duration (mm:ss)" in both goal charts and scatterplots
+  - **Corrected tick formatting** - All duration values now display as minutes:seconds (0:00, 1:10, 2:26) instead of raw seconds
+  - **Fixed tooltip calculations** - Duration hover tooltips now properly convert decimal minutes format (1.10 = 1 min 10 sec)
+  - **Consistent duration display** - Both individual goal charts and main scatterplot use identical duration formatting
+  - **Eliminated seconds-only display** - All duration data now shows in proper time format throughout the application
+
 - July 18, 2025: **IMPLEMENTED COMPREHENSIVE REAL-TIME DATA COLLECTION SYSTEM**
   - **Added Live Collection tab** - New dedicated interface for real-time classroom data collection
   - **Session-based data collection** - Start/stop timer functionality for observation periods
