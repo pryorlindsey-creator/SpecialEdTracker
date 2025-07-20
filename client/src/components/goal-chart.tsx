@@ -39,15 +39,15 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     );
   }
 
-  const { goal, dataPoints } = goalProgress;
+  const { goal, dataPoints } = goalProgress as any;
 
   // Prepare chart data
   const chartData = dataPoints
-    .map((point) => ({
+    .map((point: any) => ({
       date: format(new Date(point.date), "MMM d"),
       fullDate: point.date,
       progress: parseFloat(point.progressValue.toString()),
-      originalValue: parseFloat(point.value?.toString() || point.progressValue.toString()),
+      originalValue: parseFloat(point.progressValue.toString()),
       support: point.levelOfSupport || 'Not specified',
     }))
     .reverse() // Show oldest to newest
@@ -85,7 +85,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   };
 
   if (goal.dataCollectionType === 'frequency') {
-    const frequencyValues = chartData.map(d => d.originalValue);
+    const frequencyValues = chartData.map((d: any) => d.originalValue);
     const minValue = Math.min(...frequencyValues, 0);
     const maxValue = Math.max(...frequencyValues, 1);
     const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
@@ -101,7 +101,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       isReversed: goal.frequencyDirection === 'decrease'
     };
   } else if (goal.dataCollectionType === 'duration') {
-    const durationValues = chartData.map(d => d.originalValue);
+    const durationValues = chartData.map((d: any) => d.originalValue);
     const minValue = Math.min(...durationValues, 0);
     const maxValue = Math.max(...durationValues, 1);
     const padding = Math.ceil((maxValue - minValue) * 0.1) || 1;
@@ -130,7 +130,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
 
   // For frequency charts, use original values instead of progress values
   const displayData = goal.dataCollectionType === 'frequency' || goal.dataCollectionType === 'duration'
-    ? chartData.map(d => ({ ...d, progress: d.originalValue }))
+    ? chartData.map((d: any) => ({ ...d, progress: d.originalValue }))
     : chartData;
 
   return (
@@ -229,7 +229,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                     goalProgress.trend > 0 ? 'text-green-600' : 
                     goalProgress.trend < 0 ? 'text-red-600' : 'text-gray-900'
                   }`}>
-                    {goalProgress.trend > 0 ? '+' : ''}{goalProgress.trend.toFixed(1)}%
+                    {(goalProgress as any).trend > 0 ? '+' : ''}{((goalProgress as any).trend || 0).toFixed(1)}%
                   </p>
                   <p className="text-sm text-gray-600">Trend</p>
                 </div>
@@ -244,13 +244,13 @@ export default function GoalChart({ goalId }: GoalChartProps) {
               <div className="grid grid-cols-3 gap-4 pt-6 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {dataPoints.length > 0 ? Math.round(parseFloat(dataPoints[dataPoints.length - 1].value?.toString() || '0')) : 0}
+                    {dataPoints.length > 0 ? Math.round(parseFloat(dataPoints[dataPoints.length - 1].progressValue?.toString() || '0')) : 0}
                   </p>
                   <p className="text-sm text-gray-600">Current Frequency</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {dataPoints.length > 0 ? Math.round(dataPoints.reduce((sum, point) => sum + parseFloat(point.value?.toString() || '0'), 0) / dataPoints.length) : 0}
+                    {dataPoints.length > 0 ? Math.round(dataPoints.reduce((sum: any, point: any) => sum + parseFloat(point.progressValue?.toString() || '0'), 0) / dataPoints.length) : 0}
                   </p>
                   <p className="text-sm text-gray-600">Average Frequency</p>
                 </div>
