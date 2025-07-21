@@ -130,7 +130,7 @@ export default function EditDataPointModal({ dataPoint, isOpen, onClose, onSucce
         denominator: data.denominator ? parseInt(data.denominator) : null,
       };
 
-      return apiRequest(`/api/data-points/${dataPoint.id}`, 'PATCH', updateData);
+      return apiRequest('PATCH', `/api/data-points/${dataPoint.id}`, updateData);
     },
     onSuccess: () => {
       toast({
