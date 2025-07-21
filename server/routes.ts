@@ -966,7 +966,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/data-points/:id', async (req: any, res) => {
+  // Update a data point
+  app.patch('/api/data-points/:id', async (req: any, res) => {
     try {
       const dataPointId = parseInt(req.params.id);
       const existingDataPoint = await storage.getDataPointById(dataPointId);
@@ -975,13 +976,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Data point not found" });
       }
 
-      // Verify ownership through goal and student
-      const goal = await storage.getGoalById(existingDataPoint.goalId);
-      if (!goal) {
-        return res.status(404).json({ message: "Goal not found" });
-      }
-
-      const student = await storage.getStudentById(goal.studentId);
+      // Verify ownership through student
+      const student = await storage.getStudentById(existingDataPoint.studentId);
       if (!student) {
         return res.status(404).json({ message: "Student not found" });
       }
@@ -991,12 +987,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const updateData = insertDataPointSchema.partial().parse(req.body);
+      console.log("=== DATA POINT UPDATE REQUEST ===");
+      console.log("Data Point ID:", dataPointId);
+      console.log("Request timestamp:", new Date().toISOString());
+      console.log("Received update data:", req.body);
+      
+      // Convert level of support to JSON string for storage if it's an array
+      const requestBody = { ...req.body };
+      if (requestBody.levelOfSupport) {
+        if (typeof requestBody.levelOfSupport === 'string') {
+          // If it's already a string, assume it's JSON or a single value
+          try {
+            JSON.parse(requestBody.levelOfSupport);
+            // It's valid JSON, keep as is
+          } catch {
+            // It's a single value, wrap in array and stringify
+            requestBody.levelOfSupport = JSON.stringify([requestBody.levelOfSupport]);
+          }
+        } else if (Array.isArray(requestBody.levelOfSupport)) {
+          requestBody.levelOfSupport = requestBody.levelOfSupport.length > 0 
+            ? JSON.stringify(requestBody.levelOfSupport) 
+            : null;
+        }
+      }
+      
+      // Convert progressValue to number if it's a string
+      if (requestBody.progressValue && typeof requestBody.progressValue === 'string') {
+        requestBody.progressValue = parseFloat(requestBody.progressValue);
+      }
+
+      // Convert date string to proper format
+      if (requestBody.date && typeof requestBody.date === 'string') {
+        requestBody.date = new Date(requestBody.date + 'T12:00:00.000Z');
+      }
+      
+      // Parse and validate the update data
+      const updateData = insertDataPointSchema.partial().parse(requestBody);
+      
+      console.log("Parsed update data:", updateData);
+      
       const dataPoint = await storage.updateDataPoint(dataPointId, updateData);
+      console.log("✅ DATA POINT UPDATED SUCCESSFULLY:");
+      console.log("   - ID:", dataPoint.id);
+      console.log("   - Progress Value:", dataPoint.progressValue);
+      console.log("   - Duration Unit:", dataPoint.durationUnit);
+      console.log("   - Date:", dataPoint.date);
+      
       res.json(dataPoint);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating data point:", error);
+      console.error("Error stack:", (error as Error)?.stack);
       if (error instanceof z.ZodError) {
+        console.error("Zod validation errors:", error.errors);
         res.status(400).json({ message: "Invalid data point data", errors: error.errors });
       } else {
         res.status(500).json({ message: "Failed to update data point" });

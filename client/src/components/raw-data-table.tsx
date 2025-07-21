@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, Filter, Calendar, Target, TrendingUp } from 'lucide-react';
+import { Download, Search, Filter, Calendar, Target, TrendingUp, Edit } from 'lucide-react';
 import { format } from 'date-fns';
+import EditDataPointModal from './edit-data-point-modal';
 
 interface RawDataTableProps {
   studentId: number;
@@ -32,6 +33,9 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGoal, setSelectedGoal] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date-desc');
+  const [editingDataPoint, setEditingDataPoint] = useState<DataPoint | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Fetch all data points for this student
   const { data: rawData, isLoading, error } = useQuery({
@@ -277,6 +281,7 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
                 <TableHead>Level of Support</TableHead>
                 <TableHead>Notes</TableHead>
                 <TableHead>Recorded</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -306,6 +311,19 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
                   <TableCell className="text-sm text-gray-500">
                     {format(new Date(item.createdAt), 'MMM dd, h:mm a')}
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingDataPoint(item);
+                        setIsEditModalOpen(true);
+                      }}
+                      className="h-8 w-8 p-0"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -318,6 +336,26 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
           </div>
         )}
       </CardContent>
+
+      {/* Edit Data Point Modal */}
+      {editingDataPoint && (
+        <EditDataPointModal
+          dataPoint={editingDataPoint}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingDataPoint(null);
+          }}
+          onSuccess={() => {
+            // Refresh the data after successful update
+            queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
+            queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}`] });
+            setIsEditModalOpen(false);
+            setEditingDataPoint(null);
+          }}
+        />
+      )}
     </Card>
   );
 }
