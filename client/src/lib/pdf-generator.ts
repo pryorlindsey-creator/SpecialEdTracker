@@ -570,9 +570,13 @@ export class PDFGenerator {
       // Set up document
       this.setupDocument();
       
-      console.log('Adding student header...');
-      // Add header with student info
-      this.addStudentHeader(student);
+      console.log('Adding header...');
+      // Add header
+      this.addHeader(student);
+      
+      console.log('Adding student info...');
+      // Add student information
+      this.addStudentInfo(student);
       
       console.log('Adding raw data table...');
       // Add the raw data table
