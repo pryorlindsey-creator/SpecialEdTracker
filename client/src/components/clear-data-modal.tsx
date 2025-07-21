@@ -25,12 +25,15 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
   const [confirmText, setConfirmText] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
   const [finalConfirmation, setFinalConfirmation] = useState(false);
+  const [dataBackedUp, setDataBackedUp] = useState(false);
+  const [reportsDownloaded, setReportsDownloaded] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const expectedText = type === "student" ? "CLEAR STUDENT" : "CLEAR ALL DATA";
   const isTextConfirmed = confirmText === expectedText;
-  const isReadyForFinalStep = currentStep === 3 && isTextConfirmed && finalConfirmation;
+  const isStep2Ready = currentStep === 2 && dataBackedUp && reportsDownloaded;
+  const isReadyForFinalStep = currentStep === 4 && isTextConfirmed && finalConfirmation;
 
   const clearMutation = useMutation({
     mutationFn: async () => {
@@ -77,7 +80,7 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
   });
 
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -93,6 +96,8 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
     setConfirmText("");
     setCurrentStep(1);
     setFinalConfirmation(false);
+    setDataBackedUp(false);
+    setReportsDownloaded(false);
   };
 
   return (
@@ -105,14 +110,14 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
             </div>
             <div className="flex-1">
               <DialogTitle className="text-lg font-semibold">
-                {type === "student" ? "Clear Student Data" : "Clear All Data"} - Step {currentStep} of 3
+                {type === "student" ? "Clear Student Data" : "Clear All Data"} - Step {currentStep} of 4
               </DialogTitle>
               <DialogDescription className="text-sm text-gray-600">
                 Multiple confirmations required - This action cannot be undone
               </DialogDescription>
             </div>
             <div className="flex space-x-1">
-              {[1, 2, 3].map((step) => (
+              {[1, 2, 3, 4].map((step) => (
                 <div
                   key={step}
                   className={`w-3 h-3 rounded-full ${
@@ -142,20 +147,103 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
                 </p>
               </div>
               
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-800 mb-2">📥 RECOMMENDED: Save Your Data First</h4>
+                <p className="text-sm text-blue-700 mb-2">
+                  Before proceeding, we strongly recommend downloading your data:
+                </p>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• Export raw data tables as PDF from each student's Raw Data tab</li>
+                  <li>• Print progress charts from each student's Reports tab</li>
+                  <li>• Save any important notes or documentation</li>
+                  {type === "all" && <li>• Consider backing up your entire teaching portfolio</li>}
+                </ul>
+              </div>
+
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <h4 className="font-medium text-yellow-800 mb-2">Important considerations:</h4>
+                <h4 className="font-medium text-yellow-800 mb-2">⚠️ Important considerations:</h4>
                 <ul className="text-sm text-yellow-700 space-y-1">
                   <li>• This action cannot be undone</li>
                   <li>• Data cannot be recovered after deletion</li>
-                  <li>• Consider exporting reports before proceeding</li>
+                  <li>• All progress tracking will be permanently lost</li>
                   {type === "all" && <li>• You will lose all your teaching portfolio data</li>}
                 </ul>
               </div>
             </div>
           )}
 
-          {/* Step 2: Data Review */}
+          {/* Step 2: Data Backup Confirmation */}
           {currentStep === 2 && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-blue-50 p-4 border border-blue-200">
+                <h4 className="font-bold text-blue-800 mb-3">
+                  📥 BACKUP YOUR DATA FIRST
+                </h4>
+                <p className="text-sm text-blue-700 mb-3">
+                  Before continuing, you must back up your important data. Once deleted, this information cannot be recovered.
+                </p>
+                
+                <div className="space-y-3">
+                  <div className="bg-white p-3 rounded border border-blue-200">
+                    <h5 className="font-medium text-blue-800 mb-2">Required Actions:</h5>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      {type === "student" ? (
+                        <>
+                          <li>• Go to {studentName}'s Raw Data tab and click "Print PDF" to save all data points</li>
+                          <li>• Go to {studentName}'s Reports tab and click "Print Charts" to save progress charts</li>
+                          <li>• Save any important notes or objectives documentation</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>• Visit each student's Raw Data tab and export PDF reports</li>
+                          <li>• Visit each student's Reports tab and print progress charts</li>
+                          <li>• Export any reporting period configurations</li>
+                          <li>• Save your complete teaching portfolio</li>
+                        </>
+                      )}
+                    </ul>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="dataBackup"
+                        checked={dataBackedUp}
+                        onChange={(e) => setDataBackedUp(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="dataBackup" className="text-sm text-gray-700">
+                        ✓ I have downloaded all raw data PDFs
+                      </label>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="reportsBackup"
+                        checked={reportsDownloaded}
+                        onChange={(e) => setReportsDownloaded(e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-blue-300 rounded focus:ring-blue-500"
+                      />
+                      <label htmlFor="reportsBackup" className="text-sm text-gray-700">
+                        ✓ I have printed all progress charts and reports
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Note:</strong> You must confirm both backup actions above before proceeding to the next step.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Step 3: Data Review */}
+          {currentStep === 3 && (
             <div className="space-y-4">
               <div className="rounded-lg bg-red-50 p-4 border border-red-200">
                 <h4 className="font-medium text-red-800 mb-2">
@@ -189,8 +277,8 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
             </div>
           )}
 
-          {/* Step 3: Final Confirmation */}
-          {currentStep === 3 && (
+          {/* Step 4: Final Confirmation */}
+          {currentStep === 4 && (
             <div className="space-y-4">
               <div className="rounded-lg bg-red-100 p-4 border-2 border-red-300">
                 <h4 className="font-bold text-red-900 mb-2">
@@ -241,14 +329,14 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
             Cancel
           </Button>
           
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
             <Button
               variant="outline"
               onClick={handleNext}
-              disabled={clearMutation.isPending}
+              disabled={clearMutation.isPending || (currentStep === 2 && (!dataBackedUp || !reportsDownloaded))}
               className="bg-orange-50 border-orange-300 text-orange-700 hover:bg-orange-100"
             >
-              Continue
+              {currentStep === 2 ? 'Data Backed Up - Continue' : 'Continue'}
             </Button>
           ) : (
             <Button
