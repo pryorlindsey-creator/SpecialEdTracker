@@ -266,7 +266,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
   };
 
   return (
-    <Card>
+    <Card data-goal-id={goalId || 'combined'}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5" />

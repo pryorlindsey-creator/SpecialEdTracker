@@ -295,15 +295,23 @@ export class PDFGenerator {
         // Look for the chart element by goal ID first
         let chartElement = document.querySelector(`[data-goal-id="${goal.id}"]`) as HTMLElement;
         
-        // If not found, try to find any charts and match by index
+        console.log(`Looking for chart with data-goal-id="${goal.id}", found:`, !!chartElement);
+        
+        // If not found, try alternative selectors
         if (!chartElement) {
-          const allCharts = document.querySelectorAll('.recharts-wrapper');
-          if (allCharts[i]) {
-            chartElement = allCharts[i] as HTMLElement;
+          // Try to find charts by card structure with goal titles
+          const goalCards = Array.from(document.querySelectorAll('.card, [class*="card"]')).filter((card: any) => {
+            const cardText = card.textContent || '';
+            return cardText.includes(goal.title);
+          });
+          
+          if (goalCards.length > 0) {
+            chartElement = goalCards[0] as HTMLElement;
+            console.log(`Found chart by goal title: ${goal.title}`);
           }
         }
         
-        if (chartElement && chartElement.offsetHeight > 0) {
+        if (chartElement && chartElement.offsetHeight > 0 && chartElement.offsetWidth > 0) {
           console.log(`Capturing chart for goal: ${goal.title}`);
           
           // Add goal header
