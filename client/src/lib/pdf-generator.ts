@@ -49,11 +49,7 @@ export class PDFGenerator {
 
   constructor() {
     this.doc = new jsPDF();
-    // Ensure autoTable is available on the instance
-    if (!this.doc.autoTable) {
-      console.log('Initializing autoTable plugin...');
-      (this.doc as any).autoTable = autoTable.bind(this.doc);
-    }
+    console.log('PDF instance created successfully');
   }
 
   generateStudentReport(
@@ -175,7 +171,7 @@ export class PDFGenerator {
       goal.lastDataDate ? format(new Date(goal.lastDataDate), 'MM/dd/yyyy') : 'No data'
     ]);
 
-    this.doc.autoTable({
+    autoTable(this.doc, {
       startY: yPos + 10,
       head: [['Goal Title', 'Data Type', 'Status', 'Progress', 'Data Points', 'Last Entry']],
       body: tableData,
@@ -194,7 +190,7 @@ export class PDFGenerator {
   }
 
   private addGoalsDetails(goals: PDFGoalData[]): void {
-    let yPos = (this.doc as any).lastAutoTable.finalY + 20;
+    let yPos = (this.doc as any).lastAutoTable?.finalY + 20 || 200;
     
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
@@ -252,7 +248,7 @@ export class PDFGenerator {
       format(new Date(point.createdAt), 'MM/dd/yyyy HH:mm')
     ]);
 
-    this.doc.autoTable({
+    autoTable(this.doc, {
       startY: 30,
       head: [['Date', 'Goal', 'Progress', 'Support Level', 'Notes', 'Recorded']],
       body: tableData,
