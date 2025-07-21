@@ -21,6 +21,7 @@ import StudentScatterplot from "@/components/student-scatterplot";
 import RawDataTable from "@/components/raw-data-table";
 import LiveCollectionTools from "@/components/live-collection-tools";
 import { format } from "date-fns";
+import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
 
 export default function StudentDetail() {
   const params = useParams();
@@ -130,6 +131,80 @@ export default function StudentDetail() {
     ? format(new Date((student as any).lastDataPoint.date), "MMM d, yyyy")
     : "No data yet";
 
+  // PDF Generation Function
+  const generatePDF = async () => {
+    try {
+      // Ensure we have all the data needed
+      if (!student || !goals || !dataPoints) {
+        toast({
+          title: "Error",
+          description: "Unable to generate PDF. Missing student data.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Transform student data for PDF
+      const pdfStudent: PDFStudentData = {
+        id: student.id,
+        name: student.name,
+        grade: student.grade,
+        iepDueDate: student.iepDueDate,
+        relatedServices: student.relatedServices,
+        totalGoals: student.totalGoals || goals.length,
+        activeGoals: student.activeGoals || goals.filter(g => g.status === 'active').length,
+        completedGoals: student.completedGoals || goals.filter(g => g.status === 'completed').length,
+        totalDataPoints: student.totalDataPoints || dataPoints.length,
+      };
+
+      // Transform goals data for PDF
+      const pdfGoals: PDFGoalData[] = goals.map(goal => ({
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        targetCriteria: goal.targetCriteria,
+        dataCollectionType: goal.dataCollectionType,
+        status: goal.status,
+        currentProgress: goal.currentProgress || 0,
+        dataPointsCount: dataPoints.filter(dp => dp.goalId === goal.id).length,
+        lastDataDate: dataPoints.filter(dp => dp.goalId === goal.id).sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        )[0]?.date || null,
+      }));
+
+      // Transform data points for PDF
+      const pdfDataPoints: PDFDataPoint[] = dataPoints.map(dp => {
+        const goal = goals.find(g => g.id === dp.goalId);
+        return {
+          id: dp.id,
+          date: dp.date,
+          goalTitle: goal?.title || 'Unknown Goal',
+          progressValue: dp.progressValue,
+          progressFormat: dp.progressFormat,
+          levelOfSupport: dp.levelOfSupport || '[]',
+          anecdotalInfo: dp.anecdotalInfo || '',
+          createdAt: dp.createdAt,
+        };
+      }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+      // Generate PDF
+      const pdfGenerator = new PDFGenerator();
+      pdfGenerator.generateStudentReport(pdfStudent, pdfGoals, pdfDataPoints);
+
+      toast({
+        title: "Success",
+        description: "PDF report has been generated and downloaded.",
+      });
+    } catch (error) {
+      console.error('PDF generation error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Navigation confirmed working - proceeding with full interface
 
   return (
@@ -221,7 +296,7 @@ export default function StudentDetail() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh Data
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" onClick={generatePDF}>
               <Printer className="h-4 w-4 mr-2" />
               Print Report
             </Button>
