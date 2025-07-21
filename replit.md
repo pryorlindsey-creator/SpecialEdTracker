@@ -394,6 +394,15 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
   - **Enhanced error handling** - Proper validation and user feedback for all edit operations
   - **Classroom workflow integration** - Teachers can now correct data entry mistakes seamlessly
 
+- July 21, 2025: **ENHANCED PDF CHART GENERATION WITH GOAL DETAILS**
+  - **Fixed visual chart capture** - Added data-goal-id attributes to StudentScatterplot components for proper PDF chart identification
+  - **Tab-aware functionality** - Print Charts button only works when on Reports tab with visual feedback (blue highlight + checkmark)
+  - **Enhanced chart detection** - Multiple fallback methods to locate and capture visible charts using html2canvas
+  - **Comprehensive goal information** - PDF now includes goal descriptions, target criteria, progress stats, and status alongside each chart
+  - **Professional PDF layout** - Each goal section contains title, description, target criteria, data collection details, and visual progress chart
+  - **User guidance system** - Clear error messages and instructions when charts aren't visible or user is on wrong tab
+  - **Successful chart capture verified** - All 3 goal charts (Behavior, Focus, Literacy) successfully captured and included in PDF reports
+
 - July 17, 2025: **CREATED PROFESSIONAL CUSTOMER LANDING PAGE**
   - **Clean white background design** - Implemented requested white background with dark blue text throughout
   - **Professional branding** - Featured "Special Education Data Collection App" prominently in header

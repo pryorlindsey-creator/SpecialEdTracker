@@ -324,12 +324,28 @@ export class PDFGenerator {
           this.doc.setFont('helvetica', 'bold');
           this.doc.text(`${i + 1}. ${goal.title}`, 20, yPos);
           
-          yPos += 8;
+          yPos += 10;
           this.doc.setFontSize(10);
           this.doc.setFont('helvetica', 'normal');
-          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount}`, 20, yPos);
           
-          yPos += 15;
+          // Goal description
+          if (goal.description) {
+            const descLines = this.doc.splitTextToSize(`Description: ${goal.description}`, 170);
+            this.doc.text(descLines, 20, yPos);
+            yPos += descLines.length * 5 + 3;
+          }
+          
+          // Target criteria
+          if (goal.targetCriteria) {
+            const criteriaLines = this.doc.splitTextToSize(`Target: ${goal.targetCriteria}`, 170);
+            this.doc.text(criteriaLines, 20, yPos);
+            yPos += criteriaLines.length * 5 + 3;
+          }
+          
+          // Goal stats
+          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount} | Status: ${goal.status}`, 20, yPos);
+          
+          yPos += 12;
           
           // Capture the chart as image
           const canvas = await html2canvas(chartElement, {
@@ -378,20 +394,22 @@ export class PDFGenerator {
           this.doc.setFont('helvetica', 'normal');
           
           // Goal description
-          const description = goal.description || 'No description available';
-          const descLines = this.doc.splitTextToSize(description, 170);
-          this.doc.text(descLines, 20, yPos);
-          yPos += descLines.length * 5 + 5;
+          if (goal.description) {
+            const descLines = this.doc.splitTextToSize(`Description: ${goal.description}`, 170);
+            this.doc.text(descLines, 20, yPos);
+            yPos += descLines.length * 5 + 3;
+          }
+          
+          // Target criteria
+          if (goal.targetCriteria) {
+            const criteriaLines = this.doc.splitTextToSize(`Target: ${goal.targetCriteria}`, 170);
+            this.doc.text(criteriaLines, 20, yPos);
+            yPos += criteriaLines.length * 5 + 3;
+          }
           
           // Goal details
-          this.doc.text(`Data Collection Type: ${goal.dataCollectionType}`, 20, yPos);
-          yPos += 5;
-          this.doc.text(`Current Progress: ${Math.round(goal.currentProgress)}%`, 20, yPos);
-          yPos += 5;
-          this.doc.text(`Data Points Collected: ${goal.dataPointsCount}`, 20, yPos);
-          yPos += 5;
-          this.doc.text(`Status: ${goal.status}`, 20, yPos);
-          yPos += 15;
+          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount} | Status: ${goal.status}`, 20, yPos);
+          yPos += 10;
           
           // Instructions
           this.doc.setFontSize(9);
