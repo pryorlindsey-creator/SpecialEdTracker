@@ -134,11 +134,26 @@ export default function StudentDetail() {
   // PDF Generation Function
   const generatePDF = async () => {
     try {
+      console.log('PDF Generation Debug:');
+      console.log('Student data:', student);
+      console.log('Goals data:', goals);
+      console.log('Data points:', dataPoints);
+      
       // Ensure we have all the data needed
-      if (!student || !goals || !dataPoints) {
+      if (!student || !goals || !dataPoints || 
+          !Array.isArray(goals) || !Array.isArray(dataPoints) ||
+          !student.name || !student.id) {
+        console.error('Missing data for PDF generation:', {
+          student: !!student,
+          studentName: student?.name,
+          goals: !!goals,
+          goalsIsArray: Array.isArray(goals),
+          dataPoints: !!dataPoints,
+          dataPointsIsArray: Array.isArray(dataPoints)
+        });
         toast({
           title: "Error",
-          description: "Unable to generate PDF. Missing student data.",
+          description: "Unable to generate PDF. Missing or invalid student data.",
           variant: "destructive",
         });
         return;
