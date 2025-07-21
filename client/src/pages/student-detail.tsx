@@ -667,7 +667,7 @@ export default function StudentDetail() {
 
           {/* Raw Data Tab */}
           <TabsContent value="raw-data">
-            <RawDataTable studentId={studentId!} />
+            <RawDataTable studentId={studentId!} student={student} />
           </TabsContent>
         </Tabs>
       </div>

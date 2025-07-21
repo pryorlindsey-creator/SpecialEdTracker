@@ -137,6 +137,16 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
 
 ## Recent Changes
 
+- July 21, 2025: **COMPLETED PDF EXPORT FOR RAW DATA TABLES**
+  - **Added raw data PDF generation** - New generateRawDataReport method in PDF generator library
+  - **Print PDF button integration** - Added printer icon button to Raw Data Table header with proper positioning
+  - **Student data integration** - PDF export includes comprehensive student information and all data points
+  - **Professional table formatting** - Raw data displays in formatted table with proper date, goal, progress, support levels, and notes
+  - **File naming convention** - PDFs save as StudentName_Raw_Data_YYYY-MM-DD.pdf format
+  - **Error handling and validation** - Button disabled when no data available, proper toast notifications for success/error states
+  - **Complete workflow** - Teachers can now export all raw data points to PDF directly from Raw Data Table tab
+  - **Enhanced data accessibility** - PDF format allows for offline review, parent conferences, and official documentation
+
 - December 30, 2024: Created database administrator interface
   - Added secure admin login (sandralindsey/IsabelShea@1998)
   - Database schema viewer with field details and relationships

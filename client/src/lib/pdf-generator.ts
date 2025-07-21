@@ -556,6 +556,34 @@ export class PDFGenerator {
     }
   }
 
+  async generateRawDataReport(
+    student: PDFStudentData,
+    dataPoints: PDFDataPoint[]
+  ): Promise<void> {
+    try {
+      console.log('Setting up raw data PDF document...');
+      // Set up document
+      this.setupDocument();
+      
+      console.log('Adding student header...');
+      // Add header with student info
+      this.addStudentHeader(student);
+      
+      console.log('Adding raw data table...');
+      // Add the raw data table
+      this.addRawDataTable(dataPoints);
+      
+      console.log('Downloading raw data PDF...');
+      // Download
+      this.doc.save(`${student.name}_Raw_Data_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      
+      console.log('Raw data PDF generation completed successfully');
+    } catch (error) {
+      console.error('Raw data PDF generation error:', error);
+      throw error;
+    }
+  }
+
   private downloadPDF(studentName: string): void {
     const fileName = `${studentName.replace(/\s+/g, '_')}_IEP_Report_${format(new Date(), 'yyyy-MM-dd')}.pdf`;
     this.doc.save(fileName);

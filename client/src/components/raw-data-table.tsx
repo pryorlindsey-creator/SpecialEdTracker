@@ -6,12 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, Filter, Calendar, Target, TrendingUp, Edit } from 'lucide-react';
+import { Download, Search, Filter, Calendar, Target, TrendingUp, Edit, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import EditDataPointModal from './edit-data-point-modal';
+import { PDFGenerator, type PDFStudentData, type PDFDataPoint } from '@/lib/pdf-generator';
+import { useToast } from "@/hooks/use-toast";
 
 interface RawDataTableProps {
   studentId: number;
+  student?: any; // Student data for PDF generation
 }
 
 interface DataPoint {
@@ -29,13 +32,14 @@ interface DataPoint {
   createdAt: string;
 }
 
-export default function RawDataTable({ studentId }: RawDataTableProps) {
+export default function RawDataTable({ studentId, student }: RawDataTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedGoal, setSelectedGoal] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date-desc');
   const [editingDataPoint, setEditingDataPoint] = useState<DataPoint | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Fetch all data points for this student
   const { data: rawData, isLoading, error } = useQuery({
@@ -52,6 +56,66 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: 'always',
   });
+
+  // PDF Generation Function
+  const generateRawDataPDF = async () => {
+    try {
+      if (!student || !rawData || rawData.length === 0) {
+        toast({
+          title: "No Data",
+          description: "No student or data points available to generate PDF.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Generating raw data PDF for student:', student.name);
+      console.log('Data points count:', rawData.length);
+
+      // Transform student data for PDF
+      const pdfStudent: PDFStudentData = {
+        id: student.id,
+        name: student.name,
+        grade: student.grade || 'Not specified',
+        iepDueDate: student.iepDueDate,
+        relatedServices: student.relatedServices || 'None specified',
+        totalGoals: student.totalGoals || 0,
+        activeGoals: student.activeGoals || 0,
+        completedGoals: student.completedGoals || 0,
+        totalDataPoints: student.totalDataPoints || rawData.length
+      };
+
+      // Transform data points for PDF
+      const pdfDataPoints: PDFDataPoint[] = rawData.map((point: DataPoint) => ({
+        id: point.id,
+        date: point.date,
+        goalTitle: point.goalTitle,
+        progressValue: point.progressValue,
+        progressFormat: point.progressFormat,
+        levelOfSupport: point.levelOfSupport || '[]',
+        anecdotalInfo: point.anecdotalInfo || '',
+        createdAt: point.createdAt
+      }));
+
+      console.log('Creating PDF generator...');
+      const pdfGenerator = new PDFGenerator();
+      console.log('Calling generateRawDataReport...');
+      await pdfGenerator.generateRawDataReport(pdfStudent, pdfDataPoints);
+      console.log('Raw data PDF generation completed successfully');
+
+      toast({
+        title: "Success",
+        description: "Raw data PDF has been generated and downloaded.",
+      });
+    } catch (error) {
+      console.error('Raw data PDF generation error:', error);
+      toast({
+        title: "Error",
+        description: `Failed to generate raw data PDF: ${error?.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -193,15 +257,27 @@ export default function RawDataTable({ studentId }: RawDataTableProps) {
             <Table className="h-5 w-5" />
             <span className="whitespace-nowrap">Raw Data Table</span>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportToCSV}
-            className="gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={generateRawDataPDF}
+              className="gap-2"
+              disabled={!student || !rawData || rawData.length === 0}
+            >
+              <Printer className="h-4 w-4" />
+              Print PDF
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportToCSV}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
