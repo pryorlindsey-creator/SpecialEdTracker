@@ -3,7 +3,7 @@ import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,7 @@ export default function StudentDetail() {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
   const [isClearStudentDataModalOpen, setIsClearStudentDataModalOpen] = useState(false);
+  const [isRemoveStudentModalOpen, setIsRemoveStudentModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [editingGoal, setEditingGoal] = useState<any>(null);
 
@@ -420,6 +421,14 @@ export default function StudentDetail() {
               <Trash2 className="h-4 w-4 mr-2" />
               Clear Student Data
             </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsRemoveStudentModalOpen(true)}
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            >
+              <UserX className="h-4 w-4 mr-2" />
+              Remove from Caseload
+            </Button>
           </div>
         </div>
 
@@ -702,6 +711,15 @@ export default function StudentDetail() {
         isOpen={isClearStudentDataModalOpen}
         onClose={() => setIsClearStudentDataModalOpen(false)}
         type="student"
+        studentId={studentId}
+        studentName={student?.name}
+      />
+
+      {/* Remove Student Modal */}
+      <ClearDataModal
+        isOpen={isRemoveStudentModalOpen}
+        onClose={() => setIsRemoveStudentModalOpen(false)}
+        type="remove"
         studentId={studentId}
         studentName={student?.name}
       />

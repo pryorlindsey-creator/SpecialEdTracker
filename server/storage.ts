@@ -256,6 +256,20 @@ export class DatabaseStorage implements IStorage {
     await db.delete(goals).where(eq(goals.studentId, studentId));
   }
 
+  async removeStudentFromCaseload(studentId: number): Promise<void> {
+    // Delete all data points for this student
+    await db.delete(dataPoints).where(eq(dataPoints.studentId, studentId));
+    
+    // Delete all objectives for this student
+    await db.delete(objectives).where(eq(objectives.studentId, studentId));
+    
+    // Delete all goals for this student
+    await db.delete(goals).where(eq(goals.studentId, studentId));
+    
+    // Delete the student record itself
+    await db.delete(students).where(eq(students.id, studentId));
+  }
+
   async clearAllUserData(userId: string): Promise<void> {
     // Get all students for this user
     const userStudents = await db

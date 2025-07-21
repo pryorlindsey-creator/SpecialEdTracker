@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 interface ClearDataModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: "student" | "all";
+  type: "student" | "all" | "remove";
   studentId?: number;
   studentName?: string;
 }
@@ -30,7 +30,7 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const expectedText = type === "student" ? "CLEAR STUDENT" : "CLEAR ALL DATA";
+  const expectedText = type === "student" ? "CLEAR STUDENT" : type === "remove" ? "REMOVE STUDENT" : "CLEAR ALL DATA";
   const isTextConfirmed = confirmText === expectedText;
   const isStep2Ready = currentStep === 2 && dataBackedUp && reportsDownloaded;
   const isReadyForFinalStep = currentStep === 4 && isTextConfirmed && finalConfirmation;
@@ -39,6 +39,8 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
     mutationFn: async () => {
       if (type === "student" && studentId) {
         await apiRequest("DELETE", `/api/students/${studentId}/clear-data`);
+      } else if (type === "remove" && studentId) {
+        await apiRequest("DELETE", `/api/students/${studentId}/remove-from-caseload`);
       } else {
         await apiRequest("DELETE", "/api/users/clear-all-data");
       }
@@ -50,15 +52,23 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
         queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
         queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
         queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/objectives`] });
+      } else if (type === "remove") {
+        queryClient.invalidateQueries({ queryKey: ["/api/students"] });
+        // Redirect to home page after removing student
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
       } else {
         queryClient.invalidateQueries({ queryKey: ["/api/students"] });
         queryClient.invalidateQueries({ queryKey: ["/api/reporting-periods"] });
       }
       
       toast({
-        title: "Data Cleared",
+        title: type === "remove" ? "Student Removed" : "Data Cleared",
         description: type === "student" 
           ? `All data for ${studentName} has been cleared.`
+          : type === "remove" 
+          ? `${studentName} has been removed from your caseload.`
           : "All students and data have been cleared from your caseload.",
         variant: "default",
       });
@@ -69,7 +79,9 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
     onError: (error) => {
       toast({
         title: "Error",
-        description: `Failed to clear data: ${error.message}`,
+        description: type === "remove" 
+          ? `Failed to remove student from caseload: ${error.message}`
+          : `Failed to clear data: ${error.message}`,
         variant: "destructive",
       });
     },
@@ -106,7 +118,7 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
             </div>
             <div className="flex-1">
               <DialogTitle className="text-lg font-semibold">
-                {type === "student" ? "Clear Student Data" : "Clear All Data"} - Step {currentStep} of 4
+                {type === "student" ? "Clear Student Data" : type === "remove" ? "Remove Student from Caseload" : "Clear All Data"} - Step {currentStep} of 4
               </DialogTitle>
               <DialogDescription className="text-sm text-gray-600">
                 Multiple confirmations required - This action cannot be undone
@@ -138,6 +150,8 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
                 <p className="text-sm text-red-700">
                   {type === "student" 
                     ? `You are about to permanently delete ALL data for ${studentName}. This includes goals, objectives, and all progress tracking data.`
+                    : type === "remove"
+                    ? `You are about to permanently remove ${studentName} from your caseload. This will delete the student record AND all associated data (goals, objectives, and progress tracking).`
                     : "You are about to permanently delete YOUR ENTIRE CASELOAD. This includes all students, goals, objectives, progress data, and reporting periods."
                   }
                 </p>

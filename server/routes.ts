@@ -1272,6 +1272,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete('/api/students/:studentId/remove-from-caseload', async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudentById(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Verify ownership
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.removeStudentFromCaseload(studentId);
+      res.json({ message: "Student removed from caseload successfully" });
+    } catch (error) {
+      console.error("Error removing student from caseload:", error);
+      res.status(500).json({ message: "Failed to remove student from caseload" });
+    }
+  });
+
   // Reporting periods routes
   app.get('/api/reporting-periods', async (req: any, res) => {
     try {
