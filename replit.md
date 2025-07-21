@@ -146,6 +146,9 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
   - **Error handling and validation** - Button disabled when no data available, proper toast notifications for success/error states
   - **Complete workflow** - Teachers can now export all raw data points to PDF directly from Raw Data Table tab
   - **Enhanced data accessibility** - PDF format allows for offline review, parent conferences, and official documentation
+  - **Removed CSV export** - Eliminated Export CSV button from Raw Data Table as requested by user
+  - **Fixed method naming** - Resolved PDF generation errors by using correct addHeader and addStudentInfo methods
+  - **User testing successful** - PDF generation confirmed working with Student 1's 17 data points successfully exported
 
 - December 30, 2024: Created database administrator interface
   - Added secure admin login (sandralindsey/IsabelShea@1998)
