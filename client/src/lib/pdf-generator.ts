@@ -276,15 +276,34 @@ export class PDFGenerator {
     
     yPos += 20;
     
+    // Look for charts in multiple possible locations
+    const chartSelectors = [
+      `[data-goal-id]`, // Any chart with goal ID
+      `.recharts-wrapper`, // Recharts containers
+      `[class*="chart"]`, // Any element with "chart" in class name
+      `svg[class*="recharts"]` // SVG elements from recharts
+    ];
+    
+    let chartsFound = 0;
+    
     // Try to capture individual goal charts from the Reports tab
     for (let i = 0; i < goals.length; i++) {
       const goal = goals[i];
+      let chartCaptured = false;
       
       try {
-        // Look for the chart element by goal ID
-        const chartElement = document.querySelector(`[data-goal-id="${goal.id}"]`) as HTMLElement;
+        // Look for the chart element by goal ID first
+        let chartElement = document.querySelector(`[data-goal-id="${goal.id}"]`) as HTMLElement;
         
-        if (chartElement) {
+        // If not found, try to find any charts and match by index
+        if (!chartElement) {
+          const allCharts = document.querySelectorAll('.recharts-wrapper');
+          if (allCharts[i]) {
+            chartElement = allCharts[i] as HTMLElement;
+          }
+        }
+        
+        if (chartElement && chartElement.offsetHeight > 0) {
           console.log(`Capturing chart for goal: ${goal.title}`);
           
           // Add goal header
@@ -307,9 +326,11 @@ export class PDFGenerator {
           // Capture the chart as image
           const canvas = await html2canvas(chartElement, {
             backgroundColor: '#ffffff',
-            scale: 2,
+            scale: 1.5,
             useCORS: true,
-            allowTaint: true
+            allowTaint: true,
+            height: chartElement.offsetHeight,
+            width: chartElement.offsetWidth
           });
           
           const imgData = canvas.toDataURL('image/png');
@@ -328,10 +349,14 @@ export class PDFGenerator {
           this.doc.addImage(imgData, 'PNG', 20, yPos, imgWidth, imgHeight);
           yPos += imgHeight + 20;
           
-        } else {
+          chartCaptured = true;
+          chartsFound++;
+        }
+        
+        if (!chartCaptured) {
           console.log(`No chart element found for goal: ${goal.title}`);
-          // Add text placeholder if chart not found
-          if (yPos > 250) {
+          // Add detailed goal information instead
+          if (yPos > 220) {
             this.doc.addPage();
             yPos = 20;
           }
@@ -340,14 +365,31 @@ export class PDFGenerator {
           this.doc.setFont('helvetica', 'bold');
           this.doc.text(`${i + 1}. ${goal.title}`, 20, yPos);
           
-          yPos += 8;
+          yPos += 10;
           this.doc.setFontSize(10);
           this.doc.setFont('helvetica', 'normal');
-          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount}`, 20, yPos);
           
-          yPos += 8;
-          this.doc.text('Chart available in the Reports tab of the application.', 20, yPos);
-          yPos += 20;
+          // Goal description
+          const description = goal.description || 'No description available';
+          const descLines = this.doc.splitTextToSize(description, 170);
+          this.doc.text(descLines, 20, yPos);
+          yPos += descLines.length * 5 + 5;
+          
+          // Goal details
+          this.doc.text(`Data Collection Type: ${goal.dataCollectionType}`, 20, yPos);
+          yPos += 5;
+          this.doc.text(`Current Progress: ${Math.round(goal.currentProgress)}%`, 20, yPos);
+          yPos += 5;
+          this.doc.text(`Data Points Collected: ${goal.dataPointsCount}`, 20, yPos);
+          yPos += 5;
+          this.doc.text(`Status: ${goal.status}`, 20, yPos);
+          yPos += 15;
+          
+          // Instructions
+          this.doc.setFontSize(9);
+          this.doc.setFont('helvetica', 'italic');
+          this.doc.text('To view visual chart: Go to Reports tab in the application and click Print Charts while viewing charts.', 20, yPos);
+          yPos += 15;
         }
       } catch (error) {
         console.error(`Error capturing chart for goal ${goal.title}:`, error);
@@ -355,10 +397,30 @@ export class PDFGenerator {
       }
     }
     
-    // Add fallback if no charts were captured
-    if (goals.length === 0) {
-      this.doc.setFontSize(12);
-      this.doc.text('No goals available for chart generation.', 20, yPos);
+    // Add summary at the end
+    if (yPos > 250) {
+      this.doc.addPage();
+      yPos = 20;
+    }
+    
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Chart Capture Summary', 20, yPos);
+    yPos += 10;
+    
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text(`Charts successfully captured: ${chartsFound} of ${goals.length}`, 20, yPos);
+    yPos += 8;
+    
+    if (chartsFound === 0) {
+      this.doc.text('No visual charts were captured. To include charts in PDF:', 20, yPos);
+      yPos += 6;
+      this.doc.text('1. Navigate to the Reports tab', 25, yPos);
+      yPos += 5;
+      this.doc.text('2. Wait for all charts to load completely', 25, yPos);
+      yPos += 5;
+      this.doc.text('3. Click Print Charts button while charts are visible', 25, yPos);
     }
   }
 

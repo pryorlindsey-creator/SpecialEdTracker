@@ -244,8 +244,22 @@ export default function StudentDetail() {
         return;
       }
 
+      // Check if we're on the Reports tab (where charts are visible)
+      const isOnReportsTab = activeTab === 'reports';
+      const visibleCharts = document.querySelectorAll('[data-goal-id]');
+      
+      if (!isOnReportsTab || visibleCharts.length === 0) {
+        toast({
+          title: "Charts Not Visible",
+          description: "Please navigate to the Reports tab first, then click Print Charts to capture the visual charts.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       console.log('Student data:', student);
       console.log('Goals data:', goals);
+      console.log(`Found ${visibleCharts.length} visible charts`);
 
       const pdfStudent: PDFStudentData = {
         id: (student as any).id,
@@ -388,9 +402,16 @@ export default function StudentDetail() {
               <Printer className="h-4 w-4 mr-2" />
               Print Report
             </Button>
-            <Button variant="outline" onClick={generateChartsPDF}>
+            <Button 
+              variant="outline" 
+              onClick={generateChartsPDF}
+              className={activeTab === 'reports' ? 'bg-blue-50 border-blue-300' : ''}
+            >
               <ChartLine className="h-4 w-4 mr-2" />
               Print Charts
+              {activeTab === 'reports' && (
+                <span className="ml-1 text-xs text-blue-600">✓</span>
+              )}
             </Button>
           </div>
         </div>
