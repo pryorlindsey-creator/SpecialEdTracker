@@ -1237,6 +1237,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Clear data routes
+  app.delete('/api/students/:studentId/clear-data', async (req: any, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const student = await storage.getStudentById(studentId);
+      
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+
+      // Verify ownership
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      await storage.clearStudentData(studentId);
+      res.json({ message: "Student data cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing student data:", error);
+      res.status(500).json({ message: "Failed to clear student data" });
+    }
+  });
+
+  app.delete('/api/users/clear-all-data', async (req: any, res) => {
+    try {
+      const userId = '4201332';
+      await storage.clearAllUserData(userId);
+      res.json({ message: "All user data cleared successfully" });
+    } catch (error) {
+      console.error("Error clearing all user data:", error);
+      res.status(500).json({ message: "Failed to clear all data" });
+    }
+  });
+
   // Reporting periods routes
   app.get('/api/reporting-periods', async (req: any, res) => {
     try {

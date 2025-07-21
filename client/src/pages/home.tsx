@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Users, Target, BarChart3, Calendar, ChevronRight } from "lucide-react";
+import { Plus, Users, Target, BarChart3, Calendar, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { GraduationCap } from "lucide-react";
@@ -12,11 +12,13 @@ import AddStudentModal from "@/components/add-student-modal";
 import DashboardCalendar from "@/components/dashboard-calendar";
 import { ReportingPeriodsButton } from "@/components/reporting-periods-modal";
 import ReportingPeriodsDisplay from "@/components/reporting-periods-display";
+import { ClearDataModal } from "@/components/clear-data-modal";
 
 export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+  const [isClearAllDataModalOpen, setIsClearAllDataModalOpen] = useState(false);
 
   const { data: students, isLoading, error, refetch } = useQuery({
     queryKey: ["/api/students"],
@@ -181,6 +183,14 @@ export default function Home() {
                     Admin Panel
                   </Button>
                   <ReportingPeriodsButton />
+                  <Button 
+                    onClick={() => setIsClearAllDataModalOpen(true)}
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Clear All Data
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -296,6 +306,13 @@ export default function Home() {
           refetch();
           setIsAddStudentModalOpen(false);
         }}
+      />
+
+      {/* Clear All Data Modal */}
+      <ClearDataModal
+        isOpen={isClearAllDataModalOpen}
+        onClose={() => setIsClearAllDataModalOpen(false)}
+        type="all"
       />
     </div>
   );

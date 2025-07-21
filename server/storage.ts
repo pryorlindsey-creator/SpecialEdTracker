@@ -244,6 +244,45 @@ export class DatabaseStorage implements IStorage {
     await db.delete(dataPoints).where(eq(dataPoints.id, id));
   }
 
+  // Clear data operations
+  async clearStudentData(studentId: number): Promise<void> {
+    // Delete all data points for this student
+    await db.delete(dataPoints).where(eq(dataPoints.studentId, studentId));
+    
+    // Delete all objectives for this student
+    await db.delete(objectives).where(eq(objectives.studentId, studentId));
+    
+    // Delete all goals for this student
+    await db.delete(goals).where(eq(goals.studentId, studentId));
+  }
+
+  async clearAllUserData(userId: string): Promise<void> {
+    // Get all students for this user
+    const userStudents = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.userId, userId));
+    
+    const studentIds = userStudents.map(s => s.id);
+    
+    if (studentIds.length > 0) {
+      // Delete all data points for all students
+      await db.delete(dataPoints).where(inArray(dataPoints.studentId, studentIds));
+      
+      // Delete all objectives for all students  
+      await db.delete(objectives).where(inArray(objectives.studentId, studentIds));
+      
+      // Delete all goals for all students
+      await db.delete(goals).where(inArray(goals.studentId, studentIds));
+    }
+    
+    // Delete all students
+    await db.delete(students).where(eq(students.userId, userId));
+    
+    // Delete reporting periods
+    await db.delete(reportingPeriods).where(eq(reportingPeriods.userId, userId));
+  }
+
   // Analytics operations
   async getStudentSummary(studentId: number): Promise<{
     totalGoals: number;

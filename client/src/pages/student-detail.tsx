@@ -3,7 +3,7 @@ import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,6 +20,7 @@ import StudentInfoCard from "@/components/student-info-card";
 import StudentScatterplot from "@/components/student-scatterplot";
 import RawDataTable from "@/components/raw-data-table";
 import LiveCollectionTools from "@/components/live-collection-tools";
+import { ClearDataModal } from "@/components/clear-data-modal";
 import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
 
@@ -31,6 +32,7 @@ export default function StudentDetail() {
   const [activeTab, setActiveTab] = useState("overview");
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
+  const [isClearStudentDataModalOpen, setIsClearStudentDataModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [editingGoal, setEditingGoal] = useState<any>(null);
 
@@ -413,6 +415,14 @@ export default function StudentDetail() {
                 <span className="ml-1 text-xs text-blue-600">✓</span>
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              onClick={() => setIsClearStudentDataModalOpen(true)}
+              className="border-red-300 text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear Student Data
+            </Button>
           </div>
         </div>
 
@@ -689,6 +699,15 @@ export default function StudentDetail() {
           }}
         />
       )}
+
+      {/* Clear Student Data Modal */}
+      <ClearDataModal
+        isOpen={isClearStudentDataModalOpen}
+        onClose={() => setIsClearStudentDataModalOpen(false)}
+        type="student"
+        studentId={studentId}
+        studentName={student?.name}
+      />
     </div>
   );
 }
