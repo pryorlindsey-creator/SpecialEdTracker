@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, Filter, Calendar, Target, TrendingUp, Edit, Printer } from 'lucide-react';
+import { Search, Filter, Calendar, Target, TrendingUp, Edit, Printer } from 'lucide-react';
 import { format } from 'date-fns';
 import EditDataPointModal from './edit-data-point-modal';
 import { PDFGenerator, type PDFStudentData, type PDFDataPoint } from '@/lib/pdf-generator';
@@ -225,29 +225,7 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
     }
   };
 
-  const exportToCSV = () => {
-    const headers = ['Date', 'Goal', 'Progress', 'Level of Support', 'Notes', 'Recorded'];
-    const csvData = filteredData.map((item: DataPoint) => [
-      format(new Date(item.date), 'MM/dd/yyyy'),
-      item.goalTitle,
-      formatProgressDisplay(item),
-      formatLevelOfSupport(item.levelOfSupport),
-      item.anecdotalInfo || '',
-      format(new Date(item.createdAt), 'MM/dd/yyyy h:mm a')
-    ]);
 
-    const csvContent = [headers, ...csvData]
-      .map(row => row.map(cell => `"${cell}"`).join(','))
-      .join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `student-raw-data-${format(new Date(), 'yyyy-MM-dd')}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
 
   return (
     <Card>
@@ -257,27 +235,16 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
             <Table className="h-5 w-5" />
             <span className="whitespace-nowrap">Raw Data Table</span>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={generateRawDataPDF}
-              className="gap-2"
-              disabled={!student || !rawData || rawData.length === 0}
-            >
-              <Printer className="h-4 w-4" />
-              Print PDF
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={exportToCSV}
-              className="gap-2"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={generateRawDataPDF}
+            className="gap-2"
+            disabled={!student || !rawData || rawData.length === 0}
+          >
+            <Printer className="h-4 w-4" />
+            Print PDF
+          </Button>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

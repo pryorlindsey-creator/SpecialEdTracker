@@ -495,9 +495,14 @@ export class PDFGenerator {
   }
 
   private addRawDataTable(dataPoints: PDFDataPoint[]): void {
+    // Start the raw data table after the student header
+    let yPos = 200; // Give enough space after student header
+    
     this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Raw Data Points', 20, 20);
+    this.doc.text('Raw Data Points', 20, yPos);
+    
+    yPos += 15;
     
     // Format data for table
     const tableData = dataPoints.map(point => [
@@ -510,7 +515,7 @@ export class PDFGenerator {
     ]);
 
     autoTable(this.doc, {
-      startY: 30,
+      startY: yPos,
       head: [['Date', 'Goal', 'Progress', 'Support Level', 'Notes', 'Recorded']],
       body: tableData,
       theme: 'striped',
