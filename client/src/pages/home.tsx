@@ -185,7 +185,7 @@ export default function Home() {
                   <ReportingPeriodsButton />
                   <Button 
                     onClick={() => setIsClearAllDataModalOpen(true)}
-                    className="w-full justify-start"
+                    className="w-full justify-start border-red-300 text-red-600 hover:bg-red-50"
                     variant="outline"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
