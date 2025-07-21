@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
 // Extend jsPDF type to include autoTable
@@ -49,6 +49,11 @@ export class PDFGenerator {
 
   constructor() {
     this.doc = new jsPDF();
+    // Ensure autoTable is available on the instance
+    if (!this.doc.autoTable) {
+      console.log('Initializing autoTable plugin...');
+      (this.doc as any).autoTable = autoTable.bind(this.doc);
+    }
   }
 
   generateStudentReport(
