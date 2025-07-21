@@ -400,10 +400,7 @@ export default function StudentDetail() {
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh Data
             </Button>
-            <Button variant="outline" onClick={generatePDF}>
-              <Printer className="h-4 w-4 mr-2" />
-              Print Report
-            </Button>
+
             {activeTab === 'reports' && (
               <Button 
                 variant="outline" 
