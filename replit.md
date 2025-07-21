@@ -137,6 +137,16 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
 
 ## Recent Changes
 
+- July 21, 2025: **COMPLETED STUDENT CASELOAD REMOVAL FUNCTIONALITY**
+  - **Added complete student removal system** - New "Remove from Caseload" button for permanently removing students who transfer schools
+  - **Enhanced clear data modal** - Extended existing modal to handle both data clearing and complete student removal with appropriate warnings
+  - **Proper database cleanup** - removeStudentFromCaseload method removes student record and all associated data (goals, objectives, data points)
+  - **Safety-first workflow** - Same 4-step confirmation process with mandatory backup requirements as data clearing functionality
+  - **Automatic navigation** - After removal, users are redirected to home dashboard since student detail page no longer valid
+  - **Individual student focus** - One-at-a-time removal ensures careful data backup for each student transition
+  - **User testing successful** - Test Student 3 successfully removed with all confirmation steps working correctly
+  - **Clear distinction** - Two separate options: "Clear Student Data" (keeps student record) vs "Remove from Caseload" (complete removal)
+
 - July 21, 2025: **COMPLETED PDF EXPORT FOR RAW DATA TABLES**
   - **Added raw data PDF generation** - New generateRawDataReport method in PDF generator library
   - **Print PDF button integration** - Added printer icon button to Raw Data Table header with proper positioning
