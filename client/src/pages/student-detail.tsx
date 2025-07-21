@@ -57,6 +57,14 @@ export default function StudentDetail() {
     queryKey: [`/api/goals/${selectedGoalId}/data-points`],
     enabled: !!selectedGoalId,
   });
+
+  // Query for ALL data points for PDF generation
+  const { data: allDataPoints, isLoading: allDataPointsLoading, refetch: refetchAllDataPoints } = useQuery({
+    queryKey: [`/api/students/${studentId}/all-data-points`],
+    enabled: !!studentId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
   
   // Add error logging for debugging blank screen
   useEffect(() => {
@@ -137,19 +145,19 @@ export default function StudentDetail() {
       console.log('PDF Generation Debug:');
       console.log('Student data:', student);
       console.log('Goals data:', goals);
-      console.log('Data points:', dataPoints);
+      console.log('All data points:', allDataPoints);
       
       // Ensure we have all the data needed
-      if (!student || !goals || !dataPoints || 
-          !Array.isArray(goals) || !Array.isArray(dataPoints) ||
+      if (!student || !goals || !allDataPoints || 
+          !Array.isArray(goals) || !Array.isArray(allDataPoints) ||
           !student.name || !student.id) {
         console.error('Missing data for PDF generation:', {
           student: !!student,
           studentName: student?.name,
           goals: !!goals,
           goalsIsArray: Array.isArray(goals),
-          dataPoints: !!dataPoints,
-          dataPointsIsArray: Array.isArray(dataPoints)
+          allDataPoints: !!allDataPoints,
+          allDataPointsIsArray: Array.isArray(allDataPoints)
         });
         toast({
           title: "Error",
@@ -169,7 +177,7 @@ export default function StudentDetail() {
         totalGoals: student.totalGoals || goals.length,
         activeGoals: student.activeGoals || goals.filter(g => g.status === 'active').length,
         completedGoals: student.completedGoals || goals.filter(g => g.status === 'completed').length,
-        totalDataPoints: student.totalDataPoints || dataPoints.length,
+        totalDataPoints: student.totalDataPoints || allDataPoints.length,
       };
 
       // Transform goals data for PDF
@@ -181,14 +189,14 @@ export default function StudentDetail() {
         dataCollectionType: goal.dataCollectionType,
         status: goal.status,
         currentProgress: goal.currentProgress || 0,
-        dataPointsCount: dataPoints.filter(dp => dp.goalId === goal.id).length,
-        lastDataDate: dataPoints.filter(dp => dp.goalId === goal.id).sort((a, b) => 
+        dataPointsCount: allDataPoints.filter(dp => dp.goalId === goal.id).length,
+        lastDataDate: allDataPoints.filter(dp => dp.goalId === goal.id).sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
         )[0]?.date || null,
       }));
 
       // Transform data points for PDF
-      const pdfDataPoints: PDFDataPoint[] = dataPoints.map(dp => {
+      const pdfDataPoints: PDFDataPoint[] = allDataPoints.map(dp => {
         const goal = goals.find(g => g.id === dp.goalId);
         return {
           id: dp.id,
