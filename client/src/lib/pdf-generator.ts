@@ -495,8 +495,8 @@ export class PDFGenerator {
   }
 
   private addRawDataTable(dataPoints: PDFDataPoint[]): void {
-    // Start the raw data table after the student header
-    let yPos = 200; // Give enough space after student header
+    // Start the raw data table after the header (no student info section)
+    let yPos = 60; // Start closer to header since we removed student info
     
     this.doc.setFontSize(16);
     this.doc.setFont('helvetica', 'bold');
@@ -574,12 +574,8 @@ export class PDFGenerator {
       // Add header
       this.addHeader(student);
       
-      console.log('Adding student info...');
-      // Add student information
-      this.addStudentInfo(student);
-      
       console.log('Adding raw data table...');
-      // Add the raw data table
+      // Add the raw data table directly after header (skip student info section)
       this.addRawDataTable(dataPoints);
       
       console.log('Downloading raw data PDF...');
