@@ -274,7 +274,7 @@ export default function StudentDetail() {
       console.log('Creating PDF generator...');
       const pdfGenerator = new PDFGenerator();
       console.log('Calling generateChartsReport...');
-      pdfGenerator.generateChartsReport(pdfStudent, pdfGoals);
+      await pdfGenerator.generateChartsReport(pdfStudent, pdfGoals);
       console.log('Charts PDF generation completed successfully');
 
       toast({

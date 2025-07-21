@@ -145,7 +145,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     : chartData;
 
   return (
-    <Card>
+    <Card data-goal-id={goalId}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">

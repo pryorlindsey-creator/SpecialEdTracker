@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import html2canvas from 'html2canvas';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -52,10 +53,10 @@ export class PDFGenerator {
     console.log('PDF instance created successfully');
   }
 
-  generateChartsReport(
+  async generateChartsReport(
     student: PDFStudentData,
     goals: PDFGoalData[]
-  ): void {
+  ): Promise<void> {
     try {
       console.log('Setting up charts PDF document...');
       // Set up document
@@ -65,9 +66,9 @@ export class PDFGenerator {
       // Add header
       this.addHeader(student);
       
-      console.log('Adding charts placeholder...');
-      // Add charts section
-      this.addChartsSection(student, goals);
+      console.log('Capturing chart images...');
+      // Capture charts from the Reports tab
+      await this.addChartsWithImages(student, goals);
       
       console.log('Downloading charts PDF...');
       // Download
@@ -259,6 +260,106 @@ export class PDFGenerator {
       this.doc.text(`Data Points Collected: ${goal.dataPointsCount}`, 30, yPos);
       yPos += 15; // Extra space between goals
     });
+  }
+
+  private async addChartsWithImages(student: PDFStudentData, goals: PDFGoalData[]): Promise<void> {
+    let yPos = 60;
+    
+    this.doc.setFontSize(16);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Progress Charts Report', 20, yPos);
+    
+    yPos += 15;
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('Visual progress charts for each goal with trend analysis.', 20, yPos);
+    
+    yPos += 20;
+    
+    // Try to capture individual goal charts from the Reports tab
+    for (let i = 0; i < goals.length; i++) {
+      const goal = goals[i];
+      
+      try {
+        // Look for the chart element by goal ID
+        const chartElement = document.querySelector(`[data-goal-id="${goal.id}"]`) as HTMLElement;
+        
+        if (chartElement) {
+          console.log(`Capturing chart for goal: ${goal.title}`);
+          
+          // Add goal header
+          if (yPos > 200) {
+            this.doc.addPage();
+            yPos = 20;
+          }
+          
+          this.doc.setFontSize(14);
+          this.doc.setFont('helvetica', 'bold');
+          this.doc.text(`${i + 1}. ${goal.title}`, 20, yPos);
+          
+          yPos += 8;
+          this.doc.setFontSize(10);
+          this.doc.setFont('helvetica', 'normal');
+          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount}`, 20, yPos);
+          
+          yPos += 15;
+          
+          // Capture the chart as image
+          const canvas = await html2canvas(chartElement, {
+            backgroundColor: '#ffffff',
+            scale: 2,
+            useCORS: true,
+            allowTaint: true
+          });
+          
+          const imgData = canvas.toDataURL('image/png');
+          
+          // Calculate dimensions to fit on page
+          const imgWidth = 170; // Max width for PDF
+          const imgHeight = (canvas.height / canvas.width) * imgWidth;
+          
+          // Check if we need a new page
+          if (yPos + imgHeight > 280) {
+            this.doc.addPage();
+            yPos = 20;
+          }
+          
+          // Add image to PDF
+          this.doc.addImage(imgData, 'PNG', 20, yPos, imgWidth, imgHeight);
+          yPos += imgHeight + 20;
+          
+        } else {
+          console.log(`No chart element found for goal: ${goal.title}`);
+          // Add text placeholder if chart not found
+          if (yPos > 250) {
+            this.doc.addPage();
+            yPos = 20;
+          }
+          
+          this.doc.setFontSize(14);
+          this.doc.setFont('helvetica', 'bold');
+          this.doc.text(`${i + 1}. ${goal.title}`, 20, yPos);
+          
+          yPos += 8;
+          this.doc.setFontSize(10);
+          this.doc.setFont('helvetica', 'normal');
+          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount}`, 20, yPos);
+          
+          yPos += 8;
+          this.doc.text('Chart available in the Reports tab of the application.', 20, yPos);
+          yPos += 20;
+        }
+      } catch (error) {
+        console.error(`Error capturing chart for goal ${goal.title}:`, error);
+        // Continue with next chart
+      }
+    }
+    
+    // Add fallback if no charts were captured
+    if (goals.length === 0) {
+      this.doc.setFontSize(12);
+      this.doc.text('No goals available for chart generation.', 20, yPos);
+    }
   }
 
   private addChartsSection(student: PDFStudentData, goals: PDFGoalData[]): void {
