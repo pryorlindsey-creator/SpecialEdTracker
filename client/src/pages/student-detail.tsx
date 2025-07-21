@@ -233,6 +233,66 @@ export default function StudentDetail() {
     }
   };
 
+  const generateChartsPDF = async () => {
+    try {
+      if (!student || !goals || goals.length === 0) {
+        toast({
+          title: "No Data",
+          description: "No student or goals data available to generate charts PDF.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Student data:', student);
+      console.log('Goals data:', goals);
+
+      const pdfStudent: PDFStudentData = {
+        id: (student as any).id,
+        name: (student as any).name,
+        grade: (student as any).grade || 'Not specified',
+        iepDueDate: (student as any).iepDueDate,
+        relatedServices: (student as any).relatedServices || 'None specified',
+        totalGoals: (student as any).totalGoals || 0,
+        activeGoals: (student as any).activeGoals || 0,
+        completedGoals: (student as any).completedGoals || 0,
+        totalDataPoints: (student as any).totalDataPoints || 0
+      };
+
+      const pdfGoals: PDFGoalData[] = (goals || []).map((goal: any) => ({
+        id: goal.id,
+        title: goal.title,
+        description: goal.description,
+        targetCriteria: goal.targetCriteria,
+        dataCollectionType: goal.dataCollectionType,
+        status: goal.status,
+        currentProgress: goal.currentProgress || 0,
+        dataPointsCount: goal.dataPointsCount || 0,
+        lastDataDate: null // Not needed for charts PDF
+      }));
+
+      console.log('Creating PDF generator...');
+      const pdfGenerator = new PDFGenerator();
+      console.log('Calling generateChartsReport...');
+      pdfGenerator.generateChartsReport(pdfStudent, pdfGoals);
+      console.log('Charts PDF generation completed successfully');
+
+      toast({
+        title: "Success",
+        description: "Charts PDF has been generated and downloaded.",
+      });
+    } catch (error) {
+      console.error('Charts PDF generation error:', error);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      toast({
+        title: "Error",
+        description: `Failed to generate charts PDF: ${error?.message || 'Unknown error'}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   // Navigation confirmed working - proceeding with full interface
 
   return (
@@ -327,6 +387,10 @@ export default function StudentDetail() {
             <Button variant="outline" onClick={generatePDF}>
               <Printer className="h-4 w-4 mr-2" />
               Print Report
+            </Button>
+            <Button variant="outline" onClick={generateChartsPDF}>
+              <ChartLine className="h-4 w-4 mr-2" />
+              Print Charts
             </Button>
           </div>
         </div>

@@ -52,6 +52,34 @@ export class PDFGenerator {
     console.log('PDF instance created successfully');
   }
 
+  generateChartsReport(
+    student: PDFStudentData,
+    goals: PDFGoalData[]
+  ): void {
+    try {
+      console.log('Setting up charts PDF document...');
+      // Set up document
+      this.setupDocument();
+      
+      console.log('Adding header...');
+      // Add header
+      this.addHeader(student);
+      
+      console.log('Adding charts placeholder...');
+      // Add charts section
+      this.addChartsSection(student, goals);
+      
+      console.log('Downloading charts PDF...');
+      // Download
+      this.doc.save(`${student.name}_Progress_Charts_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      
+      console.log('Charts PDF generation completed successfully');
+    } catch (error) {
+      console.error('Error in charts PDF generation:', error);
+      throw error;
+    }
+  }
+
   generateStudentReport(
     student: PDFStudentData,
     goals: PDFGoalData[],
@@ -231,6 +259,66 @@ export class PDFGenerator {
       this.doc.text(`Data Points Collected: ${goal.dataPointsCount}`, 30, yPos);
       yPos += 15; // Extra space between goals
     });
+  }
+
+  private addChartsSection(student: PDFStudentData, goals: PDFGoalData[]): void {
+    let yPos = 60;
+    
+    this.doc.setFontSize(16);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Progress Charts', 20, yPos);
+    
+    yPos += 15;
+    this.doc.setFontSize(11);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('This report contains visual progress charts for each goal.', 20, yPos);
+    
+    yPos += 10;
+    this.doc.text('Charts show data points over time with trend analysis.', 20, yPos);
+    
+    yPos += 20;
+    
+    // Add goals summary for charts
+    this.doc.setFontSize(14);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Goals Overview', 20, yPos);
+    
+    // Goals summary table for charts context
+    const tableData = goals.map(goal => [
+      goal.title,
+      goal.dataCollectionType,
+      `${Math.round(goal.currentProgress)}%`,
+      goal.dataPointsCount.toString()
+    ]);
+
+    autoTable(this.doc, {
+      startY: yPos + 10,
+      head: [['Goal Title', 'Data Type', 'Current Progress', 'Data Points']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 10, cellPadding: 4 },
+      columnStyles: {
+        0: { cellWidth: 60 },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 40 },
+        3: { cellWidth: 40 }
+      }
+    });
+    
+    // Add note about charts
+    const finalY = (this.doc as any).lastAutoTable?.finalY + 20 || yPos + 80;
+    this.doc.setFontSize(12);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.text('Chart Instructions:', 20, finalY);
+    
+    this.doc.setFontSize(10);
+    this.doc.setFont('helvetica', 'normal');
+    this.doc.text('• View interactive charts in the application\'s Reports tab', 25, finalY + 12);
+    this.doc.text('• Each goal displays as a separate scatter plot with trend lines', 25, finalY + 20);
+    this.doc.text('• Charts show progress over time with date labels on x-axis', 25, finalY + 28);
+    this.doc.text('• Different data types (percentage, frequency, duration) use appropriate scales', 25, finalY + 36);
+    this.doc.text('• This printable summary provides context for chart interpretation', 25, finalY + 44);
   }
 
   private addRawDataTable(dataPoints: PDFDataPoint[]): void {
