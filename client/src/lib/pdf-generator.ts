@@ -263,18 +263,7 @@ export class PDFGenerator {
   }
 
   private async addChartsWithImages(student: PDFStudentData, goals: PDFGoalData[]): Promise<void> {
-    let yPos = 60;
-    
-    this.doc.setFontSize(16);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.text('Progress Charts Report', 20, yPos);
-    
-    yPos += 15;
-    this.doc.setFontSize(11);
-    this.doc.setFont('helvetica', 'normal');
-    this.doc.text('Visual progress charts for each goal with trend analysis.', 20, yPos);
-    
-    yPos += 20;
+    let yPos = 40;
     
     // Look for charts in multiple possible locations
     const chartSelectors = [
@@ -342,10 +331,7 @@ export class PDFGenerator {
             yPos += criteriaLines.length * 5 + 3;
           }
           
-          // Goal stats
-          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount} | Status: ${goal.status}`, 20, yPos);
-          
-          yPos += 12;
+          yPos += 5;
           
           // Capture the chart as image
           const canvas = await html2canvas(chartElement, {
@@ -407,9 +393,7 @@ export class PDFGenerator {
             yPos += criteriaLines.length * 5 + 3;
           }
           
-          // Goal details
-          this.doc.text(`Data Type: ${goal.dataCollectionType} | Progress: ${Math.round(goal.currentProgress)}% | Data Points: ${goal.dataPointsCount} | Status: ${goal.status}`, 20, yPos);
-          yPos += 10;
+          yPos += 5;
           
           // Instructions
           this.doc.setFontSize(9);
