@@ -56,27 +56,41 @@ export class PDFGenerator {
     goals: PDFGoalData[],
     dataPoints: PDFDataPoint[]
   ): void {
-    // Set up document
-    this.setupDocument();
-    
-    // Add header
-    this.addHeader(student);
-    
-    // Add student information
-    this.addStudentInfo(student);
-    
-    // Add goals summary
-    this.addGoalsSummary(goals);
-    
-    // Add goals details
-    this.addGoalsDetails(goals);
-    
-    // Start new page for raw data
-    this.doc.addPage();
-    this.addRawDataTable(dataPoints);
-    
-    // Download the PDF
-    this.downloadPDF(student.name);
+    try {
+      console.log('Setting up PDF document...');
+      // Set up document
+      this.setupDocument();
+      
+      console.log('Adding header...');
+      // Add header
+      this.addHeader(student);
+      
+      console.log('Adding student info...');
+      // Add student information
+      this.addStudentInfo(student);
+      
+      console.log('Adding goals summary...');
+      // Add goals summary
+      this.addGoalsSummary(goals);
+      
+      console.log('Adding goals details...');
+      // Add goals details
+      this.addGoalsDetails(goals);
+      
+      console.log('Adding new page for raw data...');
+      // Start new page for raw data
+      this.doc.addPage();
+      
+      console.log('Adding raw data table...');
+      this.addRawDataTable(dataPoints);
+      
+      console.log('Downloading PDF...');
+      // Download the PDF
+      this.downloadPDF(student.name);
+    } catch (error) {
+      console.error('Error in PDF generation:', error);
+      throw error;
+    }
   }
 
   private setupDocument(): void {

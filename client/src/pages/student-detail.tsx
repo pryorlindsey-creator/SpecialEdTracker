@@ -211,8 +211,11 @@ export default function StudentDetail() {
       }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       // Generate PDF
+      console.log('Creating PDF generator...');
       const pdfGenerator = new PDFGenerator();
+      console.log('Calling generateStudentReport...');
       pdfGenerator.generateStudentReport(pdfStudent, pdfGoals, pdfDataPoints);
+      console.log('PDF generation completed successfully');
 
       toast({
         title: "Success",
@@ -220,9 +223,11 @@ export default function StudentDetail() {
       });
     } catch (error) {
       console.error('PDF generation error:', error);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
       toast({
         title: "Error",
-        description: "Failed to generate PDF report. Please try again.",
+        description: `Failed to generate PDF report: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
