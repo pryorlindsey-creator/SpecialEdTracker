@@ -38,13 +38,9 @@ export function ClearDataModal({ isOpen, onClose, type, studentId, studentName }
   const clearMutation = useMutation({
     mutationFn: async () => {
       if (type === "student" && studentId) {
-        await apiRequest(`/api/students/${studentId}/clear-data`, {
-          method: "DELETE"
-        });
+        await apiRequest(`/api/students/${studentId}/clear-data`, "DELETE");
       } else {
-        await apiRequest("/api/users/clear-all-data", {
-          method: "DELETE"
-        });
+        await apiRequest("/api/users/clear-all-data", "DELETE");
       }
     },
     onSuccess: () => {
