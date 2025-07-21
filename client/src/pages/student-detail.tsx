@@ -402,17 +402,17 @@ export default function StudentDetail() {
               <Printer className="h-4 w-4 mr-2" />
               Print Report
             </Button>
-            <Button 
-              variant="outline" 
-              onClick={generateChartsPDF}
-              className={activeTab === 'reports' ? 'bg-blue-50 border-blue-300' : ''}
-            >
-              <ChartLine className="h-4 w-4 mr-2" />
-              Print Charts
-              {activeTab === 'reports' && (
+            {activeTab === 'reports' && (
+              <Button 
+                variant="outline" 
+                onClick={generateChartsPDF}
+                className="bg-blue-50 border-blue-300"
+              >
+                <ChartLine className="h-4 w-4 mr-2" />
+                Print Charts
                 <span className="ml-1 text-xs text-blue-600">✓</span>
-              )}
-            </Button>
+              </Button>
+            )}
           </div>
         </div>
 

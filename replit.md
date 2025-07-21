@@ -396,11 +396,11 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
 
 - July 21, 2025: **ENHANCED PDF CHART GENERATION WITH GOAL DETAILS**
   - **Fixed visual chart capture** - Added data-goal-id attributes to StudentScatterplot components for proper PDF chart identification
-  - **Tab-aware functionality** - Print Charts button only works when on Reports tab with visual feedback (blue highlight + checkmark)
+  - **Tab-aware functionality** - Print Charts button only appears when on Reports tab, ensuring charts are always visible for capture
   - **Enhanced chart detection** - Multiple fallback methods to locate and capture visible charts using html2canvas
   - **Comprehensive goal information** - PDF now includes goal descriptions, target criteria, progress stats, and status alongside each chart
   - **Professional PDF layout** - Each goal section contains title, description, target criteria, data collection details, and visual progress chart
-  - **User guidance system** - Clear error messages and instructions when charts aren't visible or user is on wrong tab
+  - **Improved user experience** - Button visibility prevents confusion by only showing when charts can be successfully captured
   - **Successful chart capture verified** - All 3 goal charts (Behavior, Focus, Literacy) successfully captured and included in PDF reports
 
 - July 17, 2025: **CREATED PROFESSIONAL CUSTOMER LANDING PAGE**
