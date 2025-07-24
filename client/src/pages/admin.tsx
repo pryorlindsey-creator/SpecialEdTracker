@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Database, Users, Target, BarChart3, Trash2, Eye, RefreshCw } from "lucide-react";
+import { Database, Users, Target, BarChart3, Trash2, Eye, RefreshCw, CheckCircle2, AlertTriangle, Search } from "lucide-react";
+import AdminVerification from "@/components/admin-verification";
 
 interface AdminStats {
   totalUsers: number;
@@ -26,6 +29,11 @@ interface AdminStats {
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [verificationModal, setVerificationModal] = useState<{
+    type: "user" | "student" | "goal" | "sample";
+    data: any;
+    isOpen: boolean;
+  }>({ type: "user", data: null, isOpen: false });
   const { toast } = useToast();
 
   // Check if already authenticated
@@ -72,6 +80,59 @@ export default function AdminPage() {
     queryKey: ["/api/admin/students"],
     enabled: isAuthenticated,
   });
+
+  // Verification query functions
+  const verifyUser = async (userId: string) => {
+    try {
+      const result = await apiRequest(`/api/admin/verify/user/${userId}`);
+      setVerificationModal({ type: "user", data: result, isOpen: true });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify user data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const verifyStudent = async (studentId: number) => {
+    try {
+      const result = await apiRequest(`/api/admin/verify/student/${studentId}`);
+      setVerificationModal({ type: "student", data: result, isOpen: true });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify student data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const verifyGoal = async (goalId: number) => {
+    try {
+      const result = await apiRequest(`/api/admin/verify/goal/${goalId}`);
+      setVerificationModal({ type: "goal", data: result, isOpen: true });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify goal data",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getSampleData = async (userId: string) => {
+    try {
+      const result = await apiRequest(`/api/admin/sample-data/${userId}`);
+      setVerificationModal({ type: "sample", data: result, isOpen: true });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch sample data",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { data: goals } = useQuery({
     queryKey: ["/api/admin/goals"],
@@ -246,13 +307,33 @@ export default function AdminPage() {
         </div>
 
         {/* Management Tabs */}
-        <Tabs defaultValue="database" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="verification" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="verification">Data Verification</TabsTrigger>
             <TabsTrigger value="database">Database Tables</TabsTrigger>
             <TabsTrigger value="users">Users Management</TabsTrigger>
             <TabsTrigger value="students">Students Data</TabsTrigger>
             <TabsTrigger value="goals">Goals & Progress</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="verification">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Data Verification & Integrity Checking
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <AdminVerification
+                  onVerifyUser={verifyUser}
+                  onVerifyStudent={verifyStudent}
+                  onVerifyGoal={verifyGoal}
+                  onSampleData={getSampleData}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="database">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -525,6 +606,281 @@ export default function AdminPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Verification Results Modals */}
+        <Dialog open={verificationModal.isOpen} onOpenChange={(open) => setVerificationModal(prev => ({ ...prev, isOpen: open }))}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {verificationModal.type === "user" && "User Data Verification"}
+                {verificationModal.type === "student" && "Student Data Verification"} 
+                {verificationModal.type === "goal" && "Goal Data Verification"}
+                {verificationModal.type === "sample" && "Sample Data Review"}
+              </DialogTitle>
+            </DialogHeader>
+
+            {verificationModal.type === "user" && verificationModal.data && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">User Information</h4>
+                    <p className="text-sm">User ID: {verificationModal.data.userId}</p>
+                    <p className="text-sm">Status: {verificationModal.data.userExists ? "✅ Active" : "❌ Not Found"}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Data Counts</h4>
+                    <p className="text-sm">Students: {verificationModal.data.studentCount}</p>
+                    <p className="text-sm">Goals: {verificationModal.data.goalCount}</p>
+                    <p className="text-sm">Data Points: {verificationModal.data.dataPointCount}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-medium">Data Integrity Check</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Badge variant={verificationModal.data.dataIntegrity.orphanedGoals === 0 ? "default" : "destructive"}>
+                      Orphaned Goals: {verificationModal.data.dataIntegrity.orphanedGoals}
+                    </Badge>
+                    <Badge variant={verificationModal.data.dataIntegrity.orphanedDataPoints === 0 ? "default" : "destructive"}>
+                      Orphaned Data Points: {verificationModal.data.dataIntegrity.orphanedDataPoints}
+                    </Badge>
+                    <Badge variant={verificationModal.data.dataIntegrity.studentsWithoutGoals === 0 ? "default" : "secondary"}>
+                      Students w/o Goals: {verificationModal.data.dataIntegrity.studentsWithoutGoals}
+                    </Badge>
+                    <Badge variant={verificationModal.data.dataIntegrity.goalsWithoutDataPoints === 0 ? "default" : "secondary"}>
+                      Goals w/o Data: {verificationModal.data.dataIntegrity.goalsWithoutDataPoints}
+                    </Badge>
+                  </div>
+                </div>
+
+                {verificationModal.data.sampleStudents.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Sample Students</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Grade</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {verificationModal.data.sampleStudents.map((student: any) => (
+                          <TableRow key={student.id}>
+                            <TableCell>{student.id}</TableCell>
+                            <TableCell>{student.name}</TableCell>
+                            <TableCell>{student.grade}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {verificationModal.type === "student" && verificationModal.data && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Student Information</h4>
+                    <p className="text-sm">Student ID: {verificationModal.data.studentId}</p>
+                    <p className="text-sm">Status: {verificationModal.data.studentExists ? "✅ Found" : "❌ Not Found"}</p>
+                    {verificationModal.data.student && (
+                      <>
+                        <p className="text-sm">Name: {verificationModal.data.student.name}</p>
+                        <p className="text-sm">Grade: {verificationModal.data.student.grade}</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Data Summary</h4>
+                    <p className="text-sm">Goals: {verificationModal.data.goalCount}</p>
+                    <p className="text-sm">Data Points: {verificationModal.data.dataPointCount}</p>
+                  </div>
+                </div>
+
+                {verificationModal.data.goals.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Goals</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {verificationModal.data.goals.map((goal: any) => (
+                          <TableRow key={goal.id}>
+                            <TableCell>{goal.id}</TableCell>
+                            <TableCell>{goal.title}</TableCell>
+                            <TableCell>{goal.dataCollectionType}</TableCell>
+                            <TableCell>{goal.status}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {verificationModal.type === "goal" && verificationModal.data && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Goal Information</h4>
+                    <p className="text-sm">Goal ID: {verificationModal.data.goalId}</p>
+                    <p className="text-sm">Status: {verificationModal.data.goalExists ? "✅ Found" : "❌ Not Found"}</p>
+                    {verificationModal.data.goal && (
+                      <>
+                        <p className="text-sm">Title: {verificationModal.data.goal.title}</p>
+                        <p className="text-sm">Type: {verificationModal.data.goal.dataCollectionType}</p>
+                        <p className="text-sm">Status: {verificationModal.data.goal.status}</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Student & Progress</h4>
+                    {verificationModal.data.student && (
+                      <p className="text-sm">Student: {verificationModal.data.student.name}</p>
+                    )}
+                    <p className="text-sm">Data Points: {verificationModal.data.dataPointCount}</p>
+                    {verificationModal.data.progressCalculation && (
+                      <p className="text-sm">Current Progress: {verificationModal.data.progressCalculation.currentProgress}%</p>
+                    )}
+                  </div>
+                </div>
+
+                {verificationModal.data.dataPoints.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Recent Data Points</h4>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead>Progress</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {verificationModal.data.dataPoints.slice(0, 10).map((dp: any) => (
+                          <TableRow key={dp.id}>
+                            <TableCell>{new Date(dp.date).toLocaleDateString()}</TableCell>
+                            <TableCell>{dp.value}</TableCell>
+                            <TableCell>{dp.progress}%</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {verificationModal.type === "sample" && verificationModal.data && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="font-medium">User Overview</h4>
+                    {verificationModal.data.user && (
+                      <>
+                        <p className="text-sm">Name: {verificationModal.data.user.firstName} {verificationModal.data.user.lastName}</p>
+                        <p className="text-sm">Email: {verificationModal.data.user.email}</p>
+                      </>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Data Summary</h4>
+                    <p className="text-sm">Students: {verificationModal.data.summary.totalStudents}</p>
+                    <p className="text-sm">Goals: {verificationModal.data.summary.totalGoals}</p>
+                    <p className="text-sm">Data Points: {verificationModal.data.summary.totalDataPoints}</p>
+                  </div>
+                </div>
+
+                <Tabs defaultValue="students" className="w-full">
+                  <TabsList>
+                    <TabsTrigger value="students">Sample Students</TabsTrigger>
+                    <TabsTrigger value="goals">Sample Goals</TabsTrigger>
+                    <TabsTrigger value="datapoints">Sample Data Points</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="students">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Grade</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {verificationModal.data.sampleStudents.map((student: any) => (
+                          <TableRow key={student.id}>
+                            <TableCell>{student.id}</TableCell>
+                            <TableCell>{student.name}</TableCell>
+                            <TableCell>{student.grade}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+
+                  <TabsContent value="goals">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Title</TableHead>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Student</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {verificationModal.data.sampleGoals.map((goal: any) => (
+                          <TableRow key={goal.id}>
+                            <TableCell>{goal.id}</TableCell>
+                            <TableCell>{goal.title}</TableCell>
+                            <TableCell>{goal.dataCollectionType}</TableCell>
+                            <TableCell>{goal.studentId}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+
+                  <TabsContent value="datapoints">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead>Progress</TableHead>
+                          <TableHead>Goal</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {verificationModal.data.sampleDataPoints.map((dp: any) => (
+                          <TableRow key={dp.id}>
+                            <TableCell>{dp.id}</TableCell>
+                            <TableCell>{new Date(dp.date).toLocaleDateString()}</TableCell>
+                            <TableCell>{dp.value}</TableCell>
+                            <TableCell>{dp.progress}%</TableCell>
+                            <TableCell>{dp.goalId}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

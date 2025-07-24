@@ -5,6 +5,7 @@ import {
   objectives,
   dataPoints,
   reportingPeriods,
+  sessions,
   type User,
   type UpsertUser,
   type Student,
@@ -83,6 +84,61 @@ export interface IStorage {
   getReportingPeriodsByUserId(userId: string): Promise<ReportingPeriod[]>;
   saveReportingPeriods(userId: string, periods: { periodNumber: number; startDate: string; endDate: string; }[], periodLength: string): Promise<void>;
   deleteReportingPeriodsByUserId(userId: string): Promise<void>;
+  
+  // Admin operations
+  getAllUsers(): Promise<User[]>;
+  getAllStudents(): Promise<Student[]>;
+  getAllGoals(): Promise<Goal[]>;
+  getAllDataPoints(): Promise<DataPoint[]>;
+  deleteUser(userId: string): Promise<void>;
+  getDatabaseSchema(): Promise<any>;
+  getAllStudentsWithDetails(): Promise<any[]>;
+  getAllGoalsWithDetails(): Promise<any[]>;
+  getAllSessions(): Promise<any[]>;
+  getAllReportingPeriods(): Promise<any[]>;
+  getAllObjectives(): Promise<any[]>;
+  
+  // Admin verification operations
+  verifyUserData(userId: string): Promise<{
+    userId: string;
+    userExists: boolean;
+    studentCount: number;
+    goalCount: number;
+    dataPointCount: number;
+    sampleStudents: any[];
+    dataIntegrity: {
+      orphanedGoals: number;
+      orphanedDataPoints: number;
+      studentsWithoutGoals: number;
+      goalsWithoutDataPoints: number;
+    };
+  }>;
+  verifyStudentData(studentId: number): Promise<{
+    studentId: number;
+    studentExists: boolean;
+    student?: Student;
+    goalCount: number;
+    dataPointCount: number;
+    goals: Goal[];
+    recentDataPoints: DataPoint[];
+    progressSummary: any;
+  }>;
+  verifyGoalData(goalId: number): Promise<{
+    goalId: number;
+    goalExists: boolean;
+    goal?: Goal;
+    student?: Student;
+    dataPointCount: number;
+    dataPoints: DataPoint[];
+    progressCalculation: any;
+  }>;
+  getSampleUserData(userId: string): Promise<{
+    user?: User;
+    sampleStudents: any[];
+    sampleGoals: any[];
+    sampleDataPoints: any[];
+    summary: any;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -648,6 +704,44 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Admin methods for database browsing
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async getAllStudents(): Promise<Student[]> {
+    return await db.select().from(students);
+  }
+
+  async getAllGoals(): Promise<Goal[]> {
+    return await db.select().from(goals);
+  }
+
+  async getAllDataPoints(): Promise<DataPoint[]> {
+    return await db.select().from(dataPoints);
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
+  async getDatabaseSchema(): Promise<any> {
+    const schema = await db.execute(sql`
+      SELECT table_name, column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns 
+      WHERE table_schema = 'public'
+      ORDER BY table_name, ordinal_position
+    `);
+    return schema.rows;
+  }
+
+  async getAllStudentsWithDetails(): Promise<any[]> {
+    return await db.select().from(students);
+  }
+
+  async getAllGoalsWithDetails(): Promise<any[]> {
+    return await db.select().from(goals);
+  }
+
   async getAllSessions() {
     return await db.select().from(sessions);
   }
@@ -658,6 +752,136 @@ export class DatabaseStorage implements IStorage {
 
   async getAllObjectives() {
     return await db.select().from(objectives);
+  }
+
+  // Admin verification methods
+  async verifyUserData(userId: string) {
+    const user = await this.getUser(userId);
+    const userStudents = user ? await db.select().from(students).where(eq(students.userId, userId)) : [];
+    
+    const goalCounts = await db.execute(sql`
+      SELECT COUNT(g.id) as count 
+      FROM goals g
+      JOIN students s ON g.student_id = s.id
+      WHERE s.user_id = ${userId}
+    `);
+    
+    const dataPointCounts = await db.execute(sql`
+      SELECT COUNT(dp.id) as count 
+      FROM data_points dp
+      JOIN students s ON dp.student_id = s.id
+      WHERE s.user_id = ${userId}
+    `);
+
+    const orphanedGoals = await db.execute(sql`
+      SELECT COUNT(*) as count
+      FROM goals g
+      LEFT JOIN students s ON g.student_id = s.id
+      WHERE s.id IS NULL
+    `);
+
+    const orphanedDataPoints = await db.execute(sql`
+      SELECT COUNT(*) as count
+      FROM data_points dp
+      LEFT JOIN goals g ON dp.goal_id = g.id
+      WHERE g.id IS NULL
+    `);
+
+    const studentsWithoutGoals = await db.execute(sql`
+      SELECT COUNT(*) as count
+      FROM students s
+      LEFT JOIN goals g ON s.id = g.student_id
+      WHERE s.user_id = ${userId} AND g.id IS NULL
+    `);
+
+    const goalsWithoutDataPoints = await db.execute(sql`
+      SELECT COUNT(*) as count
+      FROM goals g
+      JOIN students s ON g.student_id = s.id
+      LEFT JOIN data_points dp ON g.id = dp.goal_id
+      WHERE s.user_id = ${userId} AND dp.id IS NULL
+    `);
+
+    return {
+      userId,
+      userExists: !!user,
+      studentCount: userStudents.length,
+      goalCount: Number(goalCounts.rows[0]?.count || 0),
+      dataPointCount: Number(dataPointCounts.rows[0]?.count || 0),
+      sampleStudents: userStudents.slice(0, 5),
+      dataIntegrity: {
+        orphanedGoals: Number(orphanedGoals.rows[0]?.count || 0),
+        orphanedDataPoints: Number(orphanedDataPoints.rows[0]?.count || 0),
+        studentsWithoutGoals: Number(studentsWithoutGoals.rows[0]?.count || 0),
+        goalsWithoutDataPoints: Number(goalsWithoutDataPoints.rows[0]?.count || 0),
+      }
+    };
+  }
+
+  async verifyStudentData(studentId: number) {
+    const student = await this.getStudentById(studentId);
+    const goals = student ? await this.getGoalsByStudentId(studentId) : [];
+    const dataPoints = student ? await this.getDataPointsByStudentId(studentId) : [];
+    const summary = student ? await this.getStudentSummary(studentId) : null;
+
+    return {
+      studentId,
+      studentExists: !!student,
+      student,
+      goalCount: goals.length,
+      dataPointCount: dataPoints.length,
+      goals,
+      recentDataPoints: dataPoints.slice(0, 10),
+      progressSummary: summary
+    };
+  }
+
+  async verifyGoalData(goalId: number) {
+    const goal = await this.getGoalById(goalId);
+    const student = goal ? await this.getStudentById(goal.studentId) : undefined;
+    const dataPoints = goal ? await this.getDataPointsByGoalId(goalId) : [];
+    const progress = goal ? await this.getGoalProgress(goalId) : null;
+
+    return {
+      goalId,
+      goalExists: !!goal,
+      goal,
+      student,
+      dataPointCount: dataPoints.length,
+      dataPoints,
+      progressCalculation: progress
+    };
+  }
+
+  async getSampleUserData(userId: string) {
+    const user = await this.getUser(userId);
+    const students = user ? await db.select().from(students).where(eq(students.userId, userId)).limit(5) : [];
+    
+    const goals = students.length > 0 ? await db.select().from(goals)
+      .where(inArray(goals.studentId, students.map(s => s.id)))
+      .limit(10) : [];
+    
+    const dataPoints = goals.length > 0 ? await db.select().from(dataPoints)
+      .where(inArray(dataPoints.goalId, goals.map(g => g.id)))
+      .limit(20) : [];
+
+    const summary = {
+      totalStudents: students.length,
+      totalGoals: goals.length,
+      totalDataPoints: dataPoints.length,
+      dataTypes: goals.reduce((acc: any, g) => {
+        acc[g.dataCollectionType] = (acc[g.dataCollectionType] || 0) + 1;
+        return acc;
+      }, {})
+    };
+
+    return {
+      user,
+      sampleStudents: students,
+      sampleGoals: goals,
+      sampleDataPoints: dataPoints,
+      summary
+    };
   }
 }
 

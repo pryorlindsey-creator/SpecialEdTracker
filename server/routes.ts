@@ -1237,6 +1237,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin data verification endpoints
+  app.get('/api/admin/verify/user/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const verification = await storage.verifyUserData(userId);
+      res.json(verification);
+    } catch (error) {
+      console.error("Error verifying user data:", error);
+      res.status(500).json({ message: "Failed to verify user data" });
+    }
+  });
+
+  app.get('/api/admin/verify/student/:studentId', async (req, res) => {
+    try {
+      const studentId = parseInt(req.params.studentId);
+      const verification = await storage.verifyStudentData(studentId);
+      res.json(verification);
+    } catch (error) {
+      console.error("Error verifying student data:", error);
+      res.status(500).json({ message: "Failed to verify student data" });
+    }
+  });
+
+  app.get('/api/admin/verify/goal/:goalId', async (req, res) => {
+    try {
+      const goalId = parseInt(req.params.goalId);
+      const verification = await storage.verifyGoalData(goalId);
+      res.json(verification);
+    } catch (error) {
+      console.error("Error verifying goal data:", error);
+      res.status(500).json({ message: "Failed to verify goal data" });
+    }
+  });
+
+  app.get('/api/admin/sample-data/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const sampleData = await storage.getSampleUserData(userId);
+      res.json(sampleData);
+    } catch (error) {
+      console.error("Error fetching sample data:", error);
+      res.status(500).json({ message: "Failed to fetch sample data" });
+    }
+  });
+
   // Clear data routes
   app.delete('/api/students/:studentId/clear-data', async (req: any, res) => {
     try {
