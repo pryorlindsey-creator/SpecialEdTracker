@@ -53,6 +53,10 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       progress: parseFloat(point.progressValue.toString()),
       originalValue: parseFloat(point.progressValue.toString()),
       support: point.levelOfSupport || 'Not specified',
+      notes: point.anecdotalInfo || '',
+      durationUnit: point.durationUnit || '',
+      numerator: point.numerator,
+      denominator: point.denominator,
     }))
     .reverse() // Show oldest to newest
     .slice(-10); // Show last 10 data points
@@ -144,6 +148,75 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     ? chartData.map((d: any) => ({ ...d, progress: d.originalValue }))
     : chartData;
 
+  // Custom tooltip component
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      const date = new Date(data.fullDate);
+      
+      // Parse level of support
+      let supportLevels = [];
+      try {
+        if (data.support && data.support !== 'Not specified') {
+          supportLevels = JSON.parse(data.support);
+        }
+      } catch (e) {
+        supportLevels = data.support === 'Not specified' ? [] : [data.support];
+      }
+
+      // Format support levels for display
+      const formatSupport = (levels: string[]) => {
+        if (!levels || levels.length === 0) return 'Independent';
+        return levels.map(level => {
+          switch (level) {
+            case 'independent': return 'Independent';
+            case 'verbal-prompt': return 'Verbal Prompt';
+            case 'visual-prompt': return 'Visual Prompt';
+            case 'gestural-prompt': return 'Gestural Prompt';
+            case 'physical-prompt': return 'Physical Prompt';
+            case 'hand-over-hand': return 'Hand-over-Hand';
+            default: return level;
+          }
+        }).join(', ');
+      };
+
+      return (
+        <div className="bg-white p-4 border rounded-lg shadow-lg min-w-[250px]">
+          <p className="font-semibold text-lg mb-2">{goal.title}</p>
+          <div className="space-y-1 text-sm">
+            <p><strong>Date:</strong> {date.toLocaleDateString('en-US', { 
+              weekday: 'short', 
+              year: 'numeric', 
+              month: 'short', 
+              day: 'numeric' 
+            })}</p>
+            
+            <p><strong>
+              {goal.dataCollectionType === 'frequency' ? 'Frequency:' : 
+               goal.dataCollectionType === 'duration' ? 'Duration:' : 'Progress:'}
+            </strong> {yAxisConfig.tooltipFormatter(data.progress)}
+            {goal.dataCollectionType === 'frequency' && ' times'}
+            </p>
+
+            {goal.dataCollectionType === 'percentage' && data.numerator !== null && data.denominator !== null && (
+              <p><strong>Trials:</strong> {data.numerator} correct out of {data.denominator} attempts</p>
+            )}
+
+            <p><strong>Support Level:</strong> {formatSupport(supportLevels)}</p>
+            
+            {data.notes && data.notes.trim() && (
+              <div className="mt-2 pt-2 border-t border-gray-200">
+                <p><strong>Notes:</strong></p>
+                <p className="text-gray-700 italic">{data.notes}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <Card data-goal-id={goalId}>
       <CardContent className="p-6">
@@ -194,26 +267,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                       position: 'insideLeft' 
                     }}
                   />
-                  <Tooltip
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0]) {
-                        const data = payload[0].payload;
-                        return format(new Date(data.fullDate), "MMM d, yyyy");
-                      }
-                      return label;
-                    }}
-                    formatter={(value: number, name: string, props) => [
-                      yAxisConfig.tooltipFormatter(value),
-                      goal.dataCollectionType === 'frequency' ? 'Frequency' : 
-                      goal.dataCollectionType === 'duration' ? 'Duration' : 'Progress'
-                    ]}
-                    contentStyle={{
-                      backgroundColor: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '0.5rem',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                    }}
-                  />
+                  <Tooltip content={<CustomTooltip />} />
                   <Line
                     type="monotone"
                     dataKey="progress"
