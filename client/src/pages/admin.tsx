@@ -84,7 +84,8 @@ export default function AdminPage() {
   // Verification query functions
   const verifyUser = async (userId: string) => {
     try {
-      const result = await apiRequest("GET", `/api/admin/verify/user/${userId}`);
+      const response = await apiRequest("GET", `/api/admin/verify/user/${userId}`);
+      const result = await response.json();
       console.log("Verification result for user", userId, ":", result);
       setVerificationModal({ type: "user", data: result, isOpen: true });
     } catch (error) {
@@ -99,7 +100,8 @@ export default function AdminPage() {
 
   const verifyStudent = async (studentId: number) => {
     try {
-      const result = await apiRequest("GET", `/api/admin/verify/student/${studentId}`);
+      const response = await apiRequest("GET", `/api/admin/verify/student/${studentId}`);
+      const result = await response.json();
       setVerificationModal({ type: "student", data: result, isOpen: true });
     } catch (error) {
       toast({
@@ -112,7 +114,8 @@ export default function AdminPage() {
 
   const verifyGoal = async (goalId: number) => {
     try {
-      const result = await apiRequest("GET", `/api/admin/verify/goal/${goalId}`);
+      const response = await apiRequest("GET", `/api/admin/verify/goal/${goalId}`);
+      const result = await response.json();
       setVerificationModal({ type: "goal", data: result, isOpen: true });
     } catch (error) {
       toast({
@@ -125,7 +128,8 @@ export default function AdminPage() {
 
   const getSampleData = async (userId: string) => {
     try {
-      const result = await apiRequest("GET", `/api/admin/sample-data/${userId}`);
+      const response = await apiRequest("GET", `/api/admin/sample-data/${userId}`);
+      const result = await response.json();
       setVerificationModal({ type: "sample", data: result, isOpen: true });
     } catch (error) {
       toast({
