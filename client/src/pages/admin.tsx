@@ -86,7 +86,7 @@ export default function AdminPage() {
     try {
       const response = await apiRequest("GET", `/api/admin/verify/user/${userId}`);
       const result = await response.json();
-      console.log("Verification result for user", userId, ":", result);
+
       setVerificationModal({ type: "user", data: result, isOpen: true });
     } catch (error) {
       console.error("Error verifying user:", error);
@@ -627,7 +627,6 @@ export default function AdminPage() {
 
             {verificationModal.type === "user" && verificationModal.data && (
               <div className="space-y-4">
-                {console.log("Modal data:", verificationModal.data)}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h4 className="font-medium">User Information</h4>
