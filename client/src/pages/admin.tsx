@@ -635,25 +635,27 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <h4 className="font-medium">Data Integrity Check</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Badge variant={verificationModal.data.dataIntegrity.orphanedGoals === 0 ? "default" : "destructive"}>
-                      Orphaned Goals: {verificationModal.data.dataIntegrity.orphanedGoals}
-                    </Badge>
-                    <Badge variant={verificationModal.data.dataIntegrity.orphanedDataPoints === 0 ? "default" : "destructive"}>
-                      Orphaned Data Points: {verificationModal.data.dataIntegrity.orphanedDataPoints}
-                    </Badge>
-                    <Badge variant={verificationModal.data.dataIntegrity.studentsWithoutGoals === 0 ? "default" : "secondary"}>
-                      Students w/o Goals: {verificationModal.data.dataIntegrity.studentsWithoutGoals}
-                    </Badge>
-                    <Badge variant={verificationModal.data.dataIntegrity.goalsWithoutDataPoints === 0 ? "default" : "secondary"}>
-                      Goals w/o Data: {verificationModal.data.dataIntegrity.goalsWithoutDataPoints}
-                    </Badge>
+                {verificationModal.data.dataIntegrity && (
+                  <div className="space-y-2">
+                    <h4 className="font-medium">Data Integrity Check</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Badge variant={verificationModal.data.dataIntegrity.orphanedGoals === 0 ? "default" : "destructive"}>
+                        Orphaned Goals: {verificationModal.data.dataIntegrity.orphanedGoals}
+                      </Badge>
+                      <Badge variant={verificationModal.data.dataIntegrity.orphanedDataPoints === 0 ? "default" : "destructive"}>
+                        Orphaned Data Points: {verificationModal.data.dataIntegrity.orphanedDataPoints}
+                      </Badge>
+                      <Badge variant={verificationModal.data.dataIntegrity.studentsWithoutGoals === 0 ? "default" : "secondary"}>
+                        Students w/o Goals: {verificationModal.data.dataIntegrity.studentsWithoutGoals}
+                      </Badge>
+                      <Badge variant={verificationModal.data.dataIntegrity.goalsWithoutDataPoints === 0 ? "default" : "secondary"}>
+                        Goals w/o Data: {verificationModal.data.dataIntegrity.goalsWithoutDataPoints}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {verificationModal.data.sampleStudents.length > 0 && (
+                {verificationModal.data.sampleStudents && verificationModal.data.sampleStudents.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-medium">Sample Students</h4>
                     <Table>
@@ -700,7 +702,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {verificationModal.data.goals.length > 0 && (
+                {verificationModal.data.goals && verificationModal.data.goals.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-medium">Goals</h4>
                     <Table>
@@ -755,7 +757,7 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {verificationModal.data.dataPoints.length > 0 && (
+                {verificationModal.data.dataPoints && verificationModal.data.dataPoints.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-medium">Recent Data Points</h4>
                     <Table>
