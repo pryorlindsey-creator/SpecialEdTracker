@@ -85,8 +85,10 @@ export default function AdminPage() {
   const verifyUser = async (userId: string) => {
     try {
       const result = await apiRequest("GET", `/api/admin/verify/user/${userId}`);
+      console.log("Verification result for user", userId, ":", result);
       setVerificationModal({ type: "user", data: result, isOpen: true });
     } catch (error) {
+      console.error("Error verifying user:", error);
       toast({
         title: "Error",
         description: "Failed to verify user data",
@@ -621,6 +623,7 @@ export default function AdminPage() {
 
             {verificationModal.type === "user" && verificationModal.data && (
               <div className="space-y-4">
+                {console.log("Modal data:", verificationModal.data)}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h4 className="font-medium">User Information</h4>
