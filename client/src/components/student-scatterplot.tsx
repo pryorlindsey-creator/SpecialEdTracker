@@ -242,7 +242,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
             Date: {date.toLocaleDateString()}
           </p>
           <p className="text-sm">
-            Progress: {data.originalValue}
+            {data.format === 'frequency' ? 'Count:' : 'Progress:'} {data.originalValue}
             {data.format === 'percentage' && '%'}
             {data.format === 'frequency' && ' times'}
             {data.format === 'duration' && (data.durationUnit === 'seconds' ? ' seconds' : ' minutes')}

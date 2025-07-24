@@ -192,7 +192,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
             })}</p>
             
             <p><strong>
-              {goal.dataCollectionType === 'frequency' ? 'Frequency:' : 
+              {goal.dataCollectionType === 'frequency' ? 'Count:' : 
                goal.dataCollectionType === 'duration' ? 'Duration:' : 'Progress:'}
             </strong> {yAxisConfig.tooltipFormatter(data.progress)}
             {goal.dataCollectionType === 'frequency' && ' times'}
