@@ -247,16 +247,12 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
             {data.format === 'frequency' && ' times'}
             {data.format === 'duration' && (data.durationUnit === 'seconds' ? ' seconds' : ' minutes')}
           </p>
-          {data.format === 'duration' ? (
+          {data.format === 'duration' && (
             <p className="text-sm text-gray-600">
               {data.durationUnit === 'seconds' ? 
                 `${data.y} seconds` : 
                 `${Math.floor(data.y)} min ${Math.round((data.y - Math.floor(data.y)) * 100)} sec`
               }
-            </p>
-          ) : (
-            <p className="text-sm text-gray-600">
-              Display Value: {data.y.toFixed(1)}{data.format === 'percentage' ? '%' : ''}
             </p>
           )}
         </div>
