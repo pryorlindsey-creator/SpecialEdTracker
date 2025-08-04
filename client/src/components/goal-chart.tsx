@@ -304,6 +304,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
         ) : (
           <>
             {console.log(`[CHART DEBUG] Goal ${goalId} - Rendering chart type: ${selectedChartType}`)}
+            {console.log(`[CHART DEBUG] Goal ${goalId} - Checking conditions: line=${selectedChartType === 'line'}, bar=${selectedChartType === 'bar'}, pie=${selectedChartType === 'pie'}`)}
             {/* Chart Container */}
             <div className="h-80 mb-6">
               {selectedChartType === 'line' && (
