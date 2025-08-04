@@ -17,6 +17,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     // Get chart type preference from sessionStorage
     const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
+    console.log(`[CHART DEBUG] Goal ${goalId} - Saved chart type:`, savedChartType);
     return savedChartType || 'line';
   });
   
@@ -238,6 +239,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
             <Select
               value={selectedChartType}
               onValueChange={(value: ChartType) => {
+                console.log(`[CHART DEBUG] Goal ${goalId} - Changing chart type from ${selectedChartType} to ${value}`);
                 setSelectedChartType(value);
                 sessionStorage.setItem(`chartType_${goalId}`, value);
               }}
@@ -284,6 +286,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
           </div>
         ) : (
           <>
+            {console.log(`[CHART DEBUG] Goal ${goalId} - Rendering chart type: ${selectedChartType}`)}
             {/* Chart Container */}
             <div className="h-80 mb-6">
               {selectedChartType === 'line' && (
