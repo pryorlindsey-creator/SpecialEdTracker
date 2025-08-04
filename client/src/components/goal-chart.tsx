@@ -17,7 +17,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     // Get chart type preference from sessionStorage
     const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
-    console.log(`[CHART DEBUG] Goal ${goalId} - Initial saved chart type:`, savedChartType);
+  
     return savedChartType || 'line';
   });
 
@@ -26,7 +26,6 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     const checkForChartTypeChange = () => {
       const currentChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
       if (currentChartType && currentChartType !== selectedChartType) {
-        console.log(`[CHART DEBUG] Goal ${goalId} - Detected chart type change to:`, currentChartType);
         setSelectedChartType(currentChartType);
       }
     };
@@ -256,7 +255,6 @@ export default function GoalChart({ goalId }: GoalChartProps) {
             <Select
               value={selectedChartType}
               onValueChange={(value: ChartType) => {
-                console.log(`[CHART DEBUG] Goal ${goalId} - Changing chart type from ${selectedChartType} to ${value}`);
                 setSelectedChartType(value);
                 sessionStorage.setItem(`chartType_${goalId}`, value);
               }}
@@ -303,8 +301,6 @@ export default function GoalChart({ goalId }: GoalChartProps) {
           </div>
         ) : (
           <>
-            {console.log(`[CHART DEBUG] Goal ${goalId} - Rendering chart type: ${selectedChartType}`)}
-            {console.log(`[CHART DEBUG] Goal ${goalId} - Checking conditions: line=${selectedChartType === 'line'}, bar=${selectedChartType === 'bar'}, pie=${selectedChartType === 'pie'}`)}
             {/* Chart Container */}
             <div className="h-80 mb-6">
               {selectedChartType === 'line' && (
@@ -487,17 +483,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                 goal.status === 'mastered' ? 'The student has mastered this goal.' : 
                 'This goal has been discontinued.'}
             </p>
-            {dataPoints.length > 0 && (
-              <p className="text-gray-700 mb-4">
-                <strong>Recent Performance:</strong> {
-                  goal.dataCollectionType === 'frequency' 
-                    ? `The student's most recent frequency was ${Math.round(parseFloat(dataPoints[dataPoints.length - 1].value?.toString() || '0'))}, with an average frequency of ${Math.round(dataPoints.reduce((sum, point) => sum + parseFloat(point.value?.toString() || '0'), 0) / dataPoints.length)} across all data points.`
-                    : goal.dataCollectionType === 'duration'
-                    ? `The student's most recent duration was ${yAxisConfig.tooltipFormatter(parseFloat(dataPoints[dataPoints.length - 1].value?.toString() || '0'))}, with an average of ${yAxisConfig.tooltipFormatter(dataPoints.reduce((sum, point) => sum + parseFloat(point.value?.toString() || '0'), 0) / dataPoints.length)} across all data points.`
-                    : `The student's most recent score was ${goalProgress.lastScore.toFixed(0)}%, with an average performance of ${goalProgress.averageScore.toFixed(0)}% across all data points.`
-                }
-              </p>
-            )}
+
             <p className="text-gray-700">
               <strong>Data Collection:</strong> {dataPoints.length} data points have been collected for this goal.
             </p>
