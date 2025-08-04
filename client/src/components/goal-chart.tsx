@@ -1,15 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Download, Printer } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
+import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
 import { format } from "date-fns";
 
 interface GoalChartProps {
   goalId: number;
 }
 
+type ChartType = 'line' | 'pie' | 'bar';
+
 export default function GoalChart({ goalId }: GoalChartProps) {
+  const [selectedChartType, setSelectedChartType] = useState<ChartType>('line');
+  
   const { data: goalProgress, isLoading, error } = useQuery({
     queryKey: [`/api/goals/${goalId}`],
     enabled: !!goalId,
@@ -224,7 +230,35 @@ export default function GoalChart({ goalId }: GoalChartProps) {
           <h3 className="text-lg font-semibold text-gray-900">
             Progress Chart: {goal.title}
           </h3>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-2">
+            <Select
+              value={selectedChartType}
+              onValueChange={(value: ChartType) => setSelectedChartType(value)}
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Chart Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="line">
+                  <div className="flex items-center">
+                    <LineChartIcon className="h-4 w-4 mr-2" />
+                    Line Chart
+                  </div>
+                </SelectItem>
+                <SelectItem value="bar">
+                  <div className="flex items-center">
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Bar Chart
+                  </div>
+                </SelectItem>
+                <SelectItem value="pie">
+                  <div className="flex items-center">
+                    <PieChartIcon className="h-4 w-4 mr-2" />
+                    Pie Chart
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-1" />
               Export
@@ -245,39 +279,101 @@ export default function GoalChart({ goalId }: GoalChartProps) {
           <>
             {/* Chart Container */}
             <div className="h-80 mb-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={displayData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#666"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    domain={yAxisConfig.isReversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
-                    ticks={yAxisConfig.isReversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
-                    stroke="#666"
-                    fontSize={12}
-                    tickFormatter={yAxisConfig.tickFormatter}
-                    allowDecimals={!yAxisConfig.isFrequency}
-                    label={{ 
-                      value: goal.dataCollectionType === 'frequency' ? 'Frequency' : 
-                             goal.dataCollectionType === 'duration' ? 'Duration (mm:ss)' : 'Progress (%)', 
-                      angle: -90, 
-                      position: 'insideLeft' 
-                    }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Line
-                    type="monotone"
-                    dataKey="progress"
-                    stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
-                    strokeWidth={3}
-                    dot={{ fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB" }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+              {selectedChartType === 'line' && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={displayData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#666"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      domain={yAxisConfig.isReversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                      ticks={yAxisConfig.isReversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                      stroke="#666"
+                      fontSize={12}
+                      tickFormatter={yAxisConfig.tickFormatter}
+                      allowDecimals={!yAxisConfig.isFrequency}
+                      label={{ 
+                        value: goal.dataCollectionType === 'frequency' ? 'Count' : 
+                               goal.dataCollectionType === 'duration' ? 'Duration (mm:ss)' : 'Progress (%)', 
+                        angle: -90, 
+                        position: 'insideLeft' 
+                      }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Line
+                      type="monotone"
+                      dataKey="progress"
+                      stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                      strokeWidth={3}
+                      dot={{ fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB", strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
+                
+              {selectedChartType === 'bar' && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={displayData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#666"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      domain={yAxisConfig.isReversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                      ticks={yAxisConfig.isReversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                      stroke="#666"
+                      fontSize={12}
+                      tickFormatter={yAxisConfig.tickFormatter}
+                      allowDecimals={!yAxisConfig.isFrequency}
+                      label={{ 
+                        value: goal.dataCollectionType === 'frequency' ? 'Count' : 
+                               goal.dataCollectionType === 'duration' ? 'Duration (mm:ss)' : 'Progress (%)', 
+                        angle: -90, 
+                        position: 'insideLeft' 
+                      }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar
+                      dataKey="progress"
+                      fill={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+                
+              {selectedChartType === 'pie' && (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={displayData.map((item: any, index: number) => ({
+                        ...item,
+                        name: item.date,
+                        value: item.progress,
+                        fill: `hsl(${200 + (index * 30)}, 70%, 50%)`
+                      }))}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${yAxisConfig.tickFormatter(value)}`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {displayData.map((entry: any, index: number) => (
+                        <Cell key={`cell-${index}`} fill={`hsl(${200 + (index * 30)}, 70%, 50%)`} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: any) => [yAxisConfig.tickFormatter(value), goal.dataCollectionType === 'frequency' ? 'Count' : goal.dataCollectionType === 'duration' ? 'Duration' : 'Progress']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
 
             {/* Chart Statistics */}
@@ -285,20 +381,20 @@ export default function GoalChart({ goalId }: GoalChartProps) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {goalProgress.currentProgress.toFixed(0)}%
+                    {(goalProgress as any).currentProgress?.toFixed(0) || '0'}%
                   </p>
                   <p className="text-sm text-gray-600">Current Progress</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {goalProgress.averageScore.toFixed(0)}%
+                    {(goalProgress as any).averageScore?.toFixed(0) || '0'}%
                   </p>
                   <p className="text-sm text-gray-600">Average Score</p>
                 </div>
                 <div className="text-center">
                   <p className={`text-2xl font-bold ${
-                    goalProgress.trend > 0 ? 'text-green-600' : 
-                    goalProgress.trend < 0 ? 'text-red-600' : 'text-gray-900'
+                    (goalProgress as any).trend > 0 ? 'text-green-600' : 
+                    (goalProgress as any).trend < 0 ? 'text-red-600' : 'text-gray-900'
                   }`}>
                     {(goalProgress as any).trend > 0 ? '+' : ''}{((goalProgress as any).trend || 0).toFixed(1)}%
                   </p>
@@ -336,7 +432,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
               <div className="grid grid-cols-2 gap-4 pt-6 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {goalProgress.currentProgress.toFixed(0)}%
+                    {(goalProgress as any).currentProgress?.toFixed(0) || '0'}%
                   </p>
                   <p className="text-sm text-gray-600">Current Progress</p>
                 </div>
