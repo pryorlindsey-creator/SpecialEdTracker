@@ -34,7 +34,7 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
 - **Data Management**: Drizzle ORM for schema management, Zod for type-safe validation, proper foreign key constraints, and optimized indexing.
 - **Data Flow**: Secure authentication flow, streamlined data collection, and robust progress tracking. Data persistence is confirmed across sessions and server restarts.
 - **Data Collection Enhancements**: Dynamic form inputs adapting to goal types (percentage, frequency, duration), real-time live collection tab with session-based tracking, frequency counters, duration timers, and percentage trial counters. Support for multi-student group data collection.
-- **Reporting**: Comprehensive raw data table with filtering, sorting, and PDF export capabilities. Individual goal scatterplots with goal-specific data filtering and trend lines.
+- **Reporting**: Comprehensive raw data table with filtering, sorting, and PDF export capabilities. Individual goal scatterplots with goal-specific data filtering and trend lines. Clean Goal Summary Reports without "Recent Performance" statements for professional presentation.
 - **Chart Visualization**: Multiple chart types (line, bar, pie) with dropdown selection on goal cards, sessionStorage preferences, and dynamic chart type switching with proper icons and user-friendly interface.
 - **Data Point Management**: Implemented comprehensive data point editing system with dynamic forms, PATCH endpoint for updates, and real-time cache invalidation.
 - **Goal and Objective Management**: Full CRUD operations for goals and objectives, with validation for limits (max 10 goals per student, max 5 objectives per goal). Objectives are directly associated with students.
