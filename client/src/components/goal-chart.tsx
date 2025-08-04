@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,9 +17,26 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     // Get chart type preference from sessionStorage
     const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
-    console.log(`[CHART DEBUG] Goal ${goalId} - Saved chart type:`, savedChartType);
+    console.log(`[CHART DEBUG] Goal ${goalId} - Initial saved chart type:`, savedChartType);
     return savedChartType || 'line';
   });
+
+  // Listen for changes to sessionStorage chart type preference
+  useEffect(() => {
+    const checkForChartTypeChange = () => {
+      const currentChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
+      if (currentChartType && currentChartType !== selectedChartType) {
+        console.log(`[CHART DEBUG] Goal ${goalId} - Detected chart type change to:`, currentChartType);
+        setSelectedChartType(currentChartType);
+      }
+    };
+
+    // Check immediately and set up an interval to check periodically
+    checkForChartTypeChange();
+    const interval = setInterval(checkForChartTypeChange, 100);
+
+    return () => clearInterval(interval);
+  }, [goalId, selectedChartType]);
   
   const { data: goalProgress, isLoading, error } = useQuery({
     queryKey: [`/api/goals/${goalId}`],
