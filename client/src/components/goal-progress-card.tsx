@@ -3,7 +3,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { ChartLine, Plus, Calendar, Edit } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChartLine, Plus, Calendar, Edit, BarChart3, PieChart, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import EditGoalModal from "./edit-goal-modal";
 
@@ -24,7 +30,7 @@ interface Goal {
 interface GoalProgressCardProps {
   goal: Goal;
   onRefresh?: () => void;
-  onViewChart?: () => void;
+  onViewChart?: (chartType?: string) => void;
   onAddData?: () => void;
   onEditGoal?: () => void;
 }
@@ -120,15 +126,42 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddDa
             Last updated: {format(new Date(goal.updatedAt), "MMM d")}
           </div>
           <div className="flex space-x-2">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onViewChart}
-              className="text-primary hover:bg-blue-50"
-            >
-              <ChartLine className="h-4 w-4 mr-1" />
-              View Chart
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="text-primary hover:bg-blue-50"
+                >
+                  <ChartLine className="h-4 w-4 mr-1" />
+                  View Chart
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem 
+                  onClick={() => onViewChart?.('line')}
+                  className="cursor-pointer"
+                >
+                  <ChartLine className="h-4 w-4 mr-2" />
+                  Line Chart
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onViewChart?.('bar')}
+                  className="cursor-pointer"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Bar Chart
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onViewChart?.('pie')}
+                  className="cursor-pointer"
+                >
+                  <PieChart className="h-4 w-4 mr-2" />
+                  Pie Chart
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button 
               variant="ghost" 
               size="sm"

@@ -530,9 +530,13 @@ export default function StudentDetail() {
                     key={goal.id} 
                     goal={goal} 
                     onRefresh={refetchGoals}
-                    onViewChart={() => {
+                    onViewChart={(chartType) => {
                       setSelectedGoalId(goal.id);
                       setActiveTab("reports");
+                      // Store chart type preference if needed
+                      if (chartType) {
+                        sessionStorage.setItem(`chartType_${goal.id}`, chartType);
+                      }
                     }}
                     onAddData={() => {
                       setSelectedGoalId(goal.id);

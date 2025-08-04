@@ -14,7 +14,11 @@ interface GoalChartProps {
 type ChartType = 'line' | 'pie' | 'bar';
 
 export default function GoalChart({ goalId }: GoalChartProps) {
-  const [selectedChartType, setSelectedChartType] = useState<ChartType>('line');
+  const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
+    // Get chart type preference from sessionStorage
+    const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
+    return savedChartType || 'line';
+  });
   
   const { data: goalProgress, isLoading, error } = useQuery({
     queryKey: [`/api/goals/${goalId}`],
@@ -233,7 +237,10 @@ export default function GoalChart({ goalId }: GoalChartProps) {
           <div className="flex items-center space-x-2">
             <Select
               value={selectedChartType}
-              onValueChange={(value: ChartType) => setSelectedChartType(value)}
+              onValueChange={(value: ChartType) => {
+                setSelectedChartType(value);
+                sessionStorage.setItem(`chartType_${goalId}`, value);
+              }}
             >
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Chart Type" />
