@@ -661,6 +661,22 @@ export default function StudentDetail() {
                   </Button>
                 </CardContent>
               </Card>
+            ) : selectedGoalId ? (
+              <>
+                {/* Back button to return to all charts */}
+                <div className="mb-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedGoalId(null)}
+                    className="mb-4"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to All Charts
+                  </Button>
+                </div>
+                {/* Individual Goal Chart with Type Selection */}
+                <GoalChart goalId={selectedGoalId} />
+              </>
             ) : (
               <>
                 {/* Individual Goal Charts */}
