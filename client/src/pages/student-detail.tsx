@@ -39,8 +39,7 @@ export default function StudentDetail() {
 
   const studentId = params.id ? parseInt(params.id) : null;
   
-  console.log(`[STUDENT DETAIL] Component loaded with params:`, params);
-  console.log(`[STUDENT DETAIL] Parsed studentId:`, studentId);
+
 
   const { data: student, isLoading: studentLoading, error: studentError, refetch: refetchStudent } = useQuery({
     queryKey: [`/api/students/${studentId}`],
@@ -69,18 +68,11 @@ export default function StudentDetail() {
     refetchOnMount: 'always',
   });
   
-  // Add error logging for debugging blank screen
-  useEffect(() => {
-    console.log(`[STUDENT DETAIL] Component mounted, studentId: ${studentId}`);
-    console.log(`[STUDENT DETAIL] Student loading: ${studentLoading}`);
-    console.log(`[STUDENT DETAIL] Student data:`, student);
-    console.log(`[STUDENT DETAIL] Student error:`, studentError);
-  }, [studentId, studentLoading, student, studentError]);
+
 
   // Force refresh all data when component mounts to prevent cache issues
   React.useEffect(() => {
     if (studentId) {
-      console.log(`[STUDENT DETAIL] Force refreshing data for student ${studentId}`);
       queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}`] });
       queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
       queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
@@ -90,7 +82,6 @@ export default function StudentDetail() {
   // No auth handling needed in development mode
 
   if (studentLoading) {
-    console.log(`[STUDENT DETAIL] Rendering loading state for student ${studentId}`);
     return (
       <div className="min-h-screen bg-surface">
         <div className="flex items-center justify-center min-h-screen">
@@ -101,7 +92,6 @@ export default function StudentDetail() {
   }
 
   if (studentError) {
-    console.log(`[STUDENT DETAIL] Student error occurred:`, studentError);
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <Card className="p-8 text-center">
@@ -119,7 +109,6 @@ export default function StudentDetail() {
   }
 
   if (!student) {
-    console.log(`[STUDENT DETAIL] No student data found for ID: ${studentId}`);
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
         <Card className="p-8 text-center">
@@ -136,7 +125,7 @@ export default function StudentDetail() {
     );
   }
 
-  console.log(`[STUDENT DETAIL] Rendering student page for: ${student.name} (ID: ${student.id})`);
+
 
   const lastUpdateText = (student as any)?.lastDataPoint 
     ? format(new Date((student as any).lastDataPoint.date), "MMM d, yyyy")
@@ -145,23 +134,12 @@ export default function StudentDetail() {
   // PDF Generation Function
   const generatePDF = async () => {
     try {
-      console.log('PDF Generation Debug:');
-      console.log('Student data:', student);
-      console.log('Goals data:', goals);
-      console.log('All data points:', allDataPoints);
       
       // Ensure we have all the data needed
       if (!student || !goals || !allDataPoints || 
           !Array.isArray(goals) || !Array.isArray(allDataPoints) ||
           !student.name || !student.id) {
-        console.error('Missing data for PDF generation:', {
-          student: !!student,
-          studentName: student?.name,
-          goals: !!goals,
-          goalsIsArray: Array.isArray(goals),
-          allDataPoints: !!allDataPoints,
-          allDataPointsIsArray: Array.isArray(allDataPoints)
-        });
+
         toast({
           title: "Error",
           description: "Unable to generate PDF. Missing or invalid student data.",
