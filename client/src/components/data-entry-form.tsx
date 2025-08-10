@@ -542,7 +542,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 { id: "verbal", label: "Verbal" },
                 { id: "visual", label: "Visual" },
                 { id: "written", label: "Written" },
-                { id: "adult-model-of-task", label: "Adult Model of Task" },
+                { id: "model-of-task", label: "Model of Task" },
                 { id: "self-correction", label: "Self-Correction" },
                 { id: "gesture", label: "Gesture" },
               ];

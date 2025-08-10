@@ -463,7 +463,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                 <SelectItem value="verbal">Verbal</SelectItem>
                 <SelectItem value="visual">Visual</SelectItem>
                 <SelectItem value="written">Written</SelectItem>
-                <SelectItem value="adult-model-of-task">Adult Model of Task</SelectItem>
+                <SelectItem value="model-of-task">Model of Task</SelectItem>
                 <SelectItem value="self-correction">Self-Correction</SelectItem>
                 <SelectItem value="gesture">Gesture</SelectItem>
               </SelectContent>

@@ -70,7 +70,7 @@ const supportLevels = [
   "verbal",
   "visual",
   "written",
-  "adult-model-of-task",
+  "model-of-task",
   "self-correction",
   "gesture"
 ];
@@ -80,7 +80,7 @@ const supportLevelLabels: Record<string, string> = {
   "verbal": "Verbal",
   "visual": "Visual",
   "written": "Written",
-  "adult-model-of-task": "Adult Model of Task",
+  "model-of-task": "Model of Task",
   "self-correction": "Self-Correction",
   "gesture": "Gesture"
 };
