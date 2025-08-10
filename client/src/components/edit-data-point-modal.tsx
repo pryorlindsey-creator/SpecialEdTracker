@@ -67,20 +67,22 @@ interface EditDataPointModalProps {
 
 const supportLevels = [
   "independent",
-  "verbal-prompt", 
-  "gestural-prompt",
-  "visual-prompt",
-  "physical-prompt",
-  "full-physical-assistance"
+  "verbal",
+  "visual",
+  "written",
+  "adult-model-of-task",
+  "self-correction",
+  "gesture"
 ];
 
 const supportLevelLabels: Record<string, string> = {
   "independent": "Independent",
-  "verbal-prompt": "Verbal Prompt",
-  "gestural-prompt": "Gestural Prompt", 
-  "visual-prompt": "Visual Prompt",
-  "physical-prompt": "Physical Prompt",
-  "full-physical-assistance": "Full Physical Assistance"
+  "verbal": "Verbal",
+  "visual": "Visual",
+  "written": "Written",
+  "adult-model-of-task": "Adult Model of Task",
+  "self-correction": "Self-Correction",
+  "gesture": "Gesture"
 };
 
 export default function EditDataPointModal({ dataPoint, isOpen, onClose, onSuccess }: EditDataPointModalProps) {

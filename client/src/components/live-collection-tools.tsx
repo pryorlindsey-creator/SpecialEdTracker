@@ -460,11 +460,12 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="independent">Independent</SelectItem>
-                <SelectItem value="verbal-prompt">Verbal Prompt</SelectItem>
-                <SelectItem value="visual-prompt">Visual Prompt</SelectItem>
-                <SelectItem value="gestural-prompt">Gestural Prompt</SelectItem>
-                <SelectItem value="physical-prompt">Physical Prompt</SelectItem>
-                <SelectItem value="hand-over-hand">Hand Over Hand</SelectItem>
+                <SelectItem value="verbal">Verbal</SelectItem>
+                <SelectItem value="visual">Visual</SelectItem>
+                <SelectItem value="written">Written</SelectItem>
+                <SelectItem value="adult-model-of-task">Adult Model of Task</SelectItem>
+                <SelectItem value="self-correction">Self-Correction</SelectItem>
+                <SelectItem value="gesture">Gesture</SelectItem>
               </SelectContent>
             </Select>
             {levelOfSupport.length > 0 && (

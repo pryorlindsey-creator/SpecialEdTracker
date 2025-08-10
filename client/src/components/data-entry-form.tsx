@@ -539,10 +539,12 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             render={({ field }) => {
               const supportOptions = [
                 { id: "independent", label: "Independent" },
-                { id: "verbal-prompt", label: "Verbal Prompt" },
-                { id: "visual-prompt", label: "Visual Prompt" },
-                { id: "physical-prompt", label: "Physical Prompt" },
-                { id: "hand-over-hand", label: "Hand-over-Hand" },
+                { id: "verbal", label: "Verbal" },
+                { id: "visual", label: "Visual" },
+                { id: "written", label: "Written" },
+                { id: "adult-model-of-task", label: "Adult Model of Task" },
+                { id: "self-correction", label: "Self-Correction" },
+                { id: "gesture", label: "Gesture" },
               ];
 
               return (
