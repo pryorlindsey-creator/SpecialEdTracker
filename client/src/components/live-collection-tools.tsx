@@ -453,7 +453,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                   setLevelOfSupport([...levelOfSupport, value]);
                 }
               }}
-              disabled={dataType !== 'duration' && !isCollecting}
+              disabled={dataType === 'frequency' && !isCollecting}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Add support level" />
