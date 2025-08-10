@@ -503,29 +503,34 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 </div>
                 
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-600 mb-1">Attempts Format</label>
-                  <div className="flex space-x-1">
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="8"
-                      onChange={(e) => {
-                        setProgressInputType("fraction");
-                        handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
-                      }}
-                      className="w-20"
-                    />
-                    <span className="self-center text-gray-500">/</span>
-                    <Input
-                      type="number"
-                      min="1"
-                      placeholder="10"
-                      onChange={(e) => {
-                        setProgressInputType("fraction");
-                        handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
-                      }}
-                      className="w-20"
-                    />
+                  <div className="flex space-x-2">
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">Correct</label>
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="8"
+                        onChange={(e) => {
+                          setProgressInputType("fraction");
+                          handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
+                        }}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="self-center text-gray-500 pt-5">/</div>
+                    <div className="flex-1">
+                      <label className="block text-xs text-gray-600 mb-1">Total Attempts</label>
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="10"
+                        onChange={(e) => {
+                          setProgressInputType("fraction");
+                          handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
+                        }}
+                        className="w-full"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
