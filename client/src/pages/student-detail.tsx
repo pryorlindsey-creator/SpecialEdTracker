@@ -576,11 +576,11 @@ export default function StudentDetail() {
                         <Button
                           key={goal.id}
                           variant={selectedGoalId === goal.id ? "default" : "outline"}
-                          className="h-auto p-4 text-left flex flex-col items-start"
+                          className="h-auto p-4 text-left flex flex-col items-start w-full"
                           onClick={() => setSelectedGoalId(goal.id)}
                         >
-                          <div className="font-semibold mb-2">{goal.title}</div>
-                          <div className="text-sm opacity-80 text-left leading-relaxed">
+                          <div className="font-semibold mb-2 w-full">{goal.title}</div>
+                          <div className="text-sm opacity-80 text-left leading-relaxed w-full break-words whitespace-normal">
                             {goal.description}
                           </div>
                         </Button>
