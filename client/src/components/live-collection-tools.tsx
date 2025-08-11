@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Timer, Plus, Minus, Save, RotateCcw, Clock, Hash, Percent, Target } from "lucide-react";
@@ -482,43 +483,42 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label>Level of Support</Label>
-            <Select 
-              onValueChange={(value) => {
-                if (!levelOfSupport.includes(value)) {
-                  setLevelOfSupport([...levelOfSupport, value]);
-                }
-              }}
-              disabled={dataType === 'frequency' && !isCollecting}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Add support level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="independent">Independent</SelectItem>
-                <SelectItem value="verbal">Verbal</SelectItem>
-                <SelectItem value="visual">Visual</SelectItem>
-                <SelectItem value="written">Written</SelectItem>
-                <SelectItem value="model-of-task">Model of Task</SelectItem>
-                <SelectItem value="self-correction">Self-Correction</SelectItem>
-                <SelectItem value="gesture">Gesture</SelectItem>
-              </SelectContent>
-            </Select>
-            {levelOfSupport.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {levelOfSupport.map((support, index) => (
-                  <div key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center">
-                    {support.replace('-', ' ')}
-                    <button 
-                      onClick={() => setLevelOfSupport(levelOfSupport.filter((_, i) => i !== index))}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <Label className="text-base font-medium text-gray-900 mb-4 block">
+              Level of Support (Select all that apply)
+            </Label>
+            <div className="space-y-4">
+              {[
+                { id: "independent", label: "Independent" },
+                { id: "verbal", label: "Verbal" },
+                { id: "visual", label: "Visual" },
+                { id: "written", label: "Written" },
+                { id: "model-of-task", label: "Model of Task" },
+                { id: "self-correction", label: "Self-Correction" },
+                { id: "gesture", label: "Gesture" },
+              ].map((option) => (
+                <div key={option.id} className="flex items-center space-x-3">
+                  <Checkbox
+                    id={option.id}
+                    checked={levelOfSupport.includes(option.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setLevelOfSupport([...levelOfSupport, option.id]);
+                      } else {
+                        setLevelOfSupport(levelOfSupport.filter((value) => value !== option.id));
+                      }
+                    }}
+                    className="h-5 w-5"
+                    disabled={dataType === 'frequency' && !isCollecting}
+                  />
+                  <label 
+                    htmlFor={option.id} 
+                    className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
           
           <div>
