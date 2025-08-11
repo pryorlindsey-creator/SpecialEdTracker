@@ -579,7 +579,10 @@ export default function StudentDetail() {
                           className="h-auto p-4 text-left flex flex-col items-start"
                           onClick={() => setSelectedGoalId(goal.id)}
                         >
-                          <div className="font-semibold">{goal.title}</div>
+                          <div className="font-semibold mb-2">{goal.title}</div>
+                          <div className="text-sm opacity-80 text-left leading-relaxed">
+                            {goal.description}
+                          </div>
                         </Button>
                       ))}
                     </div>
