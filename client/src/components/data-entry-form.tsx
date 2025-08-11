@@ -616,10 +616,12 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
               return (
                 <FormItem>
-                  <FormLabel>Level of Support (Select all that apply)</FormLabel>
-                  <div className="space-y-3 pt-2">
+                  <FormLabel className="text-base font-medium text-gray-900 mb-4 block">
+                    Level of Support (Select all that apply)
+                  </FormLabel>
+                  <div className="space-y-4">
                     {supportOptions.map((option) => (
-                      <div key={option.id} className="flex items-center space-x-2">
+                      <div key={option.id} className="flex items-center space-x-3">
                         <Checkbox
                           id={option.id}
                           checked={field.value?.includes(option.id) || false}
@@ -631,10 +633,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                               field.onChange(currentValues.filter((value) => value !== option.id));
                             }
                           }}
+                          className="h-5 w-5"
                         />
-                        <label
-                          htmlFor={option.id}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        <label 
+                          htmlFor={option.id} 
+                          className="text-base font-medium text-gray-900 cursor-pointer leading-none"
                         >
                           {option.label}
                         </label>
