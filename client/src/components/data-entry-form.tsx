@@ -159,7 +159,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       } catch (apiError) {
         console.error("❌ API REQUEST FAILED:");
         console.error("❌ Error type:", typeof apiError);
-        console.error("❌ Error message:", apiError.message);
+        console.error("❌ Error message:", (apiError as Error).message);
         console.error("❌ Full error:", apiError);
         throw apiError;
       }
@@ -167,7 +167,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     },
     onSuccess: (savedDataPoint) => {
       const goalId = form.getValues().goalId;
-      const studentId = form.getValues().goalId ? goals.find(g => g.id === form.getValues().goalId)?.studentId : null;
+      const studentId = form.getValues().goalId ? goals?.find(g => g.id === form.getValues().goalId)?.studentId : null;
       
       console.log("✅ Data point mutation succeeded with saved data:", savedDataPoint);
       
@@ -471,92 +471,55 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 />
               </div>
             ) : (
-              /* Default Percentage/Fraction Input */
-              <div className="flex space-x-4 items-end">
-                <div className="flex-1">
-                  <label className="block text-xs text-gray-600 mb-1">Percentage</label>
-                  <FormField
-                    control={form.control}
-                    name="progressValue"
-                    render={({ field }) => (
-                      <div className="relative">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          placeholder="85"
-                          {...field}
-                          onChange={(e) => {
-                            field.onChange(parseFloat(e.target.value) || 0);
-                            setProgressInputType("percentage");
-                          }}
-                          className="pr-8"
-                        />
-                        <span className="absolute right-3 top-3 text-gray-500">%</span>
-                      </div>
-                    )}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-center px-4 pb-3">
-                  <span className="text-gray-400">OR</span>
-                </div>
-                
-                <div className="flex-1">
-                  <div className="space-y-2">
-                    <div className="flex space-x-2">
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-600 mb-1">Correct</label>
+              /* Simplified Accuracy Input */
+              <div className="space-y-4">
+                <div className="flex space-x-2">
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-600 mb-1">Correct</label>
+                    <FormField
+                      control={form.control}
+                      name="numerator"
+                      render={({ field }) => (
                         <Input
                           type="number"
                           min="0"
                           placeholder="8"
+                          {...field}
                           onChange={(e) => {
+                            const numeratorValue = parseInt(e.target.value) || 0;
+                            field.onChange(numeratorValue);
                             setProgressInputType("fraction");
-                            handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
+                            const denominatorValue = form.getValues("denominator") || 10;
+                            handleFractionChange(numeratorValue.toString(), denominatorValue.toString());
                           }}
                           className="w-full"
                         />
-                      </div>
-                      <div className="self-center text-gray-500 pt-5">/</div>
-                      <div className="flex-1">
-                        <label className="block text-xs text-gray-600 mb-1">Total Attempts</label>
+                      )}
+                    />
+                  </div>
+                  <div className="self-center text-gray-500 pt-5">/</div>
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-600 mb-1">Total Attempts</label>
+                    <FormField
+                      control={form.control}
+                      name="denominator"
+                      render={({ field }) => (
                         <Input
                           type="number"
                           min="1"
                           placeholder="10"
+                          {...field}
                           onChange={(e) => {
+                            const denominatorValue = parseInt(e.target.value) || 10;
+                            field.onChange(denominatorValue);
                             setProgressInputType("fraction");
-                            handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
+                            const numeratorValue = form.getValues("numerator") || 0;
+                            handleFractionChange(numeratorValue.toString(), denominatorValue.toString());
                           }}
                           className="w-full"
                         />
-                      </div>
-                    </div>
-                    <div className="w-full">
-                      <FormField
-                        control={form.control}
-                        name="noResponseCount"
-                        render={({ field }) => (
-                          <FormItem>
-                            <div className="flex items-center space-x-2">
-                              <label className="block text-xs text-gray-600">No Response:</label>
-                              <Input
-                                type="number"
-                                min="0"
-                                placeholder="0"
-                                {...field}
-                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                                className="w-20"
-                              />
-                              <span className="text-xs text-gray-500">trials</span>
-                            </div>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                      )}
+                    />
                   </div>
                 </div>
               </div>
