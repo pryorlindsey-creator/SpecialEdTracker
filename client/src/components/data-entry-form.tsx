@@ -20,6 +20,7 @@ const dataEntrySchema = z.object({
   progressValue: z.number().min(0, "Value must be positive"),
   numerator: z.number().optional(),
   denominator: z.number().optional(),
+  // noResponseCount: z.number().min(0).optional(), // pending database migration
   durationUnit: z.enum(["seconds", "minutes"]).optional(),
   levelOfSupport: z.array(z.string()).min(1, "At least one level of support is required"),
   anecdotalInfo: z.string().optional(),
@@ -503,32 +504,57 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 </div>
                 
                 <div className="flex-1">
-                  <div className="flex space-x-2">
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-600 mb-1">Correct</label>
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="8"
-                        onChange={(e) => {
-                          setProgressInputType("fraction");
-                          handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
-                        }}
-                        className="w-full"
-                      />
+                  <div className="space-y-2">
+                    <div className="flex space-x-2">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-600 mb-1">Correct</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="8"
+                          onChange={(e) => {
+                            setProgressInputType("fraction");
+                            handleFractionChange(e.target.value, form.getValues("denominator")?.toString() || "10");
+                          }}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="self-center text-gray-500 pt-5">/</div>
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-600 mb-1">Total Attempts</label>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="10"
+                          onChange={(e) => {
+                            setProgressInputType("fraction");
+                            handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
+                          }}
+                          className="w-full"
+                        />
+                      </div>
                     </div>
-                    <div className="self-center text-gray-500 pt-5">/</div>
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-600 mb-1">Total Attempts</label>
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="10"
-                        onChange={(e) => {
-                          setProgressInputType("fraction");
-                          handleFractionChange(form.getValues("numerator")?.toString() || "0", e.target.value);
-                        }}
-                        className="w-full"
+                    <div className="w-full">
+                      <FormField
+                        control={form.control}
+                        name="noResponseCount"
+                        render={({ field }) => (
+                          <FormItem>
+                            <div className="flex items-center space-x-2">
+                              <label className="block text-xs text-gray-600">No Response:</label>
+                              <Input
+                                type="number"
+                                min="0"
+                                placeholder="0"
+                                {...field}
+                                onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                                className="w-20"
+                              />
+                              <span className="text-xs text-gray-500">trials</span>
+                            </div>
+                            <FormMessage />
+                          </FormItem>
+                        )}
                       />
                     </div>
                   </div>

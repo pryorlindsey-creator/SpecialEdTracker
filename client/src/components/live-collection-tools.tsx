@@ -28,7 +28,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
   const [frequencyCount, setFrequencyCount] = useState(0);
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [durationSeconds, setDurationSeconds] = useState(0);
-  const [percentageTrials, setPercentageTrials] = useState({ correct: 0, total: 0 });
+  const [percentageTrials, setPercentageTrials] = useState({ correct: 0, total: 0, noResponse: 0 });
   const [notes, setNotes] = useState("");
   const [levelOfSupport, setLevelOfSupport] = useState<string[]>([]);
 
@@ -74,7 +74,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
     setFrequencyCount(0);
     setDurationMinutes(0);
     setDurationSeconds(0);
-    setPercentageTrials({ correct: 0, total: 0 });
+    setPercentageTrials({ correct: 0, total: 0, noResponse: 0 });
     setNotes("");
     toast({
       title: "Session Started",
@@ -100,7 +100,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
     setFrequencyCount(0);
     setDurationMinutes(0);
     setDurationSeconds(0);
-    setPercentageTrials({ correct: 0, total: 0 });
+    setPercentageTrials({ correct: 0, total: 0, noResponse: 0 });
     setNotes("");
     setLevelOfSupport([]);
     toast({
@@ -117,18 +117,33 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
     setFrequencyCount(prev => Math.max(0, prev - 1));
   };
 
-  const addTrial = (isCorrect: boolean) => {
+  const addTrial = (trialType: 'correct' | 'incorrect' | 'noResponse') => {
     setPercentageTrials(prev => ({
-      correct: prev.correct + (isCorrect ? 1 : 0),
-      total: prev.total + 1
+      correct: prev.correct + (trialType === 'correct' ? 1 : 0),
+      total: prev.total + (trialType !== 'noResponse' ? 1 : 0), // No response doesn't count towards total
+      noResponse: prev.noResponse + (trialType === 'noResponse' ? 1 : 0)
     }));
   };
 
   const removeTrial = () => {
-    setPercentageTrials(prev => ({
-      correct: Math.max(0, prev.correct - 1),
-      total: Math.max(0, prev.total - 1)
-    }));
+    setPercentageTrials(prev => {
+      if (prev.total === 0 && prev.noResponse === 0) return prev;
+      
+      // Remove the most recent trial (prioritize removing from total trials first, then no response)
+      if (prev.total > 0) {
+        return {
+          correct: Math.max(0, prev.correct - 1),
+          total: prev.total - 1,
+          noResponse: prev.noResponse
+        };
+      } else {
+        return {
+          correct: prev.correct,
+          total: prev.total,
+          noResponse: prev.noResponse - 1
+        };
+      }
+    });
   };
 
   const saveData = async () => {
@@ -177,6 +192,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         progressValue: parseFloat(progressValue),
         numerator,
         denominator,
+        // noResponseCount: dataType === 'percentage' ? percentageTrials.noResponse : 0, // pending database migration
         durationUnit,
         levelOfSupport,
         anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}`
@@ -408,21 +424,33 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
               <div className="text-lg text-gray-600">
                 {percentageTrials.correct} / {percentageTrials.total} correct
               </div>
+              {percentageTrials.noResponse > 0 && (
+                <div className="text-sm text-gray-500 mt-1">
+                  {percentageTrials.noResponse} no response{percentageTrials.noResponse !== 1 ? 's' : ''}
+                </div>
+              )}
             </div>
-            <div className="flex justify-center space-x-4 mb-4">
+            <div className="flex justify-center space-x-2 mb-4">
               <Button 
                 size="lg" 
-                onClick={() => addTrial(true)}
-                className="bg-green-600 hover:bg-green-700 h-16 px-8"
+                onClick={() => addTrial('correct')}
+                className="bg-green-600 hover:bg-green-700 h-16 px-6"
               >
                 ✓ Correct
               </Button>
               <Button 
                 size="lg" 
-                onClick={() => addTrial(false)}
-                className="bg-red-600 hover:bg-red-700 h-16 px-8"
+                onClick={() => addTrial('incorrect')}
+                className="bg-red-600 hover:bg-red-700 h-16 px-6"
               >
                 ✗ Incorrect
+              </Button>
+              <Button 
+                size="lg" 
+                onClick={() => addTrial('noResponse')}
+                className="bg-gray-500 hover:bg-gray-600 h-16 px-6"
+              >
+                − No Response
               </Button>
             </div>
             <div className="text-center">
@@ -430,7 +458,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
                 variant="outline" 
                 size="sm"
                 onClick={removeTrial}
-                disabled={percentageTrials.total === 0}
+                disabled={percentageTrials.total === 0 && percentageTrials.noResponse === 0}
               >
                 Remove Last Trial
               </Button>
