@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Save } from "lucide-react";
+import { Save, Percent } from "lucide-react";
 
 const dataEntrySchema = z.object({
   goalId: z.number().min(1, "Please select a goal"),
@@ -75,6 +76,11 @@ interface DataEntryFormProps {
 export default function DataEntryForm({ studentId, goals, selectedGoalId, onSuccess }: DataEntryFormProps) {
   const { toast } = useToast();
   const [progressInputType, setProgressInputType] = useState<"percentage" | "fraction">("percentage");
+  const [trialCounter, setTrialCounter] = useState({
+    correct: 0,
+    total: 0,
+    noResponse: 0
+  });
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [durationUnit, setDurationUnit] = useState<string>("minutes");
 
@@ -471,58 +477,125 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 />
               </div>
             ) : (
-              /* Simplified Accuracy Input */
-              <div className="space-y-4">
-                <div className="flex space-x-2">
-                  <div className="flex-1">
-                    <label className="block text-xs text-gray-600 mb-1">Correct</label>
-                    <FormField
-                      control={form.control}
-                      name="numerator"
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="8"
-                          {...field}
-                          onChange={(e) => {
-                            const numeratorValue = parseInt(e.target.value) || 0;
-                            field.onChange(numeratorValue);
-                            setProgressInputType("fraction");
-                            const denominatorValue = form.getValues("denominator") || 10;
-                            handleFractionChange(numeratorValue.toString(), denominatorValue.toString());
-                          }}
-                          className="w-full"
-                        />
-                      )}
-                    />
+              /* Trial Counter Interface - matching live collection */
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Percent className="h-5 w-5 mr-2" />
+                    Trial Counter
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center mb-6">
+                    <div className="text-4xl font-bold text-purple-600 mb-2">
+                      {trialCounter.total > 0 ? 
+                        Math.round((trialCounter.correct / trialCounter.total) * 100) : 0}%
+                    </div>
+                    <div className="text-lg text-gray-600">
+                      {trialCounter.correct} / {trialCounter.total} correct
+                    </div>
+                    {trialCounter.noResponse > 0 && (
+                      <div className="text-sm text-gray-500 mt-1">
+                        {trialCounter.noResponse} no response{trialCounter.noResponse !== 1 ? 's' : ''}
+                      </div>
+                    )}
                   </div>
-                  <div className="self-center text-gray-500 pt-5">/</div>
-                  <div className="flex-1">
-                    <label className="block text-xs text-gray-600 mb-1">Total Attempts</label>
-                    <FormField
-                      control={form.control}
-                      name="denominator"
-                      render={({ field }) => (
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="10"
-                          {...field}
-                          onChange={(e) => {
-                            const denominatorValue = parseInt(e.target.value) || 10;
-                            field.onChange(denominatorValue);
-                            setProgressInputType("fraction");
-                            const numeratorValue = form.getValues("numerator") || 0;
-                            handleFractionChange(numeratorValue.toString(), denominatorValue.toString());
-                          }}
-                          className="w-full"
-                        />
-                      )}
-                    />
+                  <div className="flex justify-center space-x-2 mb-4">
+                    <Button 
+                      type="button"
+                      size="lg" 
+                      onClick={() => {
+                        const newTrialCounter = {
+                          ...trialCounter,
+                          correct: trialCounter.correct + 1,
+                          total: trialCounter.total + 1
+                        };
+                        setTrialCounter(newTrialCounter);
+                        // Update form values
+                        form.setValue("numerator", newTrialCounter.correct);
+                        form.setValue("denominator", newTrialCounter.total);
+                        form.setValue("progressValue", newTrialCounter.total > 0 ? 
+                          Math.round((newTrialCounter.correct / newTrialCounter.total) * 100) : 0);
+                        setProgressInputType("fraction");
+                      }}
+                      className="bg-green-600 hover:bg-green-700 h-16 px-6"
+                    >
+                      ✓ Correct
+                    </Button>
+                    <Button 
+                      type="button"
+                      size="lg" 
+                      onClick={() => {
+                        const newTrialCounter = {
+                          ...trialCounter,
+                          total: trialCounter.total + 1
+                        };
+                        setTrialCounter(newTrialCounter);
+                        // Update form values
+                        form.setValue("numerator", newTrialCounter.correct);
+                        form.setValue("denominator", newTrialCounter.total);
+                        form.setValue("progressValue", newTrialCounter.total > 0 ? 
+                          Math.round((newTrialCounter.correct / newTrialCounter.total) * 100) : 0);
+                        setProgressInputType("fraction");
+                      }}
+                      className="bg-red-600 hover:bg-red-700 h-16 px-6"
+                    >
+                      ✗ Incorrect
+                    </Button>
+                    <Button 
+                      type="button"
+                      size="lg" 
+                      onClick={() => {
+                        const newTrialCounter = {
+                          ...trialCounter,
+                          noResponse: trialCounter.noResponse + 1
+                        };
+                        setTrialCounter(newTrialCounter);
+                        // For no response, we don't change total trials but track separately
+                      }}
+                      className="bg-gray-500 hover:bg-gray-600 h-16 px-6"
+                    >
+                      − No Response
+                    </Button>
                   </div>
-                </div>
-              </div>
+                  <div className="text-center">
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        // Remove the last trial
+                        if (trialCounter.noResponse > 0) {
+                          // Remove no response first
+                          const newTrialCounter = {
+                            ...trialCounter,
+                            noResponse: trialCounter.noResponse - 1
+                          };
+                          setTrialCounter(newTrialCounter);
+                        } else if (trialCounter.total > 0) {
+                          // Remove last correct/incorrect trial
+                          const wasLastCorrect = trialCounter.correct > 0 && 
+                            (trialCounter.correct / trialCounter.total) > ((trialCounter.correct - 1) / (trialCounter.total - 1));
+                          const newTrialCounter = {
+                            correct: wasLastCorrect ? trialCounter.correct - 1 : trialCounter.correct,
+                            total: trialCounter.total - 1,
+                            noResponse: trialCounter.noResponse
+                          };
+                          setTrialCounter(newTrialCounter);
+                          // Update form values
+                          form.setValue("numerator", newTrialCounter.correct);
+                          form.setValue("denominator", newTrialCounter.total);
+                          form.setValue("progressValue", newTrialCounter.total > 0 ? 
+                            Math.round((newTrialCounter.correct / newTrialCounter.total) * 100) : 0);
+                        }
+                      }}
+                      disabled={trialCounter.total === 0 && trialCounter.noResponse === 0}
+                    >
+                      Remove Last Trial
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
 
