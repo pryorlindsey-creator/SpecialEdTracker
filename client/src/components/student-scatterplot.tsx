@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, LineChart } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { TrendingUp, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
@@ -39,6 +41,11 @@ const GOAL_COLORS = [
 ];
 
 export default function StudentScatterplot({ studentId, goalId }: StudentScatterplotProps) {
+  const [showTrendLine, setShowTrendLine] = useState(() => {
+    // Get trend line preference from sessionStorage
+    const savedTrendPref = sessionStorage.getItem(`scatterTrend_${studentId}_${goalId || 'all'}`);
+    return savedTrendPref ? savedTrendPref === 'true' : true; // Default to true
+  });
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
@@ -264,10 +271,28 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
   return (
     <Card data-goal-id={goalId || 'combined'}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
-          {chartTitle}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5" />
+            <CardTitle>{chartTitle}</CardTitle>
+          </div>
+          
+          {hasData && (
+            <Button
+              variant={showTrendLine ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                const newValue = !showTrendLine;
+                setShowTrendLine(newValue);
+                sessionStorage.setItem(`scatterTrend_${studentId}_${goalId || 'all'}`, String(newValue));
+              }}
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              {showTrendLine ? "Hide" : "Show"} Trend
+            </Button>
+          )}
+        </div>
+        
         {hasData && (
           <p className="text-sm text-muted-foreground">
             {goalId ? `Track progress over time for ${currentGoal?.title}` : "Track progress trends across all goals over time"}
@@ -319,6 +344,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                 <Tooltip content={<CustomTooltip />} />
                 
                 {/* Trend Line */}
+                {showTrendLine && (
                 <Line
                   type="monotone"
                   dataKey="y"
@@ -333,6 +359,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   connectNulls={true}
                   name="Trend"
                 />
+                )}
                 
                 {/* Scatter Points */}
                 <Scatter

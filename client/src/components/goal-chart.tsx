@@ -3,8 +3,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from "recharts";
-import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, ComposedChart } from "recharts";
+import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 
 interface GoalChartProps {
@@ -19,6 +19,12 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
   
     return savedChartType || 'line';
+  });
+
+  const [showTrendLine, setShowTrendLine] = useState(() => {
+    // Get trend line preference from sessionStorage
+    const savedTrendPref = sessionStorage.getItem(`showTrend_${goalId}`);
+    return savedTrendPref ? savedTrendPref === 'true' : true; // Default to true
   });
 
   // Listen for changes to sessionStorage chart type preference
@@ -283,6 +289,23 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                 </SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Trend Line Toggle - Only show for line and bar charts */}
+            {(selectedChartType === 'line' || selectedChartType === 'bar') && (
+              <Button
+                variant={showTrendLine ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  const newValue = !showTrendLine;
+                  setShowTrendLine(newValue);
+                  sessionStorage.setItem(`showTrend_${goalId}`, String(newValue));
+                }}
+              >
+                <TrendingUp className="h-4 w-4 mr-2" />
+                {showTrendLine ? "Hide" : "Show"} Trend
+              </Button>
+            )}
+            
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-1" />
               Export
@@ -327,21 +350,23 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                       }}
                     />
                     <Tooltip content={<CustomTooltip />} />
-                    <Line
-                      type="monotone"
-                      dataKey="progress"
-                      stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
-                      strokeWidth={3}
-                      dot={{ fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB", strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB" }}
-                    />
+                    {showTrendLine && (
+                      <Line
+                        type="monotone"
+                        dataKey="progress"
+                        stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                        strokeWidth={3}
+                        dot={{ fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB", strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB" }}
+                      />
+                    )}
                   </LineChart>
                 </ResponsiveContainer>
               )}
                 
               {selectedChartType === 'bar' && (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={displayData}>
+                  <ComposedChart data={displayData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis 
                       dataKey="date" 
@@ -368,7 +393,19 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                       fill={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
                       radius={[4, 4, 0, 0]}
                     />
-                  </BarChart>
+                    {showTrendLine && (
+                      <Line
+                        type="monotone"
+                        dataKey="progress"
+                        stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={false}
+                        connectNulls={true}
+                        name="Trend"
+                      />
+                    )}
+                  </ComposedChart>
                 </ResponsiveContainer>
               )}
                 
