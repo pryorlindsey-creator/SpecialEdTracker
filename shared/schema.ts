@@ -176,7 +176,11 @@ export const insertDataPointSchema = createInsertSchema(dataPoints).omit({
 }).extend({
   objectiveId: z.number().optional().nullable(), // Make objectiveId explicitly optional and nullable
   progressValue: z.number().transform((num) => num.toString()), // Convert number to string for decimal field
-  date: z.date().or(z.string().transform((str) => new Date(str))), // Handle both Date and string inputs
+  date: z.date().or(z.string().transform((str) => {
+    // Handle string dates by parsing them in local timezone to avoid UTC conversion issues
+    const date = new Date(str + 'T00:00:00.000Z'); // Force UTC interpretation to avoid timezone shift
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()); // Convert to local date
+  })), // Handle both Date and string inputs
 });
 
 // Types

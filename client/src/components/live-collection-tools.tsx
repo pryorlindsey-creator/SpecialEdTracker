@@ -194,9 +194,13 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
           progressFormat = 'percentage';
       }
 
+      // Create date in local timezone to avoid UTC conversion issues
+      const now = new Date();
+      const localDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
       const dataPoint = {
         goalId,
-        date: format(new Date(), 'yyyy-MM-dd'),
+        date: localDate, // Send as Date object instead of string to maintain timezone
         progressFormat,
         progressValue: parseFloat(progressValue),
         numerator,
