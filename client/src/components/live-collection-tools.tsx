@@ -166,7 +166,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
           durationUnit = 'minutes';
           break;
         case 'percentage':
-          if (percentageTrials.total === 0) {
+          if (percentageTrials.total === 0 && percentageTrials.noResponse === 0) {
             toast({
               title: "Error",
               description: "Please add at least one trial before saving.",
@@ -174,11 +174,19 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
             });
             return;
           }
-          const percentage = (percentageTrials.correct / percentageTrials.total) * 100;
-          progressValue = percentage.toFixed(2);
-          progressFormat = 'percentage';
-          numerator = percentageTrials.correct;
-          denominator = percentageTrials.total;
+          // If there are only no response trials, record 0% with special handling
+          if (percentageTrials.total === 0 && percentageTrials.noResponse > 0) {
+            progressValue = "0";
+            progressFormat = 'percentage';
+            numerator = 0;
+            denominator = percentageTrials.noResponse; // Use no response count as denominator for context
+          } else {
+            const percentage = (percentageTrials.correct / percentageTrials.total) * 100;
+            progressValue = percentage.toFixed(2);
+            progressFormat = 'percentage';
+            numerator = percentageTrials.correct;
+            denominator = percentageTrials.total;
+          }
           break;
         default:
           progressValue = '0';
@@ -531,7 +539,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         <Button 
           size="lg" 
           onClick={saveData}
-          disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0) || (dataType === 'percentage' && percentageTrials.total === 0)}
+          disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0) || (dataType === 'percentage' && percentageTrials.total === 0 && percentageTrials.noResponse === 0)}
           className="bg-blue-600 hover:bg-blue-700 px-8"
         >
           <Save className="h-5 w-5 mr-2" />
@@ -546,10 +554,10 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
           <p className="text-sm text-gray-600 mt-2">
             {dataType === 'frequency' && frequencyCount === 0 && "Add at least one occurrence to save"}
             {dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0 && "Set duration time to save"}
-            {dataType === 'percentage' && percentageTrials.total === 0 && "Add at least one trial to save"}
+            {dataType === 'percentage' && percentageTrials.total === 0 && percentageTrials.noResponse === 0 && "Add at least one trial to save"}
             {dataType === 'frequency' && frequencyCount > 0 && "Ready to save frequency data"}
             {dataType === 'duration' && (durationMinutes > 0 || durationSeconds > 0) && "Ready to save duration data"}
-            {dataType === 'percentage' && percentageTrials.total > 0 && "Ready to save percentage data"}
+            {dataType === 'percentage' && (percentageTrials.total > 0 || percentageTrials.noResponse > 0) && "Ready to save percentage data"}
           </p>
         )}
       </div>
