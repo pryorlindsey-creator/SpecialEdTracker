@@ -62,10 +62,13 @@ interface EditGoalModalProps {
 
 const supportLevels = [
   "Independent",
-  "Verbal Prompt", 
-  "Gestural Prompt",
-  "Physical Prompt",
-  "Full Physical Assistance"
+  "Verbal",
+  "Visual", 
+  "Written",
+  "Model of Task",
+  "Self-Correction",
+  "Gesture",
+  "Custom"
 ];
 
 export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: EditGoalModalProps) {
@@ -79,6 +82,7 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
       return [];
     }
   });
+  const [customSupport, setCustomSupport] = useState<string>("");
 
   const form = useForm<EditGoalFormData>({
     resolver: zodResolver(editGoalSchema),
@@ -94,9 +98,17 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
 
   const mutation = useMutation({
     mutationFn: async (data: EditGoalFormData) => {
+      let finalSupport = [...selectedSupport];
+      
+      // If Custom is selected and customSupport has value, replace "Custom" with the custom value
+      if (selectedSupport.includes("Custom") && customSupport.trim()) {
+        finalSupport = finalSupport.filter(s => s !== "Custom");
+        finalSupport.push(customSupport.trim());
+      }
+      
       const submitData = {
         ...data,
-        levelOfSupport: selectedSupport.length > 0 ? JSON.stringify(selectedSupport) : null,
+        levelOfSupport: finalSupport.length > 0 ? JSON.stringify(finalSupport) : null,
       };
       
       const response = await fetch(`/api/goals/${goal.id}`, {
@@ -138,10 +150,19 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
   };
 
   const handleSupportChange = (level: string, checked: boolean) => {
-    if (checked) {
-      setSelectedSupport(prev => [...prev, level]);
+    if (level === "Custom") {
+      if (checked) {
+        setSelectedSupport(prev => [...prev, level]);
+      } else {
+        setSelectedSupport(prev => prev.filter(l => l !== level));
+        setCustomSupport("");
+      }
     } else {
-      setSelectedSupport(prev => prev.filter(l => l !== level));
+      if (checked) {
+        setSelectedSupport(prev => [...prev, level]);
+      } else {
+        setSelectedSupport(prev => prev.filter(l => l !== level));
+      }
     }
   };
 
@@ -291,6 +312,17 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
                   </div>
                 ))}
               </div>
+              
+              {/* Custom Support Input */}
+              {selectedSupport.includes("Custom") && (
+                <div className="mt-3">
+                  <Input
+                    placeholder="Enter your custom level of support..."
+                    value={customSupport}
+                    onChange={(e) => setCustomSupport(e.target.value)}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2">

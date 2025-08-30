@@ -83,6 +83,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   });
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [durationUnit, setDurationUnit] = useState<string>("minutes");
+  const [customSupport, setCustomSupport] = useState<string>("");
 
   // Find the selected goal to get its data collection type
   useEffect(() => {
@@ -612,6 +613,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 { id: "model-of-task", label: "Model of Task" },
                 { id: "self-correction", label: "Self-Correction" },
                 { id: "gesture", label: "Gesture" },
+                { id: "custom", label: "Custom" },
               ];
 
               // Add custom level of support from the selected goal if it exists and isn't already in the list
@@ -637,10 +639,19 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                           checked={field.value?.includes(option.id) || false}
                           onCheckedChange={(checked) => {
                             const currentValues = field.value || [];
-                            if (checked) {
-                              field.onChange([...currentValues, option.id]);
+                            if (option.id === "custom") {
+                              if (checked) {
+                                field.onChange([...currentValues, option.id]);
+                              } else {
+                                field.onChange(currentValues.filter((value) => value !== option.id));
+                                setCustomSupport("");
+                              }
                             } else {
-                              field.onChange(currentValues.filter((value) => value !== option.id));
+                              if (checked) {
+                                field.onChange([...currentValues, option.id]);
+                              } else {
+                                field.onChange(currentValues.filter((value) => value !== option.id));
+                              }
                             }
                           }}
                           className="h-5 w-5"
@@ -653,6 +664,18 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                         </label>
                       </div>
                     ))}
+                    
+                    {/* Custom Support Input */}
+                    {field.value?.includes("custom") && (
+                      <div className="mt-3">
+                        <Input
+                          placeholder="Enter your custom level of support..."
+                          value={customSupport}
+                          onChange={(e) => setCustomSupport(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
