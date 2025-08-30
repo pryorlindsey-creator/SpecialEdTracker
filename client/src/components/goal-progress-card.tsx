@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChartLine, Plus, Calendar, Edit, BarChart3, PieChart, ChevronDown } from "lucide-react";
+import { ChartLine, Plus, Calendar, Edit, BarChart3, PieChart, ChevronDown, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import EditGoalModal from "./edit-goal-modal";
 
@@ -33,9 +33,10 @@ interface GoalProgressCardProps {
   onViewChart?: (chartType?: string) => void;
   onAddData?: () => void;
   onEditGoal?: () => void;
+  onDeleteGoal?: () => void;
 }
 
-export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddData, onEditGoal }: GoalProgressCardProps) {
+export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddData, onEditGoal, onDeleteGoal }: GoalProgressCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'mastered':
@@ -179,6 +180,15 @@ export default function GoalProgressCard({ goal, onRefresh, onViewChart, onAddDa
             >
               <Plus className="h-4 w-4 mr-1" />
               Add Data
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={onDeleteGoal}
+              className="text-red-600 hover:bg-red-50"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+              Delete
             </Button>
           </div>
         </div>

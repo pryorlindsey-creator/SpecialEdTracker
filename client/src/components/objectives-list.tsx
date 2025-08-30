@@ -13,6 +13,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Objective } from "@shared/schema";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const objectiveSchema = z.object({
   description: z.string().min(1, "Objective description is required"),
@@ -32,6 +42,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   const { toast } = useToast();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | null>(null);
+  const [deletingObjectiveId, setDeletingObjectiveId] = useState<number | null>(null);
 
   const form = useForm<ObjectiveFormData>({
     resolver: zodResolver(objectiveSchema),
@@ -234,11 +245,8 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (window.confirm("Are you sure you want to delete this objective?")) {
-                            deleteObjectiveMutation.mutate(objective.id);
-                          }
-                        }}
+                        onClick={() => setDeletingObjectiveId(objective.id)}
+                        className="text-red-600 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -340,6 +348,32 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
           </Form>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Objective Confirmation Dialog */}
+      <AlertDialog open={!!deletingObjectiveId} onOpenChange={() => setDeletingObjectiveId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Objective</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this objective? This action cannot be undone and will permanently remove the objective and any associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deletingObjectiveId) {
+                  deleteObjectiveMutation.mutate(deletingObjectiveId);
+                  setDeletingObjectiveId(null);
+                }
+              }}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Objective
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

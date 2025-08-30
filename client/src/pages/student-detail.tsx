@@ -29,6 +29,18 @@ import ObjectivesList from "@/components/objectives-list";
 import { ClearDataModal } from "@/components/clear-data-modal";
 import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function StudentDetail() {
   const params = useParams();
@@ -42,6 +54,7 @@ export default function StudentDetail() {
   const [isRemoveStudentModalOpen, setIsRemoveStudentModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
   const [editingGoal, setEditingGoal] = useState<any>(null);
+  const [deletingGoalId, setDeletingGoalId] = useState<number | null>(null);
 
   const studentId = params.id ? parseInt(params.id) : null;
   
@@ -84,6 +97,28 @@ export default function StudentDetail() {
       queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
     }
   }, [studentId]);
+
+  // Mutation to delete goal
+  const deleteGoalMutation = useMutation({
+    mutationFn: (goalId: number) => apiRequest('DELETE', `/api/goals/${goalId}`),
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Goal deleted successfully!",
+      });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
+      setDeletingGoalId(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete goal. Please try again.",
+        variant: "destructive",
+      });
+      setDeletingGoalId(null);
+    },
+  });
 
   // No auth handling needed in development mode
 
@@ -530,6 +565,9 @@ export default function StudentDetail() {
                         setEditingGoal(goal);
                         setIsEditGoalModalOpen(true);
                       }}
+                      onDeleteGoal={() => {
+                        setDeletingGoalId(goal.id);
+                      }}
                     />
                     <ObjectivesList goalId={goal.id} studentId={studentId!} />
                   </div>
@@ -729,6 +767,27 @@ export default function StudentDetail() {
         studentId={studentId}
         studentName={student?.name}
       />
+
+      {/* Delete Goal Confirmation Dialog */}
+      <AlertDialog open={!!deletingGoalId} onOpenChange={() => setDeletingGoalId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Goal</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this goal? This action cannot be undone and will permanently delete all associated objectives and data points.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingGoalId && deleteGoalMutation.mutate(deletingGoalId)}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete Goal
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
