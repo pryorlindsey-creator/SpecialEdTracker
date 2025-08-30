@@ -72,6 +72,7 @@ export const objectives = pgTable("objectives", {
   title: varchar("title").notNull(),
   description: text("description").notNull(),
   targetCriteria: text("target_criteria"),
+  targetDate: timestamp("target_date"),
   status: varchar("status").notNull().default("active"), // active, mastered, discontinued
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -168,6 +169,11 @@ export const insertObjectiveSchema = createInsertSchema(objectives).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  targetDate: z.union([z.string(), z.date(), z.undefined()]).optional().transform((val) => {
+    if (!val || val === '') return undefined;
+    return typeof val === 'string' ? new Date(val) : val;
+  }),
 });
 
 export const insertDataPointSchema = createInsertSchema(dataPoints).omit({

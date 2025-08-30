@@ -17,6 +17,7 @@ import { Objective } from "@shared/schema";
 const objectiveSchema = z.object({
   description: z.string().min(1, "Objective description is required"),
   targetCriteria: z.string().optional(),
+  targetDate: z.string().optional().transform((val) => val || undefined),
   status: z.enum(["active", "mastered"]).default("active"),
 });
 
@@ -37,6 +38,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
     defaultValues: {
       description: "",
       targetCriteria: "",
+      targetDate: "",
       status: "active",
     },
   });
@@ -132,6 +134,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
     form.reset({
       description: objective.description,
       targetCriteria: objective.targetCriteria || "",
+      targetDate: objective.targetDate ? new Date(objective.targetDate).toISOString().split('T')[0] : "",
       status: objective.status as "active" | "mastered",
     });
     setIsAddModalOpen(true);
@@ -201,6 +204,11 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                       {objective.targetCriteria && (
                         <p className="text-sm text-blue-600 mt-1">
                           <strong>Target:</strong> {objective.targetCriteria}
+                        </p>
+                      )}
+                      {objective.targetDate && (
+                        <p className="text-sm text-purple-600 mt-1">
+                          <strong>Target Date:</strong> {new Date(objective.targetDate).toLocaleDateString()}
                         </p>
                       )}
                       <div className="flex items-center gap-2 mt-2">
@@ -286,6 +294,23 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                     <FormLabel>Target Criteria (Optional)</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., 80% accuracy over 4 trials" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="targetDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Target Date (Optional)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="date" 
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
