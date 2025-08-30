@@ -44,10 +44,13 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   });
 
   // Query to fetch objectives
-  const { data: objectives = [], isLoading } = useQuery<Objective[]>({
+  const { data: objectivesData, isLoading } = useQuery<Objective[]>({
     queryKey: ['/api/goals', goalId, 'objectives'],
     queryFn: () => apiRequest('GET', `/api/goals/${goalId}/objectives`),
   });
+
+  // Ensure objectives is always an array
+  const objectives = Array.isArray(objectivesData) ? objectivesData : [];
 
   // Mutation to create objective
   const createObjectiveMutation = useMutation({
