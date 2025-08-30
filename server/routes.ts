@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./replitAuth";
 import { UserMigrationService } from "./userMigration";
-import { insertStudentSchema, insertGoalSchema, insertDataPointSchema, students } from "@shared/schema";
+import { insertStudentSchema, insertGoalSchema, insertDataPointSchema, insertObjectiveSchema, students } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
