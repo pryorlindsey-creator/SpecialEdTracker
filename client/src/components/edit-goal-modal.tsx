@@ -168,13 +168,28 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent 
+        className="max-w-2xl w-full"
+        style={{
+          maxHeight: '85vh',
+          height: 'auto',
+          overflow: 'visible'
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Edit Goal</DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <div 
+          style={{
+            maxHeight: 'calc(85vh - 80px)',
+            overflow: 'auto',
+            paddingRight: '4px',
+            marginRight: '-4px'
+          }}
+        >
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="title"
@@ -333,8 +348,9 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
                 {mutation.isPending ? "Updating..." : "Update Goal"}
               </Button>
             </div>
-          </form>
-        </Form>
+            </form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
