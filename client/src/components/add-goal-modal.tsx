@@ -116,13 +116,14 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Add New Goal</DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="title"
@@ -423,7 +424,8 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               </Button>
             </div>
           </form>
-        </Form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
