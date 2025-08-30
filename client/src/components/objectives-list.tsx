@@ -15,7 +15,6 @@ import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Objective } from "@shared/schema";
 
 const objectiveSchema = z.object({
-  title: z.string().min(1, "Objective title is required"),
   description: z.string().min(1, "Objective description is required"),
   targetCriteria: z.string().optional(),
   status: z.enum(["active", "mastered"]).default("active"),
@@ -36,7 +35,6 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   const form = useForm<ObjectiveFormData>({
     resolver: zodResolver(objectiveSchema),
     defaultValues: {
-      title: "",
       description: "",
       targetCriteria: "",
       status: "active",
@@ -129,7 +127,6 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   const handleEdit = (objective: Objective) => {
     setEditingObjective(objective);
     form.reset({
-      title: objective.title,
       description: objective.description,
       targetCriteria: objective.targetCriteria || "",
       status: objective.status as "active" | "mastered",
@@ -195,10 +192,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">
-                        {objective.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-gray-900 font-medium">
                         {objective.description}
                       </p>
                       {objective.targetCriteria && (
@@ -263,20 +257,6 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Objective Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Answer who/what questions" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <FormField
                 control={form.control}
                 name="description"
