@@ -116,25 +116,18 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent 
-        className="max-w-4xl w-full max-h-[90vh] overflow-hidden"
-        style={{
-          height: '90vh',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      >
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle>Add New Goal</DialogTitle>
-        </DialogHeader>
-        
-        <div 
-          className="flex-1 overflow-y-auto p-1" 
-          style={{ 
-            minHeight: 0, 
-            scrollBehavior: 'smooth' 
-          }}
-        >
+      <DialogContent className="max-w-4xl w-full !h-[90vh] !max-h-[90vh] !overflow-visible p-0">
+        <div className="h-full flex flex-col">
+          <DialogHeader className="flex-shrink-0 px-6 py-4 border-b">
+            <DialogTitle>Add New Goal</DialogTitle>
+          </DialogHeader>
+          
+          <div 
+            className="flex-1 overflow-y-scroll px-6 py-4"
+            onWheel={(e) => {
+              e.stopPropagation();
+            }}
+          >
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -436,6 +429,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               </div>
             </form>
           </Form>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

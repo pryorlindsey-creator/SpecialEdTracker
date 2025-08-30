@@ -14,7 +14,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import GoalProgressCard from "@/components/goal-progress-card";
 import DataEntryForm from "@/components/data-entry-form";
 import GoalChart from "@/components/goal-chart";
-import AddGoalModal from "@/components/add-goal-modal-fixed";
+import AddGoalModal from "@/components/add-goal-modal";
 import EditGoalModal from "@/components/edit-goal-modal";
 import StudentInfoCard from "@/components/student-info-card";
 import StudentScatterplot from "@/components/student-scatterplot";

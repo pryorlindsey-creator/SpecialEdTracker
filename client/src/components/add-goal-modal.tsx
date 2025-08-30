@@ -116,12 +116,27 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent 
+        className="sm:max-w-4xl w-full"
+        style={{
+          maxHeight: '85vh',
+          height: 'auto',
+          overflow: 'visible'
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Add New Goal</DialogTitle>
         </DialogHeader>
         
-        <Form {...form}>
+        <div 
+          style={{
+            maxHeight: 'calc(85vh - 80px)',
+            overflow: 'auto',
+            paddingRight: '4px',
+            marginRight: '-4px'
+          }}
+        >
+          <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
@@ -423,7 +438,8 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               </Button>
             </div>
             </form>
-        </Form>
+          </Form>
+        </div>
       </DialogContent>
     </Dialog>
   );
