@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ const addGoalSchema = z.object({
   description: z.string().min(1, "Goal description is required"),
   targetCriteria: z.string().optional(),
   levelOfSupport: z.string().optional(),
+  customLevelOfSupport: z.string().optional(),
   dataCollectionType: z.string().default("percentage"),
   frequencyDirection: z.string().optional(),
   status: z.string().default("active"),
@@ -33,6 +35,7 @@ interface AddGoalModalProps {
 
 export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: AddGoalModalProps) {
   const { toast } = useToast();
+  const [isCustomSupport, setIsCustomSupport] = useState(false);
 
   const form = useForm<AddGoalFormData>({
     resolver: zodResolver(addGoalSchema),
@@ -41,6 +44,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       description: "",
       targetCriteria: "",
       levelOfSupport: "",
+      customLevelOfSupport: "",
       dataCollectionType: "percentage",
       frequencyDirection: "",
       status: "active",
@@ -49,7 +53,11 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   const addGoalMutation = useMutation({
     mutationFn: async (data: AddGoalFormData) => {
-      await apiRequest("POST", `/api/students/${studentId}/goals`, data);
+      // Use custom level of support if provided, otherwise use the selected option
+      const finalLevelOfSupport = data.levelOfSupport === "custom" ? data.customLevelOfSupport : data.levelOfSupport;
+      const { customLevelOfSupport, ...requestData } = data;
+      const goalData = { ...requestData, levelOfSupport: finalLevelOfSupport };
+      await apiRequest("POST", `/api/students/${studentId}/goals`, goalData);
     },
     onSuccess: () => {
       // Clear all cache to force immediate refresh
@@ -60,6 +68,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
         description: "Goal added successfully!",
       });
       form.reset();
+      setIsCustomSupport(false);
       onSuccess?.();
     },
     onError: (error) => {
@@ -90,6 +99,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   const handleClose = () => {
     form.reset();
+    setIsCustomSupport(false);
     onClose();
   };
 
@@ -204,7 +214,16 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Level of Support</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setIsCustomSupport(value === "custom");
+                      if (value !== "custom") {
+                        form.setValue("customLevelOfSupport", "");
+                      }
+                    }} 
+                    value={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select support level..." />
@@ -216,12 +235,33 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                       <SelectItem value="visual-prompt">Visual Prompt</SelectItem>
                       <SelectItem value="physical-prompt">Physical Prompt</SelectItem>
                       <SelectItem value="hand-over-hand">Hand-over-Hand</SelectItem>
+                      <SelectItem value="custom">Custom</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Custom Level of Support Input */}
+            {isCustomSupport && (
+              <FormField
+                control={form.control}
+                name="customLevelOfSupport"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Custom Level of Support</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter your custom level of support..."
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}
