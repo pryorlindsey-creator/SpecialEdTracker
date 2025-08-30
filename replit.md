@@ -14,6 +14,11 @@ Goal limits: Each student can have a maximum of 10 goals (not required to have 1
 
 ## System Architecture
 
+### Data Safety Measures
+- **Database schema changes**: Always use `npm run db:push --force` for safe schema synchronization to prevent data loss during development.
+- **Data backup**: Critical data like goals and objectives should be backed up before any schema modifications.
+- **User data protection**: All data belongs to user 4201332 during development with strict ownership verification.
+
 ### UI/UX Decisions
 - Consistent design system using Radix UI components with shadcn/ui.
 - Tailwind CSS for styling and custom theming.
