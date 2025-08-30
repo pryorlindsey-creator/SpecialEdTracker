@@ -699,7 +699,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const studentId = goal.studentId;
 
       // Generate a title from description if not provided
-      const title = req.body.title || req.body.description?.substring(0, 50) + (req.body.description?.length > 50 ? "..." : "");
+      const title = req.body.title || (req.body.description ? 
+        req.body.description.substring(0, 50) + (req.body.description.length > 50 ? "..." : "") : 
+        "Untitled Objective");
       
       const objectiveData = insertObjectiveSchema.parse({
         ...req.body,
