@@ -3,6 +3,11 @@ import React from "react";
 import { useParams, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import type { students, goals, dataPoints } from "@/../../shared/schema";
+
+type Student = typeof students.$inferSelect;
+type Goal = typeof goals.$inferSelect;
+type DataPoint = typeof dataPoints.$inferSelect;
 import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap, Trash2, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,27 +47,27 @@ export default function StudentDetail() {
   
 
 
-  const { data: student, isLoading: studentLoading, error: studentError, refetch: refetchStudent } = useQuery({
+  const { data: student, isLoading: studentLoading, error: studentError, refetch: refetchStudent } = useQuery<Student>({
     queryKey: [`/api/students/${studentId}`],
     enabled: !!studentId,
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: 'always',
   });
 
-  const { data: goals, isLoading: goalsLoading, error: goalsError, refetch: refetchGoals } = useQuery({
+  const { data: goals = [], isLoading: goalsLoading, error: goalsError, refetch: refetchGoals } = useQuery<Goal[]>({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
     staleTime: 0, // Always fetch fresh data
     refetchOnMount: 'always',
   });
 
-  const { data: dataPoints, isLoading: dataPointsLoading, refetch: refetchDataPoints } = useQuery({
+  const { data: dataPoints = [], isLoading: dataPointsLoading, refetch: refetchDataPoints } = useQuery<DataPoint[]>({
     queryKey: [`/api/goals/${selectedGoalId}/data-points`],
     enabled: !!selectedGoalId,
   });
 
   // Query for ALL data points for PDF generation
-  const { data: allDataPoints, isLoading: allDataPointsLoading, refetch: refetchAllDataPoints } = useQuery({
+  const { data: allDataPoints = [], isLoading: allDataPointsLoading, refetch: refetchAllDataPoints } = useQuery<DataPoint[]>({
     queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
     staleTime: 0,
@@ -138,7 +143,7 @@ export default function StudentDetail() {
       
       // Ensure we have all the data needed
       if (!student || !goals || !allDataPoints || 
-          !Array.isArray(goals) || !Array.isArray(allDataPoints) ||
+          goals.length === 0 || allDataPoints.length === 0 ||
           !student.name || !student.id) {
 
         toast({
