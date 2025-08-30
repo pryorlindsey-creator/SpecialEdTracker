@@ -42,16 +42,15 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   });
 
   // Query to fetch objectives
-  const { data: objectivesData, isLoading } = useQuery<Objective[]>({
-    queryKey: ['/api/goals', goalId, 'objectives'],
-    queryFn: () => apiRequest('GET', `/api/goals/${goalId}/objectives`),
+  const { data: objectivesData, isLoading, error } = useQuery<Objective[]>({
+    queryKey: [`/api/goals/${goalId}/objectives`],
+    // Use the default query function which properly handles JSON parsing
   });
 
   // Ensure objectives is always an array
   const objectives = Array.isArray(objectivesData) ? objectivesData : [];
   
-  // Debug logging
-  console.log('ObjectivesList render:', { goalId, objectives, objectivesData, isLoading });
+
 
   // Mutation to create objective
   const createObjectiveMutation = useMutation({
@@ -59,10 +58,8 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
       apiRequest('POST', `/api/goals/${goalId}/objectives`, data),
     onSuccess: () => {
       console.log('Objective created successfully, invalidating queries...');
-      queryClient.invalidateQueries({ queryKey: ['/api/goals', goalId, 'objectives'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/students', studentId, 'goals'] });
-      // Force refetch objectives
-      queryClient.refetchQueries({ queryKey: ['/api/goals', goalId, 'objectives'] });
+      // Clear all cached data and force fresh fetch
+      queryClient.clear();
       toast({
         title: "Success",
         description: "Objective added successfully!",
@@ -84,8 +81,8 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
     mutationFn: ({ id, data }: { id: number; data: ObjectiveFormData }) =>
       apiRequest('PUT', `/api/objectives/${id}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/goals', goalId, 'objectives'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/students', studentId, 'goals'] });
+      // Clear all cached data to force fresh fetch
+      queryClient.clear();
       toast({
         title: "Success",
         description: "Objective updated successfully!",
@@ -106,8 +103,8 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   const deleteObjectiveMutation = useMutation({
     mutationFn: (id: number) => apiRequest('DELETE', `/api/objectives/${id}`),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/goals', goalId, 'objectives'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/students', studentId, 'goals'] });
+      // Clear all cached data to force fresh fetch
+      queryClient.clear();
       toast({
         title: "Success",
         description: "Objective deleted successfully!",
