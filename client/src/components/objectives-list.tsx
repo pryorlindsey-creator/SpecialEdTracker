@@ -49,14 +49,20 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
 
   // Ensure objectives is always an array
   const objectives = Array.isArray(objectivesData) ? objectivesData : [];
+  
+  // Debug logging
+  console.log('ObjectivesList render:', { goalId, objectives, objectivesData, isLoading });
 
   // Mutation to create objective
   const createObjectiveMutation = useMutation({
     mutationFn: (data: ObjectiveFormData) =>
       apiRequest('POST', `/api/goals/${goalId}/objectives`, data),
     onSuccess: () => {
+      console.log('Objective created successfully, invalidating queries...');
       queryClient.invalidateQueries({ queryKey: ['/api/goals', goalId, 'objectives'] });
       queryClient.invalidateQueries({ queryKey: ['/api/students', studentId, 'goals'] });
+      // Force refetch objectives
+      queryClient.refetchQueries({ queryKey: ['/api/goals', goalId, 'objectives'] });
       toast({
         title: "Success",
         description: "Objective added successfully!",
