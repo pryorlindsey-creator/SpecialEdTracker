@@ -604,7 +604,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             control={form.control}
             name="levelOfSupport"
             render={({ field }) => {
-              const supportOptions = [
+              const baseSupportOptions = [
                 { id: "independent", label: "Independent" },
                 { id: "verbal", label: "Verbal" },
                 { id: "visual", label: "Visual" },
@@ -613,6 +613,16 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 { id: "self-correction", label: "Self-Correction" },
                 { id: "gesture", label: "Gesture" },
               ];
+
+              // Add custom level of support from the selected goal if it exists and isn't already in the list
+              const supportOptions = [...baseSupportOptions];
+              if (selectedGoal?.levelOfSupport && 
+                  !baseSupportOptions.some(option => option.id === selectedGoal.levelOfSupport)) {
+                supportOptions.push({ 
+                  id: selectedGoal.levelOfSupport, 
+                  label: selectedGoal.levelOfSupport.charAt(0).toUpperCase() + selectedGoal.levelOfSupport.slice(1)
+                });
+              }
 
               return (
                 <FormItem>
