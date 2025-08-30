@@ -231,10 +231,12 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                     </FormControl>
                     <SelectContent>
                       <SelectItem value="independent">Independent</SelectItem>
-                      <SelectItem value="verbal-prompt">Verbal Prompt</SelectItem>
-                      <SelectItem value="visual-prompt">Visual Prompt</SelectItem>
-                      <SelectItem value="physical-prompt">Physical Prompt</SelectItem>
-                      <SelectItem value="hand-over-hand">Hand-over-Hand</SelectItem>
+                      <SelectItem value="verbal">Verbal</SelectItem>
+                      <SelectItem value="visual">Visual</SelectItem>
+                      <SelectItem value="written">Written</SelectItem>
+                      <SelectItem value="model-of-task">Model of Task</SelectItem>
+                      <SelectItem value="self-correction">Self-Correction</SelectItem>
+                      <SelectItem value="gesture">Gesture</SelectItem>
                       <SelectItem value="custom">Custom</SelectItem>
                     </SelectContent>
                   </Select>
