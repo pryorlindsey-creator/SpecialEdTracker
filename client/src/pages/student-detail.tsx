@@ -20,6 +20,7 @@ import StudentInfoCard from "@/components/student-info-card";
 import StudentScatterplot from "@/components/student-scatterplot";
 import RawDataTable from "@/components/raw-data-table";
 import LiveCollectionTools from "@/components/live-collection-tools";
+import ObjectivesList from "@/components/objectives-list";
 import { ClearDataModal } from "@/components/clear-data-modal";
 import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
@@ -504,27 +505,29 @@ export default function StudentDetail() {
             ) : (
               <div className="space-y-6">
                 {goals.map((goal) => (
-                  <GoalProgressCard 
-                    key={goal.id} 
-                    goal={goal} 
-                    onRefresh={refetchGoals}
-                    onViewChart={(chartType) => {
-                      setSelectedGoalId(goal.id);
-                      setActiveTab("reports");
-                      // Store chart type preference if needed
-                      if (chartType) {
-                        sessionStorage.setItem(`chartType_${goal.id}`, chartType);
-                      }
-                    }}
-                    onAddData={() => {
-                      setSelectedGoalId(goal.id);
-                      setActiveTab("data-entry");
-                    }}
-                    onEditGoal={() => {
-                      setEditingGoal(goal);
-                      setIsEditGoalModalOpen(true);
-                    }}
-                  />
+                  <div key={goal.id} className="space-y-4">
+                    <GoalProgressCard 
+                      goal={goal} 
+                      onRefresh={refetchGoals}
+                      onViewChart={(chartType) => {
+                        setSelectedGoalId(goal.id);
+                        setActiveTab("reports");
+                        // Store chart type preference if needed
+                        if (chartType) {
+                          sessionStorage.setItem(`chartType_${goal.id}`, chartType);
+                        }
+                      }}
+                      onAddData={() => {
+                        setSelectedGoalId(goal.id);
+                        setActiveTab("data-entry");
+                      }}
+                      onEditGoal={() => {
+                        setEditingGoal(goal);
+                        setIsEditGoalModalOpen(true);
+                      }}
+                    />
+                    <ObjectivesList goalId={goal.id} studentId={studentId!} />
+                  </div>
                 ))}
                 
                 {/* Add New Goal Button */}

@@ -10,8 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { Plus, Trash2 } from "lucide-react";
+
+const objectiveSchema = z.object({
+  title: z.string().min(1, "Objective title is required"),
+  description: z.string().min(1, "Objective description is required"),
+  targetCriteria: z.string().optional(),
+  status: z.string().default("active"),
+});
 
 const addGoalSchema = z.object({
   title: z.string().min(1, "Goal title is required"),
@@ -22,6 +31,7 @@ const addGoalSchema = z.object({
   dataCollectionType: z.string().default("percentage"),
   frequencyDirection: z.string().optional(),
   status: z.string().default("active"),
+  objectives: z.array(objectiveSchema).max(5, "Maximum 5 objectives allowed per goal").optional().default([]),
 });
 
 type AddGoalFormData = z.infer<typeof addGoalSchema>;
@@ -48,6 +58,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       dataCollectionType: "percentage",
       frequencyDirection: "",
       status: "active",
+      objectives: [],
     },
   });
 
@@ -55,8 +66,8 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
     mutationFn: async (data: AddGoalFormData) => {
       // Use custom level of support if provided, otherwise use the selected option
       const finalLevelOfSupport = data.levelOfSupport === "custom" ? data.customLevelOfSupport : data.levelOfSupport;
-      const { customLevelOfSupport, ...requestData } = data;
-      const goalData = { ...requestData, levelOfSupport: finalLevelOfSupport };
+      const { customLevelOfSupport, objectives, ...requestData } = data;
+      const goalData = { ...requestData, levelOfSupport: finalLevelOfSupport, objectives };
       await apiRequest("POST", `/api/students/${studentId}/goals`, goalData);
     },
     onSuccess: () => {
@@ -105,7 +116,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Goal</DialogTitle>
         </DialogHeader>
@@ -264,6 +275,111 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                 )}
               />
             )}
+
+            {/* Objectives Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Objectives (Optional)
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const currentObjectives = form.getValues("objectives") || [];
+                      if (currentObjectives.length < 5) {
+                        form.setValue("objectives", [
+                          ...currentObjectives,
+                          { title: "", description: "", targetCriteria: "", status: "active" }
+                        ]);
+                      }
+                    }}
+                    disabled={form.watch("objectives")?.length >= 5}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Objective
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {form.watch("objectives")?.map((_, index) => (
+                  <div key={index} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Objective {index + 1}</h4>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const currentObjectives = form.getValues("objectives") || [];
+                          form.setValue("objectives", currentObjectives.filter((_, i) => i !== index));
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name={`objectives.${index}.title`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Objective Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., Answer who/what questions" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`objectives.${index}.description`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Objective Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              rows={2}
+                              placeholder="e.g., Student will answer who/what questions about familiar stories with 80% accuracy"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`objectives.${index}.targetCriteria`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Target Criteria (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="e.g., 80% accuracy over 4 trials" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+                
+                {(!form.watch("objectives") || form.watch("objectives")?.length === 0) && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    No objectives added. Click "Add Objective" to create objectives for this goal.
+                  </p>
+                )}
+                
+                {form.watch("objectives")?.length >= 5 && (
+                  <p className="text-sm text-amber-600 text-center">
+                    Maximum of 5 objectives per goal reached.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             <FormField
               control={form.control}

@@ -514,15 +514,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Student already has maximum of 10 goals" });
       }
 
+      const { objectives: objectivesData, ...goalRequestData } = req.body;
+      
       const goalData = insertGoalSchema.parse({
-        ...req.body,
+        ...goalRequestData,
         studentId,
       });
       
       console.log("Parsed goal data:", goalData);
       const goal = await storage.createGoal(goalData);
       console.log("Goal created successfully:", goal.id);
-      res.status(201).json(goal);
+      
+      // Create objectives if provided
+      if (objectivesData && Array.isArray(objectivesData) && objectivesData.length > 0) {
+        console.log("Creating objectives for goal:", goal.id);
+        const objectives = [];
+        
+        for (const objectiveData of objectivesData) {
+          const parsedObjective = insertObjectiveSchema.parse({
+            ...objectiveData,
+            goalId: goal.id,
+            studentId: studentId,
+          });
+          
+          const objective = await storage.createObjective(parsedObjective);
+          objectives.push(objective);
+        }
+        
+        console.log("Created objectives:", objectives.length);
+        res.status(201).json({ ...goal, objectives });
+      } else {
+        res.status(201).json(goal);
+      }
     } catch (error) {
       console.error("Error creating goal:", error);
       if (error instanceof z.ZodError) {
