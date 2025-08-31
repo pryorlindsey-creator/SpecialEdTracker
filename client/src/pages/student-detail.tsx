@@ -655,11 +655,21 @@ export default function StudentDetail() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Button
                           variant={selectedObjectiveId === null ? "default" : "outline"}
-                          className="h-auto p-4 text-left flex flex-col items-start w-full"
+                          className="h-auto p-4 text-left flex flex-col items-start w-full hover:bg-primary hover:text-white group"
                           onClick={() => setSelectedObjectiveId(null)}
                         >
-                          <div className="font-semibold mb-1 w-full text-blue-600">General Goal Data</div>
-                          <div className="text-xs text-gray-600 w-full">
+                          <div className={`font-semibold mb-1 w-full transition-colors ${
+                            selectedObjectiveId === null 
+                              ? 'text-white' 
+                              : 'text-blue-600 group-hover:text-white'
+                          }`}>
+                            General Goal Data
+                          </div>
+                          <div className={`text-xs w-full transition-colors ${
+                            selectedObjectiveId === null 
+                              ? 'text-white/80' 
+                              : 'text-gray-600 group-hover:text-white/80'
+                          }`}>
                             Collect data for the goal overall
                           </div>
                         </Button>
