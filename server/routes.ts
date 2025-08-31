@@ -1049,7 +1049,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("   - Date:", dataPoint.date);
       console.log("   - Created At:", dataPoint.createdAt);
       
+      // Send response immediately to prevent timeout issues
       res.status(201).json(dataPoint);
+      
+      // Log completion
+      console.log("✅ Response sent successfully");
     } catch (error: any) {
       console.error("Error creating data point:", error);
       console.error("Error stack:", (error as Error)?.stack);

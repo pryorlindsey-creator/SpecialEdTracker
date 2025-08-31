@@ -304,14 +304,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(dataPoints.date));
   }
 
-  async getDataPointsByObjectiveId(objectiveId: number): Promise<DataPoint[]> {
-    return await db
-      .select()
-      .from(dataPoints)
-      .where(eq(dataPoints.objectiveId, objectiveId))
-      .orderBy(desc(dataPoints.date));
-  }
-
   async getDataPointById(id: number): Promise<DataPoint | undefined> {
     const [dataPoint] = await db
       .select()
@@ -590,14 +582,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(students);
   }
 
-  async getAllGoals(): Promise<Goal[]> {
-    return await db.select().from(goals);
-  }
-
-  async getAllDataPoints(): Promise<DataPoint[]> {
-    return await db.select().from(dataPoints);
-  }
-
   async getAllStudentsWithDetails(): Promise<any[]> {
     const allStudents = await db.select().from(students);
     const studentsWithDetails = await Promise.all(
@@ -813,7 +797,7 @@ export class DatabaseStorage implements IStorage {
     return objective;
   }
 
-  // Admin methods for database browsing
+  // Admin methods for database management
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users);
   }
@@ -830,28 +814,6 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(dataPoints);
   }
 
-  async deleteUser(userId: string): Promise<void> {
-    await db.delete(users).where(eq(users.id, userId));
-  }
-
-  async getDatabaseSchema(): Promise<any> {
-    const schema = await db.execute(sql`
-      SELECT table_name, column_name, data_type, is_nullable, column_default
-      FROM information_schema.columns 
-      WHERE table_schema = 'public'
-      ORDER BY table_name, ordinal_position
-    `);
-    return schema.rows;
-  }
-
-  async getAllStudentsWithDetails(): Promise<any[]> {
-    return await db.select().from(students);
-  }
-
-  async getAllGoalsWithDetails(): Promise<any[]> {
-    return await db.select().from(goals);
-  }
-
   async getAllSessions() {
     return await db.select().from(sessions);
   }
@@ -862,6 +824,27 @@ export class DatabaseStorage implements IStorage {
 
   async getAllObjectives() {
     return await db.select().from(objectives);
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    // First delete all related data
+    const userStudents = await this.getStudentsByUserId(userId);
+    for (const student of userStudents) {
+      await this.deleteStudent(student.id);
+    }
+    // Then delete the user
+    await db.delete(users).where(eq(users.id, userId));
+  }
+
+  async getDatabaseSchema(): Promise<any> {
+    // Return schema information for admin view
+    return {
+      users: { tableName: "users", fields: [] },
+      students: { tableName: "students", fields: [] },
+      goals: { tableName: "goals", fields: [] },
+      dataPoints: { tableName: "data_points", fields: [] },
+      objectives: { tableName: "objectives", fields: [] },
+    };
   }
 
   // Admin verification methods
@@ -965,21 +948,21 @@ export class DatabaseStorage implements IStorage {
 
   async getSampleUserData(userId: string) {
     const user = await this.getUser(userId);
-    const students = user ? await db.select().from(students).where(eq(students.userId, userId)).limit(5) : [];
+    const studentsData = user ? await db.select().from(students).where(eq(students.userId, userId)).limit(5) : [];
     
-    const goals = students.length > 0 ? await db.select().from(goals)
-      .where(inArray(goals.studentId, students.map(s => s.id)))
+    const goalsData = studentsData.length > 0 ? await db.select().from(goals)
+      .where(inArray(goals.studentId, studentsData.map((s: any) => s.id)))
       .limit(10) : [];
     
-    const dataPoints = goals.length > 0 ? await db.select().from(dataPoints)
-      .where(inArray(dataPoints.goalId, goals.map(g => g.id)))
+    const dataPointsData = goalsData.length > 0 ? await db.select().from(dataPoints)
+      .where(inArray(dataPoints.goalId, goalsData.map((g: any) => g.id)))
       .limit(20) : [];
 
     const summary = {
-      totalStudents: students.length,
-      totalGoals: goals.length,
-      totalDataPoints: dataPoints.length,
-      dataTypes: goals.reduce((acc: any, g) => {
+      totalStudents: studentsData.length,
+      totalGoals: goalsData.length,
+      totalDataPoints: dataPointsData.length,
+      dataTypes: goalsData.reduce((acc: any, g: any) => {
         acc[g.dataCollectionType] = (acc[g.dataCollectionType] || 0) + 1;
         return acc;
       }, {})
@@ -987,9 +970,9 @@ export class DatabaseStorage implements IStorage {
 
     return {
       user,
-      sampleStudents: students,
-      sampleGoals: goals,
-      sampleDataPoints: dataPoints,
+      sampleStudents: studentsData,
+      sampleGoals: goalsData,
+      sampleDataPoints: dataPointsData,
       summary
     };
   }
