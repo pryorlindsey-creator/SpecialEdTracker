@@ -853,34 +853,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get data points for a specific objective
-  app.get('/api/objectives/:objectiveId/data-points', async (req: any, res) => {
-    try {
-      const objectiveId = parseInt(req.params.objectiveId);
-      const objective = await storage.getObjectiveById(objectiveId);
-      
-      if (!objective) {
-        return res.status(404).json({ message: "Objective not found" });
-      }
 
-      // Verify ownership through student
-      const student = await storage.getStudentById(objective.studentId);
-      if (!student) {
-        return res.status(404).json({ message: "Student not found" });
-      }
-
-      const userId = '4201332';
-      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
-        return res.status(403).json({ message: "Access denied" });
-      }
-
-      const dataPoints = await storage.getDataPointsByObjectiveId(objectiveId);
-      res.json(dataPoints);
-    } catch (error) {
-      console.error("Error fetching objective data points:", error);
-      res.status(500).json({ message: "Failed to fetch objective data points" });
-    }
-  });
 
   // Student data points route (all data points for a student across all goals)
   app.get('/api/students/:studentId/all-data-points', async (req: any, res) => {

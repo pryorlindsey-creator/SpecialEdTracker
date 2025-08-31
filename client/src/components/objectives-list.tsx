@@ -11,9 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, BarChart3 } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Objective } from "@shared/schema";
-import ObjectiveChart from "./objective-chart";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,7 +43,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | null>(null);
   const [deletingObjectiveId, setDeletingObjectiveId] = useState<number | null>(null);
-  const [showingCharts, setShowingCharts] = useState<Set<number>>(new Set());
+
 
   const form = useForm<ObjectiveFormData>({
     resolver: zodResolver(objectiveSchema),
@@ -165,15 +164,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
     form.reset();
   };
 
-  const toggleChart = (objectiveId: number) => {
-    const newShowingCharts = new Set(showingCharts);
-    if (newShowingCharts.has(objectiveId)) {
-      newShowingCharts.delete(objectiveId);
-    } else {
-      newShowingCharts.add(objectiveId);
-    }
-    setShowingCharts(newShowingCharts);
-  };
+
 
   if (isLoading) {
     return (
@@ -250,14 +241,6 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => toggleChart(objective.id)}
-                        title={showingCharts.has(objective.id) ? "Hide Chart" : "Show Chart"}
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
                         onClick={() => handleEdit(objective)}
                       >
                         <Edit2 className="h-4 w-4" />
@@ -272,17 +255,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                       </Button>
                     </div>
                   </div>
-                  {/* Show chart if toggled on */}
-                  {showingCharts.has(objective.id) && (
-                    <div className="mt-4">
-                      <ObjectiveChart
-                        objectiveId={objective.id}
-                        objectiveDescription={objective.description}
-                        studentId={studentId}
-                        goalId={goalId}
-                      />
-                    </div>
-                  )}
+
                 </div>
               ))}
             </div>
