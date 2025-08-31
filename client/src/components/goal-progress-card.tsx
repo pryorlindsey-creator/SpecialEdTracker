@@ -1,11 +1,8 @@
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Calendar, Edit, Trash2 } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { format } from "date-fns";
-import EditGoalModal from "./edit-goal-modal";
 
 interface Goal {
   id: number;
@@ -23,13 +20,9 @@ interface Goal {
 
 interface GoalProgressCardProps {
   goal: Goal;
-  onRefresh?: () => void;
-  onAddData?: () => void;
-  onEditGoal?: () => void;
-  onDeleteGoal?: () => void;
 }
 
-export default function GoalProgressCard({ goal, onRefresh, onAddData, onEditGoal, onDeleteGoal }: GoalProgressCardProps) {
+export default function GoalProgressCard({ goal }: GoalProgressCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'mastered':
@@ -113,44 +106,11 @@ export default function GoalProgressCard({ goal, onRefresh, onAddData, onEditGoa
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-100 items-center">
-          <div className="text-sm text-gray-600 flex items-center">
+        {/* Last Updated Info */}
+        <div className="pt-4 border-t border-gray-100">
+          <div className="text-sm text-gray-600 flex items-center justify-center">
             <Calendar className="h-4 w-4 mr-1" />
             Last updated: {format(new Date(goal.updatedAt), "MMM d")}
-          </div>
-          <div className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onEditGoal}
-              className="text-primary hover:bg-blue-50"
-            >
-              <Edit className="h-4 w-4 mr-1" />
-              Edit Goal
-            </Button>
-          </div>
-          <div className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onAddData}
-              className="text-primary hover:bg-blue-50"
-            >
-              <Plus className="h-4 w-4 mr-1" />
-              Add Data
-            </Button>
-          </div>
-          <div className="flex justify-center">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={onDeleteGoal}
-              className="text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
-            </Button>
           </div>
         </div>
       </CardContent>

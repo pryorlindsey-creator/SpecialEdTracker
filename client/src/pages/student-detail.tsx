@@ -554,19 +554,6 @@ export default function StudentDetail() {
                         lastScore: (goal as any).lastScore || 0,
                         dataPointsCount: (goal as any).dataPointsCount || 0,
                       }}
-                      onRefresh={refetchGoals}
-
-                      onAddData={() => {
-                        setSelectedGoalId(goal.id);
-                        setActiveTab("data-entry");
-                      }}
-                      onEditGoal={() => {
-                        setEditingGoal(goal);
-                        setIsEditGoalModalOpen(true);
-                      }}
-                      onDeleteGoal={() => {
-                        setDeletingGoalId(goal.id);
-                      }}
                     />
                     <ObjectivesList goalId={goal.id} studentId={studentId!} />
                   </div>
