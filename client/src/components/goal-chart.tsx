@@ -89,7 +89,11 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   
   // Apply data filter
   if (dataFilter === 'objectives') {
+    console.log('Filtering for objectives only...');
+    console.log('Total data points before filter:', filteredDataPoints.length);
+    console.log('Data points with isObjectiveSpecific true:', filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true).length);
     filteredDataPoints = filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true);
+    console.log('Filtered data points count:', filteredDataPoints.length);
   }
   
   const chartData = filteredDataPoints
@@ -360,8 +364,18 @@ export default function GoalChart({ goalId }: GoalChartProps) {
 
         {chartData.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-gray-600">No data points available for this goal</p>
-            <p className="text-sm text-gray-500 mt-1">Add some data points to see the progress chart</p>
+            <p className="text-gray-600">
+              {dataFilter === 'objectives' 
+                ? 'No objective-specific data points available for this goal'
+                : 'No data points available for this goal'
+              }
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              {dataFilter === 'objectives' 
+                ? 'Try switching to "Show All Data" or add objective-specific data points'
+                : 'Add some data points to see the progress chart'
+              }
+            </p>
           </div>
         ) : (
           <>
