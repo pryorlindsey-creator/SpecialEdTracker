@@ -58,6 +58,7 @@ export interface IStorage {
   // Data point operations
   getDataPointsByGoalId(goalId: number): Promise<DataPoint[]>;
   getDataPointsByStudentId(studentId: number): Promise<DataPoint[]>;
+  getDataPointsByObjectiveId(objectiveId: number): Promise<DataPoint[]>;
   createDataPoint(dataPoint: InsertDataPoint): Promise<DataPoint>;
   getDataPointById(id: number): Promise<DataPoint | undefined>;
   updateDataPoint(id: number, dataPoint: Partial<InsertDataPoint>): Promise<DataPoint>;
@@ -276,6 +277,14 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(dataPoints)
       .where(eq(dataPoints.studentId, studentId))
+      .orderBy(desc(dataPoints.date));
+  }
+
+  async getDataPointsByObjectiveId(objectiveId: number): Promise<DataPoint[]> {
+    return await db
+      .select()
+      .from(dataPoints)
+      .where(eq(dataPoints.objectiveId, objectiveId))
       .orderBy(desc(dataPoints.date));
   }
 

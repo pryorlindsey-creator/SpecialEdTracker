@@ -16,6 +16,7 @@ import { Save, Percent } from "lucide-react";
 
 const dataEntrySchema = z.object({
   goalId: z.number().min(1, "Please select a goal"),
+  objectiveId: z.number().optional(),
   date: z.string().min(1, "Date is required"),
   progressFormat: z.enum(["percentage", "fraction", "duration", "frequency"]),
   progressValue: z.number().min(0, "Value must be positive"),
@@ -68,6 +69,15 @@ interface Goal {
   studentId: number;
 }
 
+interface Objective {
+  id: number;
+  goalId: number;
+  studentId: number;
+  description: string;
+  targetCriteria?: string;
+  status: string;
+}
+
 interface DataEntryFormProps {
   studentId: number;
   goals: Goal[];
@@ -85,6 +95,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   });
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [durationUnit, setDurationUnit] = useState<string>("minutes");
+  const [objectives, setObjectives] = useState<Objective[]>([]);
 
   // Find the selected goal to get its data collection type
   useEffect(() => {
@@ -94,10 +105,23 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     }
   }, [selectedGoalId, goals]);
 
+  // Fetch objectives for the selected goal
+  const { data: objectivesData } = useQuery<Objective[]>({
+    queryKey: [`/api/goals/${selectedGoalIdValue || selectedGoalId}/objectives`],
+    enabled: !!(selectedGoalIdValue || selectedGoalId),
+  });
+
+  useEffect(() => {
+    if (objectivesData) {
+      setObjectives(objectivesData);
+    }
+  }, [objectivesData]);
+
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(dataEntrySchema),
     defaultValues: {
       goalId: selectedGoalId || 0,
+      objectiveId: undefined,
       date: new Date().toISOString().split('T')[0], // Today's date
       progressFormat: selectedGoal?.dataCollectionType === "duration" ? "duration" : 
                      selectedGoal?.dataCollectionType === "frequency" ? "frequency" : "percentage",
@@ -323,6 +347,38 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
               </FormItem>
             )}
           />
+
+          {/* Objective Selection (Optional) */}
+          {objectives.length > 0 && (
+            <FormField
+              control={form.control}
+              name="objectiveId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Select Objective (Optional)</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} 
+                    value={field.value?.toString() || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose an objective or leave blank for general goal data..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">General Goal (No specific objective)</SelectItem>
+                      {objectives.map((objective) => (
+                        <SelectItem key={objective.id} value={objective.id.toString()}>
+                          {objective.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           {/* Date */}
           <FormField
