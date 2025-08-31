@@ -46,7 +46,7 @@ const GOAL_COLORS = [
   "#f97316", // orange
 ];
 
-type ChartType = 'scatter' | 'line' | 'bar' | 'pie';
+type ChartType = 'line' | 'bar' | 'pie';
 
 export default function StudentScatterplot({ studentId, goalId }: StudentScatterplotProps) {
   const [showTrendLine, setShowTrendLine] = useState(() => {
@@ -57,7 +57,8 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
 
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     const savedChartType = sessionStorage.getItem(`goalChartType_${goalId || 'all'}_${studentId}`) as ChartType;
-    return savedChartType || 'scatter';
+    // If saved type is scatter, default to line instead since scatter is removed
+    return (savedChartType && savedChartType !== 'scatter') ? savedChartType : 'line';
   });
 
   // Save chart type preference when it changes
@@ -68,8 +69,6 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
 
   const getChartIcon = (chartType: ChartType) => {
     switch (chartType) {
-      case 'scatter':
-        return <TrendingUp className="h-4 w-4" />;
       case 'line':
         return <LineChartIcon className="h-4 w-4" />;
       case 'bar':
@@ -77,14 +76,12 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
       case 'pie':
         return <PieChart className="h-4 w-4" />;
       default:
-        return <TrendingUp className="h-4 w-4" />;
+        return <LineChartIcon className="h-4 w-4" />;
     }
   };
 
   const getChartLabel = (chartType: ChartType) => {
     switch (chartType) {
-      case 'scatter':
-        return 'Scatter Chart';
       case 'line':
         return 'Line Chart';
       case 'bar':
@@ -92,7 +89,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
       case 'pie':
         return 'Pie Chart';
       default:
-        return 'Scatter Chart';
+        return 'Line Chart';
     }
   };
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
@@ -362,10 +359,6 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleChartTypeChange('scatter')}>
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Scatter Chart
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleChartTypeChange('line')}>
                     <LineChartIcon className="h-4 w-4 mr-2" />
                     Line Chart
@@ -396,77 +389,6 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         ) : (
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              {selectedChartType === 'scatter' && (
-                <ComposedChart data={scatterData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    type="number" 
-                    dataKey="x" 
-                    name="Date"
-                    label={{ value: 'Date', position: 'insideBottom', offset: -10 }}
-                    domain={['dataMin', 'dataMax']}
-                    ticks={scatterData.map(point => point.x)}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric' 
-                      });
-                    }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis 
-                    type="number" 
-                    dataKey="y" 
-                    name={yAxisLabel}
-                    label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
-                    domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
-                    ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
-                    tickFormatter={yAxisConfig.tickFormatter}
-                    allowDecimals={yAxisConfig.allowDecimals}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                
-                {/* Trend Line */}
-                {showTrendLine && (
-                <Line
-                  type="monotone"
-                  dataKey="y"
-                  stroke={
-                    scatterData.length > 0 && scatterData[0].format === 'frequency' && scatterData[0].goal?.frequencyDirection === 'decrease'
-                      ? "#DC2626" // red for decrease frequency goals
-                      : scatterData.length > 0 ? scatterData[0].color : "#8884d8"
-                  }
-                  strokeWidth={2}
-                  strokeDasharray="5 5"
-                  dot={false}
-                  connectNulls={true}
-                  name="Trend"
-                />
-                )}
-                
-                {/* Scatter Points */}
-                <Scatter
-                  name={goalId ? currentGoal?.title : "Progress"}
-                  data={scatterData}
-                  fill={
-                    scatterData.length > 0 && scatterData[0].format === 'frequency' && scatterData[0].goal?.frequencyDirection === 'decrease'
-                      ? "#DC2626" // red for decrease frequency goals
-                      : scatterData.length > 0 ? scatterData[0].color : "#8884d8"
-                  }
-                  stroke={
-                    scatterData.length > 0 && scatterData[0].format === 'frequency' && scatterData[0].goal?.frequencyDirection === 'decrease'
-                      ? "#DC2626" // red for decrease frequency goals
-                      : scatterData.length > 0 ? scatterData[0].color : "#8884d8"
-                  }
-                  strokeWidth={2}
-                  r={6}
-                />
-                </ComposedChart>
-              )}
-
               {selectedChartType === 'line' && (
                 <LineChart data={lineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" />
