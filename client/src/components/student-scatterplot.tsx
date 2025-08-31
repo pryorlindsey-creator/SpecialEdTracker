@@ -1,9 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, LineChart } from "recharts";
+import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, LineChart, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Calendar } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { TrendingUp, Calendar, ChevronDown, LineChart as LineChartIcon, BarChart3, PieChart } from "lucide-react";
 import { format } from "date-fns";
 
 interface StudentScatterplotProps {
@@ -40,12 +46,55 @@ const GOAL_COLORS = [
   "#f97316", // orange
 ];
 
+type ChartType = 'scatter' | 'line' | 'bar' | 'pie';
+
 export default function StudentScatterplot({ studentId, goalId }: StudentScatterplotProps) {
   const [showTrendLine, setShowTrendLine] = useState(() => {
     // Get trend line preference from sessionStorage
     const savedTrendPref = sessionStorage.getItem(`scatterTrend_${studentId}_${goalId || 'all'}`);
     return savedTrendPref ? savedTrendPref === 'true' : true; // Default to true
   });
+
+  const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
+    const savedChartType = sessionStorage.getItem(`goalChartType_${goalId || 'all'}_${studentId}`) as ChartType;
+    return savedChartType || 'scatter';
+  });
+
+  // Save chart type preference when it changes
+  const handleChartTypeChange = (chartType: ChartType) => {
+    setSelectedChartType(chartType);
+    sessionStorage.setItem(`goalChartType_${goalId || 'all'}_${studentId}`, chartType);
+  };
+
+  const getChartIcon = (chartType: ChartType) => {
+    switch (chartType) {
+      case 'scatter':
+        return <TrendingUp className="h-4 w-4" />;
+      case 'line':
+        return <LineChartIcon className="h-4 w-4" />;
+      case 'bar':
+        return <BarChart3 className="h-4 w-4" />;
+      case 'pie':
+        return <PieChart className="h-4 w-4" />;
+      default:
+        return <TrendingUp className="h-4 w-4" />;
+    }
+  };
+
+  const getChartLabel = (chartType: ChartType) => {
+    switch (chartType) {
+      case 'scatter':
+        return 'Scatter Chart';
+      case 'line':
+        return 'Line Chart';
+      case 'bar':
+        return 'Bar Chart';
+      case 'pie':
+        return 'Pie Chart';
+      default:
+        return 'Scatter Chart';
+    }
+  };
   const { data: goals = [], isLoading: goalsLoading } = useQuery({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
@@ -237,6 +286,17 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
 
   const hasData = scatterData.length > 0;
 
+  // Prepare data for different chart types
+  const lineBarData = scatterData.map((point: any) => ({
+    date: new Date(point.x).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    progress: point.y,
+    originalValue: point.originalValue,
+    goalTitle: point.goalTitle,
+    color: point.color,
+  }));
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -278,18 +338,50 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
           </div>
           
           {hasData && (
-            <Button
-              variant={showTrendLine ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                const newValue = !showTrendLine;
-                setShowTrendLine(newValue);
-                sessionStorage.setItem(`scatterTrend_${studentId}_${goalId || 'all'}`, String(newValue));
-              }}
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              {showTrendLine ? "Hide" : "Show"} Trend
-            </Button>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="flex items-center gap-2">
+                    {getChartIcon(selectedChartType)}
+                    {getChartLabel(selectedChartType)}
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => handleChartTypeChange('scatter')}>
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Scatter Chart
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleChartTypeChange('line')}>
+                    <LineChartIcon className="h-4 w-4 mr-2" />
+                    Line Chart
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleChartTypeChange('bar')}>
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Bar Chart
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleChartTypeChange('pie')}>
+                    <PieChart className="h-4 w-4 mr-2" />
+                    Pie Chart
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {(selectedChartType === 'scatter' || selectedChartType === 'line') && (
+                <Button
+                  variant={showTrendLine ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => {
+                    const newValue = !showTrendLine;
+                    setShowTrendLine(newValue);
+                    sessionStorage.setItem(`scatterTrend_${studentId}_${goalId || 'all'}`, String(newValue));
+                  }}
+                >
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  {showTrendLine ? "Hide" : "Show"} Trend
+                </Button>
+              )}
+            </div>
           )}
         </div>
         
@@ -311,37 +403,38 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         ) : (
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={scatterData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  type="number" 
-                  dataKey="x" 
-                  name="Date"
-                  label={{ value: 'Date', position: 'insideBottom', offset: -10 }}
-                  domain={['dataMin', 'dataMax']}
-                  ticks={scatterData.map(point => point.x)}
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric' 
-                    });
-                  }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis 
-                  type="number" 
-                  dataKey="y" 
-                  name={yAxisLabel}
-                  label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
-                  domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
-                  ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
-                  tickFormatter={yAxisConfig.tickFormatter}
-                  allowDecimals={yAxisConfig.allowDecimals}
-                />
-                <Tooltip content={<CustomTooltip />} />
+              {selectedChartType === 'scatter' && (
+                <ComposedChart data={scatterData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    type="number" 
+                    dataKey="x" 
+                    name="Date"
+                    label={{ value: 'Date', position: 'insideBottom', offset: -10 }}
+                    domain={['dataMin', 'dataMax']}
+                    ticks={scatterData.map(point => point.x)}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return date.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric' 
+                      });
+                    }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="y" 
+                    name={yAxisLabel}
+                    label={{ value: yAxisLabel, angle: -90, position: 'insideLeft' }}
+                    domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                    ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                    tickFormatter={yAxisConfig.tickFormatter}
+                    allowDecimals={yAxisConfig.allowDecimals}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
                 
                 {/* Trend Line */}
                 {showTrendLine && (
@@ -378,7 +471,88 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   strokeWidth={2}
                   r={6}
                 />
-              </ComposedChart>
+                </ComposedChart>
+              )}
+
+              {selectedChartType === 'line' && (
+                <LineChart data={lineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                    ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                    tickFormatter={yAxisConfig.tickFormatter}
+                    allowDecimals={yAxisConfig.allowDecimals}
+                  />
+                  <Tooltip 
+                    formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="progress" 
+                    stroke="#3b82f6" 
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                    name="Progress"
+                  />
+                </LineChart>
+              )}
+
+              {selectedChartType === 'bar' && (
+                <BarChart data={lineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                    ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                    tickFormatter={yAxisConfig.tickFormatter}
+                    allowDecimals={yAxisConfig.allowDecimals}
+                  />
+                  <Tooltip 
+                    formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                    labelFormatter={(label) => `Date: ${label}`}
+                  />
+                  <Legend />
+                  <Bar 
+                    dataKey="progress" 
+                    fill="#3b82f6" 
+                    name="Progress"
+                  />
+                </BarChart>
+              )}
+
+              {selectedChartType === 'pie' && lineBarData.length > 0 && (
+                <RechartsPieChart>
+                  <Pie
+                    data={lineBarData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ date, progress }: any) => `${date}: ${progress}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="progress"
+                  >
+                    {lineBarData.map((entry: any, index: number) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: any) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']} />
+                </RechartsPieChart>
+              )}
             </ResponsiveContainer>
           </div>
         )}
