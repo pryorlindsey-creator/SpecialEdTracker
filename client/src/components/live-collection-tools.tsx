@@ -16,9 +16,10 @@ interface LiveCollectionToolsProps {
   studentId: number;
   goals: any[];
   onDataCollected: () => void;
+  onNavigateToReports?: (goalId: number) => void;
 }
 
-export default function LiveCollectionTools({ goalId, studentId, goals, onDataCollected }: LiveCollectionToolsProps) {
+export default function LiveCollectionTools({ goalId, studentId, goals, onDataCollected, onNavigateToReports }: LiveCollectionToolsProps) {
   const { toast } = useToast();
   const [isCollecting, setIsCollecting] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
@@ -216,11 +217,18 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
       await apiRequest('POST', `/api/goals/${goalId}/data-points`, dataPoint);
 
       toast({
-        title: "Data Saved!",
-        description: `Successfully recorded ${dataType} data for ${selectedGoal?.title}.`,
+        title: "Live Data Saved!",
+        description: "Your live data has been saved. Navigating to Reports to view chart...",
       });
 
       onDataCollected();
+      
+      // Auto-navigate to Reports after a short delay to show the updated chart
+      if (onNavigateToReports) {
+        setTimeout(() => {
+          onNavigateToReports(goalId);
+        }, 1500); // 1.5 second delay to let user see the success message
+      }
       resetSession();
     } catch (error) {
       console.error('Error saving data:', error);

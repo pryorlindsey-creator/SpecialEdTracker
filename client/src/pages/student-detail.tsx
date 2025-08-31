@@ -651,6 +651,10 @@ export default function StudentDetail() {
                       refetchStudent();
                       refetchGoals();
                     }}
+                    onNavigateToReports={(goalId) => {
+                      setSelectedGoalId(goalId);
+                      setActiveTab("reports");
+                    }}
                   />
                 )}
               </div>
@@ -673,6 +677,10 @@ export default function StudentDetail() {
                     refetchStudent();
                     refetchGoals();
                     refetchDataPoints();
+                  }}
+                  onNavigateToReports={(goalId) => {
+                    setSelectedGoalId(goalId);
+                    setActiveTab("reports");
                   }}
                 />
               </CardContent>
