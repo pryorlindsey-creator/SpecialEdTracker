@@ -9,6 +9,7 @@ interface Goal {
   id: number;
   title: string;
   description: string;
+  targetCriteria?: string;
   status: string;
   dataCollectionType: string;
   currentProgress: number;
@@ -56,6 +57,11 @@ export default function GoalProgressCard({ goal, onEditGoal, onDeleteGoal }: Goa
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-gray-900 mb-2">{goal.title}</h4>
             <p className="text-gray-600 text-sm line-clamp-2">{goal.description}</p>
+            {goal.targetCriteria && (
+              <p className="text-sm text-blue-600 mt-1">
+                <strong>Target:</strong> {goal.targetCriteria}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2 ml-4">
             <Badge className={getStatusColor(goal.status)}>

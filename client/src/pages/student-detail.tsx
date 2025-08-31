@@ -548,6 +548,7 @@ export default function StudentDetail() {
                     <GoalProgressCard 
                       goal={{
                         ...goal,
+                        targetCriteria: goal.targetCriteria,
                         currentProgress: (goal as any).currentProgress || 0,
                         averageScore: (goal as any).averageScore || 0,
                         trend: (goal as any).trend || 'stable',
