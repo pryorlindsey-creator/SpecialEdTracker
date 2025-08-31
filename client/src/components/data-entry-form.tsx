@@ -673,10 +673,14 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 { id: "gesture", label: "Gesture" },
               ];
 
-              // Add custom level of support from the selected goal if it exists and isn't already in the list
+              // Only add custom level of support if it's truly custom (not one of the standard options)
+              const standardSupportIds = baseSupportOptions.map(option => option.id);
               const supportOptions = [...baseSupportOptions];
+              
               if (selectedGoal?.levelOfSupport && 
-                  !baseSupportOptions.some(option => option.id === selectedGoal.levelOfSupport)) {
+                  !standardSupportIds.includes(selectedGoal.levelOfSupport) &&
+                  selectedGoal.levelOfSupport !== 'custom' && // Don't add 'custom' itself as an option
+                  selectedGoal.levelOfSupport.trim() !== '') {
                 supportOptions.push({ 
                   id: selectedGoal.levelOfSupport, 
                   label: selectedGoal.levelOfSupport.charAt(0).toUpperCase() + selectedGoal.levelOfSupport.slice(1)
