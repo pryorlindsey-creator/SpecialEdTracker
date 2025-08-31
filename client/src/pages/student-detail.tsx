@@ -54,6 +54,7 @@ export default function StudentDetail() {
   const [isClearStudentDataModalOpen, setIsClearStudentDataModalOpen] = useState(false);
   const [isRemoveStudentModalOpen, setIsRemoveStudentModalOpen] = useState(false);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(null);
+  const [selectedObjectiveId, setSelectedObjectiveId] = useState<number | null>(null);
   const [editingGoal, setEditingGoal] = useState<any>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<number | null>(null);
 
@@ -84,6 +85,14 @@ export default function StudentDetail() {
   const { data: allDataPoints = [], isLoading: allDataPointsLoading, refetch: refetchAllDataPoints } = useQuery<DataPoint[]>({
     queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  // Query for objectives of the selected goal
+  const { data: objectives = [], isLoading: objectivesLoading, refetch: refetchObjectives } = useQuery({
+    queryKey: [`/api/goals/${selectedGoalId}/objectives`],
+    enabled: !!selectedGoalId,
     staleTime: 0,
     refetchOnMount: 'always',
   });
@@ -618,7 +627,10 @@ export default function StudentDetail() {
                           key={goal.id}
                           variant={selectedGoalId === goal.id ? "default" : "outline"}
                           className="h-auto p-4 text-left flex flex-col items-start w-full"
-                          onClick={() => setSelectedGoalId(goal.id)}
+                          onClick={() => {
+                            setSelectedGoalId(goal.id);
+                            setSelectedObjectiveId(null); // Reset objective selection when goal changes
+                          }}
                         >
                           <div className="font-semibold mb-2 w-full">{goal.title}</div>
                           <div className="text-sm opacity-80 text-left leading-relaxed w-full break-words whitespace-normal">
@@ -630,15 +642,60 @@ export default function StudentDetail() {
                   </CardContent>
                 </Card>
 
+                {/* Objective Selection for Live Collection */}
+                {selectedGoalId && objectives.length > 0 && (
+                  <Card>
+                    <CardContent className="p-6">
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">
+                        Select Objective (Optional)
+                      </h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Choose a specific objective or collect general goal data
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Button
+                          variant={selectedObjectiveId === null ? "default" : "outline"}
+                          className="h-auto p-4 text-left flex flex-col items-start w-full"
+                          onClick={() => setSelectedObjectiveId(null)}
+                        >
+                          <div className="font-semibold mb-1 w-full text-blue-600">General Goal Data</div>
+                          <div className="text-xs text-gray-600 w-full">
+                            Collect data for the goal overall
+                          </div>
+                        </Button>
+                        {objectives.map((objective: any) => (
+                          <Button
+                            key={objective.id}
+                            variant={selectedObjectiveId === objective.id ? "default" : "outline"}
+                            className="h-auto p-4 text-left flex flex-col items-start w-full"
+                            onClick={() => setSelectedObjectiveId(objective.id)}
+                          >
+                            <div className="font-semibold mb-1 w-full text-green-600">
+                              Objective {objective.id}
+                            </div>
+                            <div className="text-xs text-gray-600 text-left leading-relaxed w-full break-words whitespace-normal">
+                              {objective.description || 'No description provided'}
+                            </div>
+                          </Button>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Live Collection Tools */}
                 {selectedGoalId && (
                   <LiveCollectionTools 
                     goalId={selectedGoalId}
+                    objectiveId={selectedObjectiveId}
                     studentId={studentId!}
                     goals={goals}
+                    objectives={objectives}
                     onDataCollected={() => {
                       refetchStudent();
                       refetchGoals();
+                      refetchObjectives();
+                      refetchAllDataPoints();
                     }}
                   />
                 )}

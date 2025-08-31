@@ -13,12 +13,14 @@ import { format } from "date-fns";
 
 interface LiveCollectionToolsProps {
   goalId: number;
+  objectiveId: number | null;
   studentId: number;
   goals: any[];
+  objectives: any[];
   onDataCollected: () => void;
 }
 
-export default function LiveCollectionTools({ goalId, studentId, goals, onDataCollected }: LiveCollectionToolsProps) {
+export default function LiveCollectionTools({ goalId, objectiveId, studentId, goals, objectives, onDataCollected }: LiveCollectionToolsProps) {
   const { toast } = useToast();
   const [isCollecting, setIsCollecting] = useState(false);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
@@ -34,6 +36,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
   const [levelOfSupport, setLevelOfSupport] = useState<string[]>([]);
 
   const selectedGoal = goals.find(g => g.id === goalId);
+  const selectedObjective = objectives.find(obj => obj.id === objectiveId);
   const dataType = selectedGoal?.dataCollectionType || 'percentage';
 
   // Timer functionality
@@ -202,6 +205,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
       
       const dataPoint = {
         goalId,
+        objectiveId, // Include objective ID if selected
         date: today, // Send as YYYY-MM-DD string
         progressFormat,
         progressValue: parseFloat(progressValue),
@@ -210,7 +214,7 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
         // noResponseCount: dataType === 'percentage' ? percentageTrials.noResponse : 0, // pending database migration
         durationUnit,
         levelOfSupport,
-        anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}`
+        anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}${objectiveId ? ` - Objective ${objectiveId}` : ''}`
       };
 
       await apiRequest('POST', `/api/goals/${goalId}/data-points`, dataPoint);
@@ -241,6 +245,11 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
             <CardTitle className="flex items-center text-blue-900">
               <Clock className="h-5 w-5 mr-2" />
               Live Collection Session - {selectedGoal?.title}
+              {objectiveId && (
+                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                  Objective {objectiveId}
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -280,6 +289,11 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
             <CardTitle className="flex items-center text-green-900">
               <Timer className="h-5 w-5 mr-2" />
               Duration Collection - {selectedGoal?.title}
+              {objectiveId && (
+                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                  Objective {objectiveId}
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -294,6 +308,11 @@ export default function LiveCollectionTools({ goalId, studentId, goals, onDataCo
             <CardTitle className="flex items-center text-purple-900">
               <Target className="h-5 w-5 mr-2" />
               Percentage Collection - {selectedGoal?.title}
+              {objectiveId && (
+                <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                  Objective {objectiveId}
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
