@@ -224,11 +224,10 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            Objectives ({objectives.length}/5)
+            Objectives ({objectives.length})
             <Button
               onClick={handleAdd}
               size="sm"
-              disabled={objectives.length >= 5}
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Objective
