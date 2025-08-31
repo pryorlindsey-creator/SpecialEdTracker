@@ -357,8 +357,8 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                 <FormItem>
                   <FormLabel>Select Objective (Optional)</FormLabel>
                   <Select 
-                    onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)} 
-                    value={field.value?.toString() || ""}
+                    onValueChange={(value) => field.onChange(value === "general" ? undefined : parseInt(value))} 
+                    value={field.value?.toString() || "general"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -366,7 +366,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">General Goal (No specific objective)</SelectItem>
+                      <SelectItem value="general">General Goal (No specific objective)</SelectItem>
                       {objectives.map((objective) => (
                         <SelectItem key={objective.id} value={objective.id.toString()}>
                           {objective.description}
