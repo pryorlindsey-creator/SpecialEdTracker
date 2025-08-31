@@ -670,10 +670,14 @@ export default function StudentDetail() {
                             className="h-auto p-4 text-left flex flex-col items-start w-full"
                             onClick={() => setSelectedObjectiveId(objective.id)}
                           >
-                            <div className="font-semibold mb-1 w-full text-green-600">
+                            <div className={`font-semibold mb-1 w-full ${
+                              selectedObjectiveId === objective.id ? 'text-white' : 'text-green-600'
+                            }`}>
                               Objective
                             </div>
-                            <div className="text-xs text-gray-600 text-left leading-relaxed w-full break-words whitespace-normal">
+                            <div className={`text-xs text-left leading-relaxed w-full break-words whitespace-normal ${
+                              selectedObjectiveId === objective.id ? 'text-white/80' : 'text-gray-600'
+                            }`}>
                               {objective.description || 'No description provided'}
                             </div>
                           </Button>
