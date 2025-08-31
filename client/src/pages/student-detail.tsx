@@ -455,7 +455,6 @@ export default function StudentDetail() {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-6 bg-white shadow-sm">
             <TabsTrigger value="overview" className="flex items-center">
-              <BarChart3 className="h-4 w-4 mr-2" />
               Overview
             </TabsTrigger>
             <TabsTrigger value="goals" className="flex items-center">
