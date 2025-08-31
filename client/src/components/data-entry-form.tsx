@@ -105,18 +105,6 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
     }
   }, [selectedGoalId, goals]);
 
-  // Fetch objectives for the selected goal
-  const { data: objectivesData } = useQuery<Objective[]>({
-    queryKey: [`/api/goals/${selectedGoalIdValue || selectedGoalId}/objectives`],
-    enabled: !!(selectedGoalIdValue || selectedGoalId),
-  });
-
-  useEffect(() => {
-    if (objectivesData) {
-      setObjectives(objectivesData);
-    }
-  }, [objectivesData]);
-
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(dataEntrySchema),
     defaultValues: {
@@ -134,6 +122,18 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
   // Watch for goal changes to update progress input type and selected goal
   const selectedGoalIdValue = form.watch("goalId");
+
+  // Fetch objectives for the selected goal
+  const { data: objectivesData } = useQuery<Objective[]>({
+    queryKey: [`/api/goals/${selectedGoalIdValue || selectedGoalId}/objectives`],
+    enabled: !!(selectedGoalIdValue || selectedGoalId),
+  });
+
+  useEffect(() => {
+    if (objectivesData) {
+      setObjectives(objectivesData);
+    }
+  }, [objectivesData]);
   
   useEffect(() => {
     if (selectedGoalIdValue > 0) {
