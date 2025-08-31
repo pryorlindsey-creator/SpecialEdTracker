@@ -677,13 +677,33 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
               const standardSupportIds = baseSupportOptions.map(option => option.id);
               const supportOptions = [...baseSupportOptions];
               
-              if (selectedGoal?.levelOfSupport && 
-                  !standardSupportIds.includes(selectedGoal.levelOfSupport) &&
-                  selectedGoal.levelOfSupport !== 'custom' && // Don't add 'custom' itself as an option
-                  selectedGoal.levelOfSupport.trim() !== '') {
-                supportOptions.push({ 
-                  id: selectedGoal.levelOfSupport, 
-                  label: selectedGoal.levelOfSupport.charAt(0).toUpperCase() + selectedGoal.levelOfSupport.slice(1)
+              if (selectedGoal?.levelOfSupport && selectedGoal.levelOfSupport.trim() !== '') {
+                // Parse the level of support - it might be a JSON array or a string
+                let goalSupportLevels = [];
+                try {
+                  // Try to parse as JSON array first
+                  const parsed = JSON.parse(selectedGoal.levelOfSupport);
+                  goalSupportLevels = Array.isArray(parsed) ? parsed : [parsed];
+                } catch {
+                  // If not JSON, treat as single string
+                  goalSupportLevels = [selectedGoal.levelOfSupport];
+                }
+                
+                // Add only truly custom support levels (not standard ones)
+                goalSupportLevels.forEach(level => {
+                  const levelLower = level.toLowerCase();
+                  const isStandardOption = standardSupportIds.includes(levelLower);
+                  const isCustomKeyword = levelLower === 'custom';
+                  
+                  if (!isStandardOption && !isCustomKeyword && level.trim() !== '') {
+                    // Check if we haven't already added this custom level
+                    if (!supportOptions.some(option => option.id === level)) {
+                      supportOptions.push({ 
+                        id: level, 
+                        label: level.charAt(0).toUpperCase() + level.slice(1)
+                      });
+                    }
+                  }
                 });
               }
 
