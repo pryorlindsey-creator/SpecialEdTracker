@@ -671,7 +671,7 @@ export default function StudentDetail() {
                             onClick={() => setSelectedObjectiveId(objective.id)}
                           >
                             <div className="font-semibold mb-1 w-full text-green-600">
-                              Objective {objective.id}
+                              Objective
                             </div>
                             <div className="text-xs text-gray-600 text-left leading-relaxed w-full break-words whitespace-normal">
                               {objective.description || 'No description provided'}
