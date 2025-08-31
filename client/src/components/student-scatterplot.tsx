@@ -331,10 +331,24 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
   return (
     <Card data-goal-id={goalId || 'combined'}>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            <CardTitle>{chartTitle}</CardTitle>
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-5 w-5" />
+              <CardTitle>{chartTitle}</CardTitle>
+            </div>
+            {goalId && currentGoal && (
+              <div className="space-y-1">
+                <p className="text-sm text-gray-600">
+                  <strong>Goal:</strong> {currentGoal.title}
+                </p>
+                {currentGoal.targetCriteria && (
+                  <p className="text-sm text-blue-600">
+                    <strong>Target:</strong> {currentGoal.targetCriteria}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           
           {hasData && (
@@ -366,17 +380,9 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-
             </div>
           )}
         </div>
-        
-        {hasData && (
-          <p className="text-sm text-muted-foreground">
-            {goalId ? `Track progress over time for ${currentGoal?.title}` : "Track progress trends across all goals over time"}
-          </p>
-        )}
       </CardHeader>
       <CardContent>
         {!hasData ? (
