@@ -689,11 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Check if goal already has 5 objectives (limit)
-      const existingObjectives = await storage.getObjectivesByGoalId(goalId);
-      if (existingObjectives.length >= 5) {
-        return res.status(400).json({ message: "Goal already has maximum of 5 objectives" });
-      }
+      // No limit on number of objectives per goal
 
       // Get student ID from the goal
       const studentId = goal.studentId;

@@ -377,11 +377,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
             </div>
           )}
           
-          {objectives.length >= 5 && (
-            <p className="text-sm text-amber-600 text-center mt-4">
-              Maximum of 5 objectives per goal reached.
-            </p>
-          )}
+
         </CardContent>
       </Card>
 

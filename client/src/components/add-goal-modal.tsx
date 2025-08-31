@@ -31,7 +31,7 @@ const addGoalSchema = z.object({
   dataCollectionType: z.string().default("percentage"),
   frequencyDirection: z.string().optional(),
   status: z.string().default("active"),
-  objectives: z.array(objectiveSchema).max(5, "Maximum 5 objectives allowed per goal").optional().default([]),
+  objectives: z.array(objectiveSchema).optional().default([]),
 });
 
 type AddGoalFormData = z.infer<typeof addGoalSchema>;
@@ -295,7 +295,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
             <Card className="border-2 border-blue-200 bg-blue-50/30">
               <CardHeader>
                 <CardTitle className="flex items-center justify-between text-blue-900">
-                  📋 Goal Objectives ({form.watch("objectives")?.length || 0}/5)
+                  📋 Goal Objectives ({form.watch("objectives")?.length || 0})
                   <Button
                     type="button"
                     variant="default"
@@ -303,21 +303,18 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                     className="bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
                       const currentObjectives = form.getValues("objectives") || [];
-                      if (currentObjectives.length < 5) {
-                        form.setValue("objectives", [
-                          ...currentObjectives,
-                          { description: "", targetCriteria: "", targetDate: "", status: "active" }
-                        ]);
-                      }
+                      form.setValue("objectives", [
+                        ...currentObjectives,
+                        { description: "", targetCriteria: "", targetDate: "", status: "active" }
+                      ]);
                     }}
-                    disabled={form.watch("objectives")?.length >= 5}
                   >
                     <Plus className="h-4 w-4 mr-2" />
                     Add Objective
                   </Button>
                 </CardTitle>
                 <p className="text-sm text-blue-700 mt-2">
-                  Add specific, measurable objectives that support this goal. You can add up to 5 objectives during goal creation.
+                  Add specific, measurable objectives that support this goal. You can add as many objectives as needed during goal creation.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -400,16 +397,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                   </div>
                 )}
                 
-                {form.watch("objectives")?.length >= 5 && (
-                  <div className="text-center py-2 px-4 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-sm text-amber-700 font-medium">
-                      ✅ Maximum of 5 objectives reached
-                    </p>
-                    <p className="text-xs text-amber-600">
-                      You can edit or remove objectives after creating the goal if needed.
-                    </p>
-                  </div>
-                )}
+
               </CardContent>
             </Card>
 
