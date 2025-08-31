@@ -1,7 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Edit2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface Goal {
@@ -20,9 +21,11 @@ interface Goal {
 
 interface GoalProgressCardProps {
   goal: Goal;
+  onEditGoal?: () => void;
+  onDeleteGoal?: () => void;
 }
 
-export default function GoalProgressCard({ goal }: GoalProgressCardProps) {
+export default function GoalProgressCard({ goal, onEditGoal, onDeleteGoal }: GoalProgressCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'mastered':
@@ -54,12 +57,31 @@ export default function GoalProgressCard({ goal }: GoalProgressCardProps) {
             <h4 className="text-lg font-semibold text-gray-900 mb-2">{goal.title}</h4>
             <p className="text-gray-600 text-sm line-clamp-2">{goal.description}</p>
           </div>
-          <div className="ml-4">
+          <div className="flex items-center gap-2 ml-4">
             <Badge className={getStatusColor(goal.status)}>
               {goal.status === 'mastered' ? 'Mastered' : 
                goal.status === 'active' ? 'Active' : 
                goal.status === 'discontinued' ? 'Discontinued' : goal.status}
             </Badge>
+            {onEditGoal && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onEditGoal}
+              >
+                <Edit2 className="h-4 w-4" />
+              </Button>
+            )}
+            {onDeleteGoal && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDeleteGoal}
+                className="text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 
