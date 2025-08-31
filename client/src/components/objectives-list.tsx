@@ -76,15 +76,29 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
   // Ensure objectives is always an array
   const objectives = Array.isArray(objectivesData) ? objectivesData : [];
   
-  // Fetch progress data for each objective
-  const objectiveProgressQueries = objectives.map((objective: Objective) => ({
-    queryKey: [`/api/objectives/${objective.id}/progress`],
-    enabled: !!objective.id,
-  }));
-
-  const objectiveProgressData = objectiveProgressQueries.map(query => 
-    useQuery<ObjectiveProgress>(query)
-  );
+  // Create a single query to fetch all objective progress data
+  const { data: allObjectiveProgress, isLoading: isLoadingAllProgress } = useQuery<Record<number, ObjectiveProgress>>({
+    queryKey: [`/api/goals/${goalId}/objectives-progress`],
+    queryFn: async () => {
+      if (objectives.length === 0) return {};
+      
+      const progressPromises = objectives.map(async (objective: Objective) => {
+        try {
+          const response = await fetch(`/api/objectives/${objective.id}/progress`);
+          if (!response.ok) throw new Error('Failed to fetch progress');
+          const progressData = await response.json();
+          return [objective.id, progressData];
+        } catch (error) {
+          console.error(`Error fetching progress for objective ${objective.id}:`, error);
+          return [objective.id, null];
+        }
+      });
+      
+      const results = await Promise.all(progressPromises);
+      return Object.fromEntries(results);
+    },
+    enabled: objectives.length > 0,
+  });
   
 
 
@@ -227,10 +241,9 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
             </p>
           ) : (
             <div className="space-y-3">
-              {objectives.map((objective: Objective, index: number) => {
-                const progressQuery = objectiveProgressData[index];
-                const progressData = progressQuery?.data;
-                const isLoadingProgress = progressQuery?.isLoading;
+              {objectives.map((objective: Objective) => {
+                const progressData = allObjectiveProgress?.[objective.id];
+                const isLoadingProgress = isLoadingAllProgress;
                 
                 const formatTrend = (trend: number) => {
                   if (trend > 0) return `+${trend.toFixed(1)}%`;
