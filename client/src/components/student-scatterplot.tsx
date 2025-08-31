@@ -367,20 +367,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {(selectedChartType === 'scatter' || selectedChartType === 'line') && (
-                <Button
-                  variant={showTrendLine ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    const newValue = !showTrendLine;
-                    setShowTrendLine(newValue);
-                    sessionStorage.setItem(`scatterTrend_${studentId}_${goalId || 'all'}`, String(newValue));
-                  }}
-                >
-                  <TrendingUp className="h-4 w-4 mr-2" />
-                  {showTrendLine ? "Hide" : "Show"} Trend
-                </Button>
-              )}
+
             </div>
           )}
         </div>
