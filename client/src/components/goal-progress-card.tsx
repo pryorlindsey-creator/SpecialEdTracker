@@ -62,13 +62,15 @@ export default function GoalProgressCard({ goal, onEditGoal, onDeleteGoal }: Goa
                 <strong>Target:</strong> {goal.targetCriteria}
               </p>
             )}
+            <div className="flex items-center mt-2">
+              <Badge className={getStatusColor(goal.status)}>
+                {goal.status === 'mastered' ? 'Mastered' : 
+                 goal.status === 'active' ? 'Active' : 
+                 goal.status === 'discontinued' ? 'Discontinued' : goal.status}
+              </Badge>
+            </div>
           </div>
           <div className="flex items-center gap-2 ml-4">
-            <Badge className={getStatusColor(goal.status)}>
-              {goal.status === 'mastered' ? 'Mastered' : 
-               goal.status === 'active' ? 'Active' : 
-               goal.status === 'discontinued' ? 'Discontinued' : goal.status}
-            </Badge>
             {onEditGoal && (
               <Button
                 variant="outline"
