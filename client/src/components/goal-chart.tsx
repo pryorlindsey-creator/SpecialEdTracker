@@ -89,11 +89,14 @@ export default function GoalChart({ goalId }: GoalChartProps) {
   
   // Apply data filter
   if (dataFilter === 'objectives') {
-    console.log('Filtering for objectives only...');
-    console.log('Total data points before filter:', filteredDataPoints.length);
-    console.log('Data points with isObjectiveSpecific true:', filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true).length);
+    console.log('🔍 Filtering for objectives only...');
+    console.log('📊 Total data points before filter:', filteredDataPoints.length);
+    console.log('🎯 Raw data sample:', filteredDataPoints.slice(0, 2));
+    console.log('✅ Data points with isObjectiveSpecific true:', filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true).length);
+    console.log('🔗 Data points with objectiveId:', filteredDataPoints.filter((point: any) => point.objectiveId !== null).length);
     filteredDataPoints = filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true);
-    console.log('Filtered data points count:', filteredDataPoints.length);
+    console.log('🎯 Filtered data points count:', filteredDataPoints.length);
+    console.log('📋 Filtered data sample:', filteredDataPoints.slice(0, 2));
   }
   
   const chartData = filteredDataPoints
