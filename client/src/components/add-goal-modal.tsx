@@ -292,14 +292,15 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
             )}
 
             {/* Objectives Section */}
-            <Card>
+            <Card className="border-2 border-blue-200 bg-blue-50/30">
               <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Objectives (Optional)
+                <CardTitle className="flex items-center justify-between text-blue-900">
+                  📋 Goal Objectives ({form.watch("objectives")?.length || 0}/5)
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="default"
                     size="sm"
+                    className="bg-blue-600 hover:bg-blue-700"
                     onClick={() => {
                       const currentObjectives = form.getValues("objectives") || [];
                       if (currentObjectives.length < 5) {
@@ -315,6 +316,9 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                     Add Objective
                   </Button>
                 </CardTitle>
+                <p className="text-sm text-blue-700 mt-2">
+                  Add specific, measurable objectives that support this goal. You can add up to 5 objectives during goal creation.
+                </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 {form.watch("objectives")?.map((_, index) => (
@@ -383,15 +387,26 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                 ))}
                 
                 {(!form.watch("objectives") || form.watch("objectives")?.length === 0) && (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    No objectives added. Click "Add Objective" to create objectives for this goal.
-                  </p>
+                  <div className="text-center py-6 px-4 border-2 border-dashed border-blue-300 rounded-lg bg-white">
+                    <div className="text-blue-400 mb-2">📝</div>
+                    <p className="text-sm text-blue-600 font-medium mb-1">
+                      No objectives added yet
+                    </p>
+                    <p className="text-xs text-blue-500">
+                      Click "Add Objective" above to create specific objectives for this goal. You can also add them later.
+                    </p>
+                  </div>
                 )}
                 
                 {form.watch("objectives")?.length >= 5 && (
-                  <p className="text-sm text-amber-600 text-center">
-                    Maximum of 5 objectives per goal reached.
-                  </p>
+                  <div className="text-center py-2 px-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-700 font-medium">
+                      ✅ Maximum of 5 objectives reached
+                    </p>
+                    <p className="text-xs text-amber-600">
+                      You can edit or remove objectives after creating the goal if needed.
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
