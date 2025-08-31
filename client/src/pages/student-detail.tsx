@@ -667,16 +667,20 @@ export default function StudentDetail() {
                           <Button
                             key={objective.id}
                             variant={selectedObjectiveId === objective.id ? "default" : "outline"}
-                            className="h-auto p-4 text-left flex flex-col items-start w-full"
+                            className="h-auto p-4 text-left flex flex-col items-start w-full hover:bg-primary hover:text-white group"
                             onClick={() => setSelectedObjectiveId(objective.id)}
                           >
-                            <div className={`font-semibold mb-1 w-full ${
-                              selectedObjectiveId === objective.id ? 'text-white' : 'text-green-600'
+                            <div className={`font-semibold mb-1 w-full transition-colors ${
+                              selectedObjectiveId === objective.id 
+                                ? 'text-white' 
+                                : 'text-green-600 group-hover:text-white'
                             }`}>
                               Objective
                             </div>
-                            <div className={`text-xs text-left leading-relaxed w-full break-words whitespace-normal ${
-                              selectedObjectiveId === objective.id ? 'text-white/80' : 'text-gray-600'
+                            <div className={`text-xs text-left leading-relaxed w-full break-words whitespace-normal transition-colors ${
+                              selectedObjectiveId === objective.id 
+                                ? 'text-white/80' 
+                                : 'text-gray-600 group-hover:text-white/80'
                             }`}>
                               {objective.description || 'No description provided'}
                             </div>
