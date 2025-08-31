@@ -13,6 +13,18 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { Objective } from "@shared/schema";
+import { Progress } from "@/components/ui/progress";
+
+// Interface for objective progress data
+interface ObjectiveProgress {
+  objective: Objective;
+  dataPoints: any[];
+  currentProgress: number;
+  averageScore: number;
+  trend: number;
+  lastScore: number;
+  dataPointsCount: number;
+}
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,6 +75,16 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
 
   // Ensure objectives is always an array
   const objectives = Array.isArray(objectivesData) ? objectivesData : [];
+  
+  // Fetch progress data for each objective
+  const objectiveProgressQueries = objectives.map((objective: Objective) => ({
+    queryKey: [`/api/objectives/${objective.id}/progress`],
+    enabled: !!objective.id,
+  }));
+
+  const objectiveProgressData = objectiveProgressQueries.map(query => 
+    useQuery<ObjectiveProgress>(query)
+  );
   
 
 
@@ -205,59 +227,131 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
             </p>
           ) : (
             <div className="space-y-3">
-              {objectives.map((objective: Objective) => (
-                <div
-                  key={objective.id}
-                  className="p-4 border rounded-lg space-y-2"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900 font-medium">
-                        {objective.description}
-                      </p>
-                      {objective.targetCriteria && (
-                        <p className="text-sm text-blue-600 mt-1">
-                          <strong>Target:</strong> {objective.targetCriteria}
+              {objectives.map((objective: Objective, index: number) => {
+                const progressQuery = objectiveProgressData[index];
+                const progressData = progressQuery?.data;
+                const isLoadingProgress = progressQuery?.isLoading;
+                
+                const formatTrend = (trend: number) => {
+                  if (trend > 0) return `+${trend.toFixed(1)}%`;
+                  if (trend < 0) return `${trend.toFixed(1)}%`;
+                  return '0%';
+                };
+
+                return (
+                  <div
+                    key={objective.id}
+                    className="p-4 border rounded-lg space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900 font-medium">
+                          {objective.description}
                         </p>
-                      )}
-                      {objective.targetDate && (
-                        <p className="text-sm text-purple-600 mt-1">
-                          <strong>Target Date:</strong> {new Date(objective.targetDate).toLocaleDateString()}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 mt-2">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            objective.status === "active"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-blue-100 text-blue-800"
-                          }`}
+                        {objective.targetCriteria && (
+                          <p className="text-sm text-blue-600 mt-1">
+                            <strong>Target:</strong> {objective.targetCriteria}
+                          </p>
+                        )}
+                        {objective.targetDate && (
+                          <p className="text-sm text-purple-600 mt-1">
+                            <strong>Target Date:</strong> {new Date(objective.targetDate).toLocaleDateString()}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              objective.status === "active"
+                                ? "bg-green-100 text-green-800"
+                                : "bg-blue-100 text-blue-800"
+                            }`}
+                          >
+                            {objective.status.charAt(0).toUpperCase() + objective.status.slice(1)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(objective)}
                         >
-                          {objective.status.charAt(0).toUpperCase() + objective.status.slice(1)}
-                        </span>
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setDeletingObjectiveId(objective.id)}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEdit(objective)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setDeletingObjectiveId(objective.id)}
-                        className="text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
 
-                </div>
-              ))}
+                    {/* Objective Progress Bar */}
+                    {isLoadingProgress ? (
+                      <div className="animate-pulse">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="h-3 bg-gray-200 rounded w-24"></div>
+                          <div className="h-3 bg-gray-200 rounded w-12"></div>
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded"></div>
+                      </div>
+                    ) : progressData ? (
+                      <>
+                        <div className="mb-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-medium text-gray-600">Current Progress</span>
+                            <span className="text-xs font-semibold text-gray-800">{progressData.currentProgress?.toFixed(0) || 0}%</span>
+                          </div>
+                          <Progress 
+                            value={Math.min(Math.max(progressData.currentProgress || 0, 0), 100)} 
+                            className="h-2 bg-gray-200"
+                          />
+                        </div>
+
+                        {/* Objective Statistics - Only show for percentage goals with data */}
+                        {progressData.dataPointsCount > 0 && (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div className="text-center p-2 bg-gray-50 rounded-lg">
+                              <p className="text-lg font-bold text-gray-900">{progressData.dataPointsCount}</p>
+                              <p className="text-xs text-gray-600">Data Points</p>
+                            </div>
+                            <div className="text-center p-2 bg-gray-50 rounded-lg">
+                              <p className="text-lg font-bold text-gray-900">{progressData.averageScore?.toFixed(0) || 0}%</p>
+                              <p className="text-xs text-gray-600">Average Score</p>
+                            </div>
+                            <div className="text-center p-2 bg-gray-50 rounded-lg">
+                              <p className={`text-lg font-bold ${progressData.trend > 0 ? 'text-green-600' : progressData.trend < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                                {formatTrend(progressData.trend || 0)}
+                              </p>
+                              <p className="text-xs text-gray-600">Trend</p>
+                            </div>
+                            <div className="text-center p-2 bg-gray-50 rounded-lg">
+                              <p className="text-lg font-bold text-gray-900">{progressData.lastScore?.toFixed(0) || 0}%</p>
+                              <p className="text-xs text-gray-600">Last Score</p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="mb-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-medium text-gray-600">Current Progress</span>
+                          <span className="text-xs font-semibold text-gray-800">0%</span>
+                        </div>
+                        <Progress 
+                          value={0} 
+                          className="h-2 bg-gray-200"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">No data points yet</p>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
             </div>
           )}
           

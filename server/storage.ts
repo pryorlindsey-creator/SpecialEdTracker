@@ -81,6 +81,16 @@ export interface IStorage {
     lastScore: number;
   }>;
   
+  getObjectiveProgress(objectiveId: number): Promise<{
+    objective: Objective;
+    dataPoints: DataPoint[];
+    currentProgress: number;
+    averageScore: number;
+    trend: number;
+    lastScore: number;
+    dataPointsCount: number;
+  }>;
+  
   // Reporting periods operations
   getReportingPeriodsByUserId(userId: string): Promise<ReportingPeriod[]>;
   saveReportingPeriods(userId: string, periods: { periodNumber: number; startDate: string; endDate: string; }[], periodLength: string): Promise<void>;
@@ -491,6 +501,83 @@ export class DatabaseStorage implements IStorage {
       averageScore,
       trend,
       lastScore,
+    };
+  }
+
+  async getObjectiveProgress(objectiveId: number): Promise<{
+    objective: Objective;
+    dataPoints: DataPoint[];
+    currentProgress: number;
+    averageScore: number;
+    trend: number;
+    lastScore: number;
+    dataPointsCount: number;
+  }> {
+    const objective = await this.getObjectiveById(objectiveId);
+    if (!objective) {
+      throw new Error('Objective not found');
+    }
+
+    const dataPointsList = await this.getDataPointsByObjectiveId(objectiveId);
+    
+    if (dataPointsList.length === 0) {
+      return {
+        objective,
+        dataPoints: [],
+        currentProgress: 0,
+        averageScore: 0,
+        trend: 0,
+        lastScore: 0,
+        dataPointsCount: 0,
+      };
+    }
+
+    // Calculate progress based on data collection type (inherited from goal)
+    const goal = await this.getGoalById(objective.goalId);
+    const scores = dataPointsList.map(dp => {
+      const value = parseFloat(dp.progressValue.toString());
+      
+      // Convert different formats to percentage for consistent display
+      switch (dp.progressFormat) {
+        case 'percentage':
+          return value; // Already in percentage format
+        case 'frequency':
+          // For frequency, calculate percentage based on numerator/denominator
+          if (dp.denominator && dp.denominator > 0) {
+            return (dp.numerator || 0) / dp.denominator * 100;
+          }
+          return value;
+        case 'duration':
+          // For duration, normalize to percentage (you may need to adjust this based on target criteria)
+          // For now, treat duration values as percentages if no specific target is defined
+          return value;
+        default:
+          return value;
+      }
+    });
+
+    const averageScore = scores.length > 0 ? scores.reduce((sum, score) => sum + score, 0) / scores.length : 0;
+    const lastScore = scores.length > 0 ? scores[0] : 0; // dataPoints are ordered by date desc
+    const currentProgress = lastScore;
+
+    // Calculate trend (compare last 3 vs previous 3 data points)
+    let trend = 0;
+    if (scores.length >= 6) {
+      const recent3 = scores.slice(0, 3);
+      const previous3 = scores.slice(3, 6);
+      const recentAvg = recent3.reduce((sum, score) => sum + score, 0) / 3;
+      const previousAvg = previous3.reduce((sum, score) => sum + score, 0) / 3;
+      trend = recentAvg - previousAvg;
+    }
+
+    return {
+      objective,
+      dataPoints: dataPointsList,
+      currentProgress,
+      averageScore,
+      trend,
+      lastScore,
+      dataPointsCount: dataPointsList.length,
     };
   }
 
