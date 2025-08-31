@@ -26,6 +26,7 @@ import StudentScatterplot from "@/components/student-scatterplot";
 import RawDataTable from "@/components/raw-data-table";
 import LiveCollectionTools from "@/components/live-collection-tools";
 import ObjectivesList from "@/components/objectives-list";
+import ObjectiveChartsForGoal from "@/components/objective-charts-for-goal";
 import { ClearDataModal } from "@/components/clear-data-modal";
 import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
@@ -700,16 +701,20 @@ export default function StudentDetail() {
                 <GoalChart goalId={selectedGoalId} />
               </>
             ) : (
-              <>
-                {/* Individual Goal Charts */}
+              <div className="space-y-8">
                 {goals.map((goal) => (
-                  <StudentScatterplot 
-                    key={goal.id} 
-                    studentId={studentId || 0} 
-                    goalId={goal.id}
-                  />
+                  <div key={goal.id} className="space-y-6">
+                    {/* Goal Chart */}
+                    <StudentScatterplot 
+                      studentId={studentId || 0} 
+                      goalId={goal.id}
+                    />
+                    
+                    {/* Objectives Charts for this Goal */}
+                    <ObjectiveChartsForGoal goalId={goal.id} />
+                  </div>
                 ))}
-              </>
+              </div>
             )}
           </TabsContent>
 
