@@ -20,7 +20,7 @@ import {
   type InsertReportingPeriod,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, sql, and, inArray, asc } from "drizzle-orm";
+import { eq, desc, sql, and, inArray, asc, isNull } from "drizzle-orm";
 
 // Helper function to convert level of support data for frontend
 function convertLevelOfSupport(levelOfSupport: string | null): string[] | null {
@@ -57,8 +57,8 @@ export interface IStorage {
   
   // Data point operations
   getDataPointsByGoalId(goalId: number): Promise<DataPoint[]>;
-  getDataPointsByStudentId(studentId: number): Promise<DataPoint[]>;
   getDataPointsByObjectiveId(objectiveId: number): Promise<DataPoint[]>;
+  getDataPointsByStudentId(studentId: number): Promise<DataPoint[]>;
   createDataPoint(dataPoint: InsertDataPoint): Promise<DataPoint>;
   getDataPointById(id: number): Promise<DataPoint | undefined>;
   updateDataPoint(id: number, dataPoint: Partial<InsertDataPoint>): Promise<DataPoint>;
@@ -252,7 +252,21 @@ export class DatabaseStorage implements IStorage {
     const rawDataPoints = await db
       .select()
       .from(dataPoints)
-      .where(eq(dataPoints.goalId, goalId))
+      .where(and(eq(dataPoints.goalId, goalId), isNull(dataPoints.objectiveId)))
+      .orderBy(desc(dataPoints.date));
+    
+    // Convert level of support from JSON strings back to arrays
+    return rawDataPoints.map(dp => ({
+      ...dp,
+      levelOfSupport: dp.levelOfSupport || null
+    }));
+  }
+
+  async getDataPointsByObjectiveId(objectiveId: number): Promise<DataPoint[]> {
+    const rawDataPoints = await db
+      .select()
+      .from(dataPoints)
+      .where(eq(dataPoints.objectiveId, objectiveId))
       .orderBy(desc(dataPoints.date));
     
     // Convert level of support from JSON strings back to arrays

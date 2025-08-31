@@ -947,8 +947,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      const dataPoints = await storage.getDataPointsByGoalId(goalId);
-      res.json(dataPoints);
+      // Get both goal-level and objective-specific data points
+      const goalDataPoints = await storage.getDataPointsByGoalId(goalId);
+      
+      // Get all objectives for this goal
+      const objectives = await storage.getObjectivesByGoalId(goalId);
+      
+      // Get data points for all objectives of this goal
+      const objectiveDataPoints = [];
+      for (const objective of objectives) {
+        const objDataPoints = await storage.getDataPointsByObjectiveId(objective.id);
+        // Add objective info to each data point
+        const enrichedObjDataPoints = objDataPoints.map(dp => ({
+          ...dp,
+          objectiveDescription: objective.description,
+          isObjectiveSpecific: true
+        }));
+        objectiveDataPoints.push(...enrichedObjDataPoints);
+      }
+      
+      // Combine and mark general goal data points
+      const allDataPoints = [
+        ...goalDataPoints.map(dp => ({ ...dp, isObjectiveSpecific: false, objectiveDescription: null })),
+        ...objectiveDataPoints
+      ];
+      
+      // Sort by date
+      allDataPoints.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      res.json(allDataPoints);
     } catch (error) {
       console.error("Error fetching data points:", error);
       res.status(500).json({ message: "Failed to fetch data points" });

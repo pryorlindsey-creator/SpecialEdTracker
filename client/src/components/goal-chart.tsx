@@ -27,6 +27,11 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     return savedTrendPref ? savedTrendPref === 'true' : true; // Default to true
   });
 
+  const [dataFilter, setDataFilter] = useState<'all' | 'objectives'>(() => {
+    const savedFilter = sessionStorage.getItem(`dataFilter_${goalId}`) as 'all' | 'objectives';
+    return savedFilter || 'all';
+  });
+
   // Listen for changes to sessionStorage chart type preference
   useEffect(() => {
     const checkForChartTypeChange = () => {
@@ -78,9 +83,10 @@ export default function GoalChart({ goalId }: GoalChartProps) {
 
   const { goal, dataPoints } = goalProgress as any;
 
-  // Prepare chart data
+  // Prepare chart data with objective indicators
   const chartData = dataPoints
-    .map((point: any) => ({
+    .map((point: any, index: number) => ({
+      index: index + 1,
       date: format(new Date(point.date), "MMM d"),
       fullDate: point.date,
       progress: parseFloat(point.progressValue.toString()),
@@ -90,6 +96,9 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       durationUnit: point.durationUnit || '',
       numerator: point.numerator,
       denominator: point.denominator,
+      isObjectiveSpecific: point.isObjectiveSpecific || false,
+      objectiveDescription: point.objectiveDescription || null,
+      dataType: point.isObjectiveSpecific ? 'Objective' : 'General Goal',
     }))
     .reverse() // Show oldest to newest
     .slice(-10); // Show last 10 data points
@@ -176,10 +185,15 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     };
   }
 
+  // Filter data based on selection
+  const filteredData = dataFilter === 'objectives' 
+    ? chartData.filter(item => item.isObjectiveSpecific)
+    : chartData;
+
   // For frequency charts, use original values instead of progress values
   const displayData = goal.dataCollectionType === 'frequency' || goal.dataCollectionType === 'duration'
-    ? chartData.map((d: any) => ({ ...d, progress: d.originalValue }))
-    : chartData;
+    ? filteredData.map((d: any) => ({ ...d, progress: d.originalValue }))
+    : filteredData;
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -237,6 +251,12 @@ export default function GoalChart({ goalId }: GoalChartProps) {
 
             <p><strong>Support Level:</strong> {formatSupport(supportLevels)}</p>
             
+            {data.isObjectiveSpecific && data.objectiveDescription && (
+              <p><strong>Objective:</strong> {data.objectiveDescription}</p>
+            )}
+            
+            <p><strong>Data Type:</strong> {data.dataType}</p>
+
             {data.notes && data.notes.trim() && (
               <div className="mt-2 pt-2 border-t border-gray-200">
                 <p><strong>Notes:</strong></p>
@@ -305,6 +325,19 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                 {showTrendLine ? "Hide" : "Show"} Trend
               </Button>
             )}
+
+            {/* Data Filter Toggle */}
+            <Button
+              variant={dataFilter === 'objectives' ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                const newFilter = dataFilter === 'all' ? 'objectives' : 'all';
+                setDataFilter(newFilter);
+                sessionStorage.setItem(`dataFilter_${goalId}`, newFilter);
+              }}
+            >
+              {dataFilter === 'all' ? 'Show Only Objectives' : 'Show All Data'}
+            </Button>
             
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-1" />
@@ -350,14 +383,29 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                       }}
                     />
                     <Tooltip content={<CustomTooltip />} />
+                    <Legend />
                     {showTrendLine && (
                       <Line
                         type="monotone"
                         dataKey="progress"
                         stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
                         strokeWidth={3}
-                        dot={{ fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB", strokeWidth: 2, r: 4 }}
-                        activeDot={{ r: 6, fill: yAxisConfig.isReversed ? "#DC2626" : "#2563EB" }}
+                        dot={(props) => {
+                          const { cx, cy, payload } = props;
+                          const isObjective = payload?.isObjectiveSpecific;
+                          return (
+                            <circle
+                              cx={cx}
+                              cy={cy}
+                              r={isObjective ? 6 : 4}
+                              fill={isObjective ? "#10B981" : (yAxisConfig.isReversed ? "#DC2626" : "#2563EB")}
+                              stroke={isObjective ? "#065F46" : (yAxisConfig.isReversed ? "#991B1B" : "#1E40AF")}
+                              strokeWidth={2}
+                            />
+                          );
+                        }}
+                        activeDot={{ r: 8, stroke: "#000", strokeWidth: 2 }}
+                        name="All Data Points"
                       />
                     )}
                   </LineChart>
@@ -388,10 +436,12 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                       }}
                     />
                     <Tooltip content={<CustomTooltip />} />
+                    <Legend />
                     <Bar
                       dataKey="progress"
                       fill={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
                       radius={[4, 4, 0, 0]}
+                      name="Progress Data"
                     />
                     {showTrendLine && (
                       <Line
@@ -435,6 +485,18 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                   </PieChart>
                 </ResponsiveContainer>
               )}
+            </div>
+
+            {/* Data Type Legend */}
+            <div className="flex justify-center gap-6 mb-4 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-blue-600"></div>
+                <span className="text-sm font-medium">General Goal Data</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded-full bg-green-600"></div>
+                <span className="text-sm font-medium">Objective-Specific Data</span>
+              </div>
             </div>
 
             {/* Chart Statistics */}
