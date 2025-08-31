@@ -64,6 +64,8 @@ interface Goal {
   title: string;
   description: string;
   dataCollectionType: string;
+  levelOfSupport?: string;
+  studentId: number;
 }
 
 interface DataEntryFormProps {

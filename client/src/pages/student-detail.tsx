@@ -193,13 +193,13 @@ export default function StudentDetail() {
       const pdfStudent: PDFStudentData = {
         id: student.id,
         name: student.name,
-        grade: student.grade,
-        iepDueDate: student.iepDueDate,
-        relatedServices: student.relatedServices,
-        totalGoals: student.totalGoals || goals.length,
-        activeGoals: student.activeGoals || goals.filter(g => g.status === 'active').length,
-        completedGoals: student.completedGoals || goals.filter(g => g.status === 'completed').length,
-        totalDataPoints: student.totalDataPoints || allDataPoints.length,
+        grade: student.grade || "",
+        iepDueDate: student.iepDueDate?.toISOString().split('T')[0] || "",
+        relatedServices: student.relatedServices || "",
+        totalGoals: (student as any).totalGoals || goals.length,
+        activeGoals: (student as any).activeGoals || goals.filter(g => g.status === 'active').length,
+        completedGoals: (student as any).completedGoals || goals.filter(g => g.status === 'completed').length,
+        totalDataPoints: (student as any).totalDataPoints || allDataPoints.length,
       };
 
       // Transform goals data for PDF
@@ -207,10 +207,10 @@ export default function StudentDetail() {
         id: goal.id,
         title: goal.title,
         description: goal.description,
-        targetCriteria: goal.targetCriteria,
+        targetCriteria: goal.targetCriteria || "",
         dataCollectionType: goal.dataCollectionType,
         status: goal.status,
-        currentProgress: goal.currentProgress || 0,
+        currentProgress: (goal as any).currentProgress || 0,
         dataPointsCount: allDataPoints.filter(dp => dp.goalId === goal.id).length,
         lastDataDate: allDataPoints.filter(dp => dp.goalId === goal.id).sort((a, b) => 
           new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -222,13 +222,13 @@ export default function StudentDetail() {
         const goal = goals.find(g => g.id === dp.goalId);
         return {
           id: dp.id,
-          date: dp.date,
+          date: dp.date.toISOString().split('T')[0],
           goalTitle: goal?.title || 'Unknown Goal',
-          progressValue: dp.progressValue,
+          progressValue: dp.progressValue.toString(),
           progressFormat: dp.progressFormat,
           levelOfSupport: dp.levelOfSupport || '[]',
           anecdotalInfo: dp.anecdotalInfo || '',
-          createdAt: dp.createdAt,
+          createdAt: dp.createdAt?.toISOString().split('T')[0] || "",
         };
       }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -245,11 +245,11 @@ export default function StudentDetail() {
       });
     } catch (error) {
       console.error('PDF generation error:', error);
-      console.error('Error message:', error?.message);
-      console.error('Error stack:', error?.stack);
+      console.error('Error message:', (error as any)?.message);
+      console.error('Error stack:', (error as any)?.stack);
       toast({
         title: "Error",
-        description: `Failed to generate PDF report: ${error?.message || 'Unknown error'}`,
+        description: `Failed to generate PDF report: ${(error as any)?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -319,11 +319,11 @@ export default function StudentDetail() {
       });
     } catch (error) {
       console.error('Charts PDF generation error:', error);
-      console.error('Error message:', error?.message);
-      console.error('Error stack:', error?.stack);
+      console.error('Error message:', (error as any)?.message);
+      console.error('Error stack:', (error as any)?.stack);
       toast({
         title: "Error",
-        description: `Failed to generate charts PDF: ${error?.message || 'Unknown error'}`,
+        description: `Failed to generate charts PDF: ${(error as any)?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -547,7 +547,14 @@ export default function StudentDetail() {
                 {goals.map((goal) => (
                   <div key={goal.id} className="space-y-4">
                     <GoalProgressCard 
-                      goal={goal} 
+                      goal={{
+                        ...goal,
+                        currentProgress: (goal as any).currentProgress || 0,
+                        averageScore: (goal as any).averageScore || 0,
+                        trend: (goal as any).trend || 'stable',
+                        lastScore: (goal as any).lastScore || 0,
+                        dataPointsCount: (goal as any).dataPointsCount || 0,
+                      }}
                       onRefresh={refetchGoals}
                       onViewChart={(chartType) => {
                         setSelectedGoalId(goal.id);
@@ -656,8 +663,12 @@ export default function StudentDetail() {
             <Card>
               <CardContent className="p-6">
                 <DataEntryForm 
-                  studentId={studentId!} 
-                  goals={goals || []}
+                  studentId={studentId || 0} 
+                  goals={(goals || []).map(goal => ({
+                    ...goal,
+                    studentId: goal.studentId || studentId || 0,
+                    levelOfSupport: goal.levelOfSupport || undefined
+                  }))}
                   selectedGoalId={selectedGoalId || undefined}
                   onSuccess={() => {
                     refetchStudent();
