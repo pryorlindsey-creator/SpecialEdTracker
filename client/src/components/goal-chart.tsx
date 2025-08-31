@@ -48,12 +48,23 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     return () => clearInterval(interval);
   }, [goalId, selectedChartType]);
   
-  const { data: goalProgress, isLoading, error } = useQuery({
-    queryKey: [`/api/goals/${goalId}`],
+  // Fetch goal details and unified data points
+  const { data: goalDetails, isLoading: goalLoading, error: goalError } = useQuery({
+    queryKey: [`/api/goals/${goalId}/details`],
     enabled: !!goalId,
     staleTime: 0,
     gcTime: 0,
   });
+
+  const { data: unifiedDataPoints, isLoading: dataLoading, error: dataError } = useQuery({
+    queryKey: [`/api/goals/${goalId}/unified-data-points`],
+    enabled: !!goalId,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+  const isLoading = goalLoading || dataLoading;
+  const error = goalError || dataError;
 
 
 
@@ -69,7 +80,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     );
   }
 
-  if (error || !goalProgress) {
+  if (error || !goalDetails || !unifiedDataPoints) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -81,10 +92,18 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     );
   }
 
-  const { goal, dataPoints } = goalProgress as any;
+  const goal = (goalDetails as any)?.goal;
+  const dataPoints = Array.isArray(unifiedDataPoints) ? unifiedDataPoints : [];
 
   // Prepare chart data with objective indicators
-  const chartData = dataPoints
+  let filteredDataPoints = dataPoints;
+  
+  // Apply data filter
+  if (dataFilter === 'objectives') {
+    filteredDataPoints = dataPoints.filter((point: any) => point.isObjectiveSpecific === true);
+  }
+  
+  const chartData = filteredDataPoints
     .map((point: any, index: number) => ({
       index: index + 1,
       date: format(new Date(point.date), "MMM d"),
@@ -98,9 +117,9 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       denominator: point.denominator,
       isObjectiveSpecific: point.isObjectiveSpecific || false,
       objectiveDescription: point.objectiveDescription || null,
-      dataType: point.isObjectiveSpecific ? 'Objective' : 'General Goal',
+      dataType: point.dataType || (point.isObjectiveSpecific ? 'Objective' : 'General Goal'),
     }))
-    .reverse() // Show oldest to newest
+    .sort((a: any, b: any) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime()) // Show oldest to newest
     .slice(-10); // Show last 10 data points
 
   // Helper function to calculate evenly spaced ticks
