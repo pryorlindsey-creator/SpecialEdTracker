@@ -48,23 +48,13 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     return () => clearInterval(interval);
   }, [goalId, selectedChartType]);
   
-  // Fetch goal details and unified data points
-  const { data: goalDetails, isLoading: goalLoading, error: goalError } = useQuery({
-    queryKey: [`/api/goals/${goalId}/details`],
+  // Fetch goal details with unified data points (existing endpoint already returns both)
+  const { data: goalProgress, isLoading, error } = useQuery({
+    queryKey: [`/api/goals/${goalId}`],
     enabled: !!goalId,
     staleTime: 0,
     gcTime: 0,
   });
-
-  const { data: unifiedDataPoints, isLoading: dataLoading, error: dataError } = useQuery({
-    queryKey: [`/api/goals/${goalId}/unified-data-points`],
-    enabled: !!goalId,
-    staleTime: 0,
-    gcTime: 0,
-  });
-
-  const isLoading = goalLoading || dataLoading;
-  const error = goalError || dataError;
 
 
 
@@ -80,7 +70,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     );
   }
 
-  if (error || !goalDetails || !unifiedDataPoints) {
+  if (error || !goalProgress) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -92,15 +82,14 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     );
   }
 
-  const goal = (goalDetails as any)?.goal;
-  const dataPoints = Array.isArray(unifiedDataPoints) ? unifiedDataPoints : [];
+  const { goal, dataPoints } = goalProgress as any;
 
   // Prepare chart data with objective indicators
-  let filteredDataPoints = dataPoints;
+  let filteredDataPoints = Array.isArray(dataPoints) ? dataPoints : [];
   
   // Apply data filter
   if (dataFilter === 'objectives') {
-    filteredDataPoints = dataPoints.filter((point: any) => point.isObjectiveSpecific === true);
+    filteredDataPoints = filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true);
   }
   
   const chartData = filteredDataPoints
@@ -115,7 +104,7 @@ export default function GoalChart({ goalId }: GoalChartProps) {
       durationUnit: point.durationUnit || '',
       numerator: point.numerator,
       denominator: point.denominator,
-      isObjectiveSpecific: point.isObjectiveSpecific || false,
+      isObjectiveSpecific: point.objectiveId !== null && point.objectiveId !== undefined,
       objectiveDescription: point.objectiveDescription || null,
       dataType: point.dataType || (point.isObjectiveSpecific ? 'Objective' : 'General Goal'),
     }))
@@ -523,28 +512,25 @@ export default function GoalChart({ goalId }: GoalChartProps) {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-100">
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {(goalProgress as any).currentProgress?.toFixed(0) || '0'}%
+                    {dataPoints.length > 0 ? Math.round(parseFloat(dataPoints[dataPoints.length - 1].progressValue?.toString() || '0')) : 0}%
                   </p>
                   <p className="text-sm text-gray-600">Current Progress</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {(goalProgress as any).averageScore?.toFixed(0) || '0'}%
+                    {dataPoints.length > 0 ? Math.round(dataPoints.reduce((sum: any, point: any) => sum + parseFloat(point.progressValue?.toString() || '0'), 0) / dataPoints.length) : 0}%
                   </p>
                   <p className="text-sm text-gray-600">Average Score</p>
                 </div>
                 <div className="text-center">
-                  <p className={`text-2xl font-bold ${
-                    (goalProgress as any).trend > 0 ? 'text-green-600' : 
-                    (goalProgress as any).trend < 0 ? 'text-red-600' : 'text-gray-900'
-                  }`}>
-                    {(goalProgress as any).trend > 0 ? '+' : ''}{((goalProgress as any).trend || 0).toFixed(1)}%
+                  <p className="text-2xl font-bold text-gray-900">
+                    0%
                   </p>
                   <p className="text-sm text-gray-600">Trend</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-bold text-gray-900">
-                    {dataPoints.length}
+                    {filteredDataPoints.length}
                   </p>
                   <p className="text-sm text-gray-600">Data Points</p>
                 </div>
