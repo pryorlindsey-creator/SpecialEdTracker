@@ -114,12 +114,12 @@ export default function GoalProgressCard({ goal, onRefresh, onAddData, onEditGoa
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-4 gap-4 pt-4 border-t border-gray-100 items-center">
           <div className="text-sm text-gray-600 flex items-center">
             <Calendar className="h-4 w-4 mr-1" />
             Last updated: {format(new Date(goal.updatedAt), "MMM d")}
           </div>
-          <div className="flex space-x-2">
+          <div className="flex justify-center">
             <Button 
               variant="ghost" 
               size="sm"
@@ -129,6 +129,8 @@ export default function GoalProgressCard({ goal, onRefresh, onAddData, onEditGoa
               <Edit className="h-4 w-4 mr-1" />
               Edit Goal
             </Button>
+          </div>
+          <div className="flex justify-center">
             <Button 
               variant="ghost" 
               size="sm"
@@ -138,6 +140,8 @@ export default function GoalProgressCard({ goal, onRefresh, onAddData, onEditGoa
               <Plus className="h-4 w-4 mr-1" />
               Add Data
             </Button>
+          </div>
+          <div className="flex justify-center">
             <Button 
               variant="ghost" 
               size="sm"
