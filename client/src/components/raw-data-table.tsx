@@ -21,6 +21,10 @@ interface DataPoint {
   id: number;
   goalId: number;
   goalTitle: string;
+  objectiveId?: number;
+  objectiveDescription?: string;
+  isObjectiveSpecific?: boolean;
+  dataType?: string;
   date: string;
   progressValue: string;
   progressFormat: 'percentage' | 'frequency' | 'duration';
@@ -42,7 +46,7 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
   const { toast } = useToast();
 
   // Fetch all data points for this student
-  const { data: rawData, isLoading, error } = useQuery({
+  const { data: rawData, isLoading, error } = useQuery<DataPoint[]>({
     queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
     staleTime: 0, // Always fetch fresh data
@@ -60,7 +64,7 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
   // PDF Generation Function
   const generateRawDataPDF = async () => {
     try {
-      if (!student || !rawData || rawData.length === 0) {
+      if (!student || !rawData || (Array.isArray(rawData) && rawData.length === 0)) {
         toast({
           title: "No Data",
           description: "No student or data points available to generate PDF.",
@@ -141,7 +145,7 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
     );
   }
 
-  if (!rawData || rawData.length === 0) {
+  if (!rawData || (Array.isArray(rawData) && rawData.length === 0)) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -157,8 +161,9 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
     );
   }
 
-  // Filter and sort data
-  let filteredData = rawData.filter((item: DataPoint) => {
+  // Ensure rawData is an array and filter data
+  const dataPoints = Array.isArray(rawData) ? rawData : [];
+  let filteredData = dataPoints.filter((item: DataPoint) => {
     const matchesSearch = !searchTerm || 
       item.goalTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.anecdotalInfo && item.anecdotalInfo.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -319,7 +324,7 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
-                <TableHead>Goal</TableHead>
+                <TableHead>Goal / Objective</TableHead>
                 <TableHead>Progress</TableHead>
                 <TableHead>Level of Support</TableHead>
                 <TableHead>Notes</TableHead>
@@ -334,7 +339,17 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
                     {format(new Date(item.date), 'MMM dd, yyyy')}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{item.goalTitle}</Badge>
+                    <div className="space-y-1">
+                      <Badge variant="outline">{item.goalTitle}</Badge>
+                      {item.isObjectiveSpecific && item.objectiveDescription && (
+                        <div className="text-xs text-blue-600 font-medium">
+                          📋 {item.objectiveDescription}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        {item.dataType || (item.isObjectiveSpecific ? 'Objective' : 'General Goal')}
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
                     <div className="font-medium">
@@ -343,7 +358,7 @@ export default function RawDataTable({ studentId, student }: RawDataTableProps) 
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      {formatLevelOfSupport(item.levelOfSupport)}
+                      {formatLevelOfSupport(item.levelOfSupport || '')}
                     </div>
                   </TableCell>
                   <TableCell>

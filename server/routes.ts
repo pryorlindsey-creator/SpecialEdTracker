@@ -904,14 +904,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all data points for this student directly
       const allDataPoints = await storage.getDataPointsByStudentId(studentId);
       
-      // Add goal titles to data points
+      // Add goal titles and objective info to data points
       const dataPointsWithGoalInfo = await Promise.all(
         allDataPoints.map(async (dp) => {
           const goal = await storage.getGoalById(dp.goalId);
+          let objectiveInfo = null;
+          
+          // If this data point has an objective, get objective details
+          if (dp.objectiveId) {
+            const objective = await storage.getObjectiveById(dp.objectiveId);
+            objectiveInfo = {
+              objectiveId: dp.objectiveId,
+              objectiveDescription: objective?.description || 'Unknown Objective',
+              isObjectiveSpecific: true
+            };
+          }
+          
           return {
             ...dp,
             goalTitle: goal?.title || 'Unknown Goal',
             goalDataCollectionType: goal?.dataCollectionType || 'percentage',
+            ...objectiveInfo,
+            isObjectiveSpecific: !!dp.objectiveId,
+            dataType: dp.objectiveId ? 'Objective' : 'General Goal',
           };
         })
       );
