@@ -83,10 +83,9 @@ interface DataEntryFormProps {
   goals: Goal[];
   selectedGoalId?: number;
   onSuccess?: () => void;
-  onNavigateToReports?: (goalId?: number) => void;
 }
 
-export default function DataEntryForm({ studentId, goals, selectedGoalId, onSuccess, onNavigateToReports }: DataEntryFormProps) {
+export default function DataEntryForm({ studentId, goals, selectedGoalId, onSuccess }: DataEntryFormProps) {
   const { toast } = useToast();
   const [progressInputType, setProgressInputType] = useState<"percentage" | "fraction">("percentage");
   const [trialCounter, setTrialCounter] = useState({
@@ -223,18 +222,11 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       
       toast({
         title: "Data Added Successfully!",
-        description: "Your data has been saved. Navigating to Reports to view chart...",
+        description: "Your data has been saved.",
       });
       
       form.reset();
       onSuccess?.();
-      
-      // Auto-navigate to Reports after a short delay to show the updated chart
-      if (onNavigateToReports) {
-        setTimeout(() => {
-          onNavigateToReports(goalId);
-        }, 1500); // 1.5 second delay to let user see the success message
-      }
     },
     onError: (error) => {
       console.error("❌ Error adding data point:", error);
