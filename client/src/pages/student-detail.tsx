@@ -555,14 +555,7 @@ export default function StudentDetail() {
                         dataPointsCount: (goal as any).dataPointsCount || 0,
                       }}
                       onRefresh={refetchGoals}
-                      onViewChart={(chartType) => {
-                        setSelectedGoalId(goal.id);
-                        setActiveTab("reports");
-                        // Store chart type preference if needed
-                        if (chartType) {
-                          sessionStorage.setItem(`chartType_${goal.id}`, chartType);
-                        }
-                      }}
+
                       onAddData={() => {
                         setSelectedGoalId(goal.id);
                         setActiveTab("data-entry");
