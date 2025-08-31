@@ -1,9 +1,6 @@
-import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChartLine, Download, Printer, BarChart3, PieChart } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -13,11 +10,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  PieChart as RechartsPieChart,
-  Cell,
-  Pie,
 } from "recharts";
 import { format } from "date-fns";
 
@@ -26,14 +18,7 @@ interface ObjectiveChartProps {
   goalId: number;
 }
 
-type ChartType = 'line' | 'pie' | 'bar';
-
 export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartProps) {
-  const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
-    const savedChartType = sessionStorage.getItem(`objectiveChartType_${objectiveId}`) as ChartType;
-    return savedChartType || 'line';
-  });
-
   // Get objective data
   const { data: objective, isLoading: objectiveLoading } = useQuery({
     queryKey: [`/api/objectives/${objectiveId}/progress`],
@@ -43,11 +28,6 @@ export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartPr
   const { data: dataPoints, isLoading: dataLoading } = useQuery({
     queryKey: [`/api/goals/${goalId}/data-points`],
   });
-
-  // Save chart type preference when it changes
-  useEffect(() => {
-    sessionStorage.setItem(`objectiveChartType_${objectiveId}`, selectedChartType);
-  }, [selectedChartType, objectiveId]);
 
   if (objectiveLoading || dataLoading) {
     return (
@@ -113,7 +93,7 @@ export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartPr
     }
   };
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
 
   return (
     <Card>
@@ -139,31 +119,7 @@ export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartPr
             </Badge>
           </div>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant={selectedChartType === 'line' ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedChartType('line')}
-            >
-              <ChartLine className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant={selectedChartType === 'bar' ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedChartType('bar')}
-            >
-              <BarChart3 className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant={selectedChartType === 'pie' ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedChartType('pie')}
-            >
-              <PieChart className="h-4 w-4" />
-            </Button>
-          </div>
+
         </div>
       </CardHeader>
 
@@ -175,89 +131,36 @@ export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartPr
           </div>
         ) : (
           <div className="h-80 mb-4">
-            {selectedChartType === 'line' && (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#666"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="#666"
-                    fontSize={12}
-                    domain={[0, 100]}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    formatter={(value: any, name: string) => [`${value}%`, 'Progress']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                  />
-                  <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="progress" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
-                    name="Progress"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-
-            {selectedChartType === 'bar' && (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#666"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="#666"
-                    fontSize={12}
-                    domain={[0, 100]}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    formatter={(value: any) => [`${value}%`, 'Progress']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                  />
-                  <Legend />
-                  <Bar 
-                    dataKey="progress" 
-                    fill="#3b82f6" 
-                    name="Progress"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-
-            {selectedChartType === 'pie' && chartData.length > 0 && (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ date, progress }: any) => `${date}: ${progress}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="progress"
-                  >
-                    {chartData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any) => [`${value}%`, 'Progress']} />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            )}
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#666"
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke="#666"
+                  fontSize={12}
+                  domain={[0, 100]}
+                  tickFormatter={(value) => `${value}%`}
+                />
+                <Tooltip
+                  formatter={(value: any, name: string) => [`${value}%`, 'Progress']}
+                  labelFormatter={(label) => `Date: ${label}`}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="progress" 
+                  stroke="#10b981" 
+                  strokeWidth={2}
+                  dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6 }}
+                  name="Progress"
+                />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         )}
 
