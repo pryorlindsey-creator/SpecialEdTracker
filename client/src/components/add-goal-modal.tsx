@@ -16,9 +16,9 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Trash2 } from "lucide-react";
 
 const objectiveSchema = z.object({
-  title: z.string().min(1, "Objective title is required"),
   description: z.string().min(1, "Objective description is required"),
   targetCriteria: z.string().optional(),
+  targetDate: z.string().optional(),
   status: z.string().default("active"),
 });
 
@@ -306,7 +306,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                       if (currentObjectives.length < 5) {
                         form.setValue("objectives", [
                           ...currentObjectives,
-                          { title: "", description: "", targetCriteria: "", status: "active" }
+                          { description: "", targetCriteria: "", targetDate: "", status: "active" }
                         ]);
                       }
                     }}
@@ -340,20 +340,6 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                     
                     <FormField
                       control={form.control}
-                      name={`objectives.${index}.title`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Objective Title</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., Answer who/what questions" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
                       name={`objectives.${index}.description`}
                       render={({ field }) => (
                         <FormItem>
@@ -370,19 +356,35 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                       )}
                     />
                     
-                    <FormField
-                      control={form.control}
-                      name={`objectives.${index}.targetCriteria`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Target Criteria (Optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g., 80% accuracy over 4 trials" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name={`objectives.${index}.targetCriteria`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Criteria (Optional)</FormLabel>
+                            <FormControl>
+                              <Input placeholder="e.g., 80% accuracy over 4 trials" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`objectives.${index}.targetDate`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Target Date (Optional)</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
                   </div>
                 ))}
                 

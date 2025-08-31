@@ -69,7 +69,7 @@ export const objectives = pgTable("objectives", {
   id: serial("id").primaryKey(),
   goalId: integer("goal_id").notNull().references(() => goals.id),
   studentId: integer("student_id").notNull().references(() => students.id),
-  title: varchar("title").notNull(),
+  title: varchar("title"), // Made optional since we're removing it from UI
   description: text("description").notNull(),
   targetCriteria: text("target_criteria"),
   targetDate: timestamp("target_date"),
