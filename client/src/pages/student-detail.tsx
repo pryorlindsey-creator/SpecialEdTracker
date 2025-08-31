@@ -655,7 +655,7 @@ export default function StudentDetail() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Button
                           variant={selectedObjectiveId === null ? "default" : "outline"}
-                          className="h-auto p-4 text-left flex flex-col items-start w-full hover:bg-primary hover:text-white group"
+                          className="h-auto p-4 text-left flex flex-col items-start w-full hover:bg-blue-600 hover:text-white group"
                           onClick={() => setSelectedObjectiveId(null)}
                         >
                           <div className={`font-semibold mb-1 w-full transition-colors ${
@@ -677,7 +677,7 @@ export default function StudentDetail() {
                           <Button
                             key={objective.id}
                             variant={selectedObjectiveId === objective.id ? "default" : "outline"}
-                            className="h-auto p-4 text-left flex flex-col items-start w-full hover:bg-primary hover:text-white group"
+                            className="h-auto p-4 text-left flex flex-col items-start w-full hover:bg-blue-600 hover:text-white group"
                             onClick={() => setSelectedObjectiveId(objective.id)}
                           >
                             <div className={`font-semibold mb-1 w-full transition-colors ${
