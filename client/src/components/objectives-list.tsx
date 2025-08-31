@@ -11,9 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar } from "lucide-react";
 import { Objective } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
+import { format } from "date-fns";
 
 // Interface for objective progress data
 interface ObjectiveProgress {
@@ -361,6 +362,14 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                         <p className="text-xs text-gray-500 mt-1">No data points yet</p>
                       </div>
                     )}
+
+                    {/* Last Updated Info */}
+                    <div className="pt-3 border-t border-gray-100">
+                      <div className="text-xs text-gray-600 flex items-center justify-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Last updated: {format(new Date(objective.updatedAt || objective.createdAt), "MMM d")}
+                      </div>
+                    </div>
 
                   </div>
                 );
