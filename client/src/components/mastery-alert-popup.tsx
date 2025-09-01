@@ -30,12 +30,12 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
   const { toast } = useToast();
 
   // Fetch goals, objectives, and data points
-  const { data: goals = [] } = useQuery({
+  const { data: goals = [] } = useQuery<Goal[]>({
     queryKey: [`/api/students/${studentId}/goals`],
     enabled: !!studentId,
   });
 
-  const { data: allDataPoints = [] } = useQuery({
+  const { data: allDataPoints = [] } = useQuery<DataPoint[]>({
     queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
     refetchInterval: 5000, // Refresh every 5 seconds to catch new data
@@ -46,7 +46,7 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
     queryFn: async () => {
       const objectivesByGoal: { [goalId: number]: any[] } = {};
       
-      for (const goal of goals) {
+      for (const goal of (goals as Goal[])) {
         try {
           const objectives = await apiRequest('GET', `/api/goals/${goal.id}/objectives`);
           objectivesByGoal[goal.id] = Array.isArray(objectives) ? objectives : [];
@@ -58,12 +58,15 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
       
       return objectivesByGoal;
     },
-    enabled: goals.length > 0,
+    enabled: (goals as Goal[]).length > 0,
   });
 
   // Check for mastery when data changes
   useEffect(() => {
     if (!goals.length || !allDataPoints.length) return;
+
+    console.log('🚨 Mastery detection running for student:', studentId, 'with goals:', goals.length, 'dataPoints:', allDataPoints.length);
+    console.log('🚨 Objectives data:', objectivesData);
 
     const alerts = detectMastery(goals, objectivesData, allDataPoints, studentId);
     

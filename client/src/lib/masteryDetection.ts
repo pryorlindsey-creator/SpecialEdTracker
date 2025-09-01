@@ -247,11 +247,13 @@ export function detectMastery(
       if (objective.status === 'mastered' || !objective.targetCriteria) return;
 
       const objectiveDataPoints = allDataPoints.filter(dp => 
-        dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
+        dp.objectiveId === objective.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
       );
 
       if (objectiveDataPoints.length === 0) return;
 
+
+      
       const masteryResult = checkMastery(
         objectiveDataPoints, 
         objective.targetCriteria, 
@@ -259,6 +261,12 @@ export function detectMastery(
       );
       
       if (masteryResult.isMastered) {
+        console.log('🎯 MASTERY ALERT: Objective achieved mastery!', {
+          objectiveId: objective.id,
+          goalTitle: goal.title,
+          criteria: objective.targetCriteria
+        });
+        
         alerts.push({
           id: `objective-${objective.id}`,
           type: 'objective',
@@ -274,5 +282,6 @@ export function detectMastery(
     });
   });
 
+  console.log('🎯 MASTERY ALERTS GENERATED:', alerts.length, alerts);
   return alerts;
 }
