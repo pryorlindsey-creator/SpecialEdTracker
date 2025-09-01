@@ -27,6 +27,7 @@ const dataEntrySchema = z.object({
   levelOfSupport: z.array(z.string()).min(1, "At least one level of support is required"),
   setting: z.array(z.string()).min(1, "At least one setting is required"),
   customSetting: z.string().optional(),
+  customSupport: z.string().optional(),
   anecdotalInfo: z.string().optional(),
 }).refine((data) => {
   // For duration goals, durationUnit is required
@@ -99,6 +100,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   const [durationUnit, setDurationUnit] = useState<string>("minutes");
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [showCustomSetting, setShowCustomSetting] = useState(false);
+  const [showCustomSupport, setShowCustomSupport] = useState(false);
 
   // Find the selected goal to get its data collection type
   useEffect(() => {
@@ -168,10 +170,12 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       console.log("🚀 Form validation status:", form.formState.isValid);
       console.log("🚀 Form errors (if any):", form.formState.errors);
       
-      // Convert the date string to ISO format for the server
+      // Convert the date string to ISO format for the server and include custom support
       const payload = {
         ...data,
         date: data.date, // Keep as string, server will parse it
+        levelOfSupport: data.levelOfSupport.concat(showCustomSupport && data.customSupport ? [data.customSupport] : []),
+        setting: data.setting.concat(showCustomSetting && data.customSetting ? [data.customSetting] : []),
       };
       
       console.log("🚀 Final payload being sent to server:", payload);
@@ -681,6 +685,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                   { id: "model-of-task", label: "Model of Task" },
                   { id: "self-correction", label: "Self-Correction" },
                   { id: "gesture", label: "Gesture" },
+                  { id: "custom", label: "Custom" },
                 ];
 
                 // Only add custom level of support if it's truly custom (not one of the standard options)
@@ -731,9 +736,18 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                             onCheckedChange={(checked) => {
                               const currentValues = field.value || [];
                               if (checked) {
-                                field.onChange([...currentValues, option.id]);
+                                const newValues = [...currentValues, option.id];
+                                field.onChange(newValues);
+                                if (option.id === "custom") {
+                                  setShowCustomSupport(true);
+                                }
                               } else {
-                                field.onChange(currentValues.filter((value) => value !== option.id));
+                                const newValues = currentValues.filter((value) => value !== option.id);
+                                field.onChange(newValues);
+                                if (option.id === "custom") {
+                                  setShowCustomSupport(false);
+                                  form.setValue("customSupport", "");
+                                }
                               }
                             }}
                             className="h-5 w-5"
@@ -746,6 +760,31 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                           </label>
                         </div>
                       ))}
+                      
+                      {/* Custom Support Input */}
+                      {showCustomSupport && (
+                        <div className="ml-8 mt-3">
+                          <FormField
+                            control={form.control}
+                            name="customSupport"
+                            render={({ field: customField }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-gray-700">
+                                  Custom Level of Support
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter custom level of support..."
+                                    {...customField}
+                                    className="w-full"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
                     </div>
                     <FormMessage />
                   </FormItem>

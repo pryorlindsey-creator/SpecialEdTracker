@@ -37,6 +37,8 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
   const [setting, setSetting] = useState<string[]>([]);
   const [customSetting, setCustomSetting] = useState("");
   const [showCustomSetting, setShowCustomSetting] = useState(false);
+  const [customSupport, setCustomSupport] = useState("");
+  const [showCustomSupport, setShowCustomSupport] = useState(false);
 
   const selectedGoal = goals.find(g => g.id === goalId);
   const selectedObjective = objectives.find(obj => obj.id === objectiveId);
@@ -113,6 +115,8 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
     setSetting([]);
     setCustomSetting("");
     setShowCustomSetting(false);
+    setCustomSupport("");
+    setShowCustomSupport(false);
     toast({
       title: "Session Reset",
       description: "All data has been cleared.",
@@ -219,7 +223,7 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
         denominator,
         // noResponseCount: dataType === 'percentage' ? percentageTrials.noResponse : 0, // pending database migration
         durationUnit,
-        levelOfSupport,
+        levelOfSupport: levelOfSupport.concat(showCustomSupport && customSupport ? [customSupport] : []),
         setting: setting.concat(showCustomSetting && customSetting ? [customSetting] : []),
         anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}${objectiveId ? ` - Objective ${objectiveId}` : ''}`
       };
@@ -531,6 +535,7 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                     { id: "model-of-task", label: "Model of Task" },
                     { id: "self-correction", label: "Self-Correction" },
                     { id: "gesture", label: "Gesture" },
+                    { id: "custom", label: "Custom" },
                   ];
 
                   // Add custom level of support from the selected goal if it exists and isn't already in the list
@@ -551,9 +556,18 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                       checked={levelOfSupport.includes(option.id)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setLevelOfSupport([...levelOfSupport, option.id]);
+                          const newLevelOfSupport = [...levelOfSupport, option.id];
+                          setLevelOfSupport(newLevelOfSupport);
+                          if (option.id === "custom") {
+                            setShowCustomSupport(true);
+                          }
                         } else {
-                          setLevelOfSupport(levelOfSupport.filter((value) => value !== option.id));
+                          const newLevelOfSupport = levelOfSupport.filter((value) => value !== option.id);
+                          setLevelOfSupport(newLevelOfSupport);
+                          if (option.id === "custom") {
+                            setShowCustomSupport(false);
+                            setCustomSupport("");
+                          }
                         }
                       }}
                       className="h-5 w-5"
@@ -567,6 +581,22 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                     </label>
                   </div>
                 ))}
+                
+                {/* Custom Support Input */}
+                {showCustomSupport && (
+                  <div className="ml-8 mt-3">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Custom Level of Support
+                    </Label>
+                    <Input
+                      value={customSupport}
+                      onChange={(e) => setCustomSupport(e.target.value)}
+                      placeholder="Enter custom level of support..."
+                      className="w-full mt-1"
+                      disabled={dataType === 'frequency' && !isCollecting}
+                    />
+                  </div>
+                )}
               </div>
             </div>
             
