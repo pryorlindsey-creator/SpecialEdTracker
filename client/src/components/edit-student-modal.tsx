@@ -197,27 +197,34 @@ export default function EditStudentModal({ student, isOpen, onClose, onSuccess }
                 <FormItem>
                   <FormLabel>Related Services</FormLabel>
                   <div className="space-y-2 mt-2">
-                    {RELATED_SERVICES_OPTIONS.map((service) => (
-                      <div key={service} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={service}
-                          checked={field.value?.includes(service) || false}
-                          onCheckedChange={(checked) => {
-                            const updatedServices = checked
-                              ? [...(field.value || []), service]
-                              : (field.value || []).filter((s) => s !== service);
-                            field.onChange(updatedServices);
-                            setSelectedServices(updatedServices);
-                          }}
-                        />
-                        <label 
-                          htmlFor={service} 
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                        >
-                          {service}
-                        </label>
+                    {/* Only show the services that are currently assigned to this student */}
+                    {existingServices.length > 0 ? (
+                      existingServices.map((service) => (
+                        <div key={service} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={service}
+                            checked={field.value?.includes(service) || false}
+                            onCheckedChange={(checked) => {
+                              const updatedServices = checked
+                                ? [...(field.value || []), service]
+                                : (field.value || []).filter((s) => s !== service);
+                              field.onChange(updatedServices);
+                              setSelectedServices(updatedServices);
+                            }}
+                          />
+                          <label 
+                            htmlFor={service} 
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {service}
+                          </label>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500 italic">
+                        No related services currently assigned to this student.
                       </div>
-                    ))}
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>
