@@ -837,13 +837,13 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             }}
           />
 
-          {/* Anecdotal Information */}
+          {/* Session Notes */}
           <FormField
             control={form.control}
             name="anecdotalInfo"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Anecdotal Information</FormLabel>
+                <FormLabel>Session Notes</FormLabel>
                 <FormControl>
                   <Textarea
                     rows={4}
