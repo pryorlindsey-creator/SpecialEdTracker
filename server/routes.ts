@@ -1026,6 +1026,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : null;
       }
       
+      // Convert setting array to JSON string for storage (same as levelOfSupport)
+      if (requestBody.setting && Array.isArray(requestBody.setting)) {
+        requestBody.setting = requestBody.setting.length > 0 
+          ? JSON.stringify(requestBody.setting) 
+          : null;
+      }
+      
       // Convert progressValue to number if it's a string
       if (requestBody.progressValue && typeof requestBody.progressValue === 'string') {
         requestBody.progressValue = parseFloat(requestBody.progressValue);
@@ -1107,6 +1114,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (Array.isArray(requestBody.levelOfSupport)) {
           requestBody.levelOfSupport = requestBody.levelOfSupport.length > 0 
             ? JSON.stringify(requestBody.levelOfSupport) 
+            : null;
+        }
+      }
+      
+      // Convert setting to JSON string for storage if it's an array
+      if (requestBody.setting) {
+        if (typeof requestBody.setting === 'string') {
+          // If it's already a string, assume it's JSON or a single value
+          try {
+            JSON.parse(requestBody.setting);
+            // It's valid JSON, keep as is
+          } catch {
+            // It's a single value, wrap in array and stringify
+            requestBody.setting = JSON.stringify([requestBody.setting]);
+          }
+        } else if (Array.isArray(requestBody.setting)) {
+          requestBody.setting = requestBody.setting.length > 0 
+            ? JSON.stringify(requestBody.setting) 
             : null;
         }
       }
