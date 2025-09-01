@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Trash2 } from "lucide-react";
+import TargetCriteriaInput from "@/components/target-criteria-input";
 
 const objectiveSchema = z.object({
   description: z.string().min(1, "Objective description is required"),
@@ -175,11 +176,13 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               name="targetCriteria"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Target Criteria (Optional)</FormLabel>
+                  <FormLabel>Target Criteria for Mastery (Optional)</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="e.g., 80% accuracy over 3 consecutive trials" 
-                      {...field} 
+                    <TargetCriteriaInput
+                      value={field.value || ''}
+                      onChange={field.onChange}
+                      dataCollectionType={form.watch("dataCollectionType")}
+                      placeholder="e.g., 80% accuracy over 3 consecutive trials"
                     />
                   </FormControl>
                   <FormMessage />
@@ -359,9 +362,14 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                         name={`objectives.${index}.targetCriteria`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Target Criteria (Optional)</FormLabel>
+                            <FormLabel>Target Criteria for Mastery (Optional)</FormLabel>
                             <FormControl>
-                              <Input placeholder="e.g., 80% accuracy over 4 trials" {...field} />
+                              <TargetCriteriaInput
+                                value={field.value || ''}
+                                onChange={field.onChange}
+                                dataCollectionType={form.watch("dataCollectionType")}
+                                placeholder="e.g., 80% accuracy over 4 trials"
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>

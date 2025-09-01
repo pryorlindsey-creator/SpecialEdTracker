@@ -28,6 +28,7 @@ import LiveCollectionTools from "@/components/live-collection-tools";
 import ObjectivesList from "@/components/objectives-list";
 import ObjectiveChartsForGoal from "@/components/objective-charts-for-goal";
 import { ClearDataModal } from "@/components/clear-data-modal";
+import MasteryAlertPopup from "@/components/mastery-alert-popup";
 import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
 import { useMutation } from "@tanstack/react-query";
@@ -829,6 +830,14 @@ export default function StudentDetail() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Mastery Alert Popup */}
+      {studentId && (
+        <MasteryAlertPopup 
+          studentId={studentId} 
+          studentName={student?.name}
+        />
+      )}
 
       {/* Add Goal Modal */}
       <AddGoalModal
