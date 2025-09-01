@@ -176,12 +176,12 @@ export default function ReportingPeriodsDisplay() {
       </CardHeader>
       <CardContent className="space-y-4">
         {currentPeriod && (
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="p-3 bg-green-50 rounded-lg border border-green-200">
             <div className="flex items-center justify-between">
-              <span className="font-medium text-blue-900">Current Period {currentPeriod.periodNumber}</span>
-              <Badge className="bg-blue-500">Active</Badge>
+              <span className="font-medium text-green-900">Current Period {currentPeriod.periodNumber}</span>
+              <Badge className="bg-green-600 text-white">Active</Badge>
             </div>
-            <p className="text-sm text-blue-700 mt-1">
+            <p className="text-sm text-green-700 mt-1">
               {format(new Date(currentPeriod.startDate + 'T12:00:00'), "MMM d")} - {format(new Date(currentPeriod.endDate + 'T12:00:00'), "MMM d, yyyy")}
             </p>
           </div>
@@ -201,10 +201,10 @@ export default function ReportingPeriodsDisplay() {
                   onClick={() => handleEditPeriod(period)}
                   className={`p-2 h-auto text-left justify-start hover:opacity-80 ${
                     isActive 
-                      ? 'bg-blue-50 border-blue-200 text-blue-900 hover:bg-blue-100'
+                      ? 'bg-green-50 border-green-200 text-green-900 hover:bg-green-100'
                       : isPast
                       ? 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
-                      : 'bg-green-50 border-green-200 text-green-900 hover:bg-green-100'
+                      : 'bg-blue-50 border-blue-200 text-blue-900 hover:bg-blue-100'
                   }`}
                 >
                   <div className="w-full">
