@@ -38,6 +38,7 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
   const { data: allDataPoints = [] } = useQuery({
     queryKey: [`/api/students/${studentId}/all-data-points`],
     enabled: !!studentId,
+    refetchInterval: 5000, // Refresh every 5 seconds to catch new data
   });
 
   const { data: objectivesData = {} } = useQuery({

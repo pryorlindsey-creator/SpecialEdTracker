@@ -29,6 +29,7 @@ import ObjectivesList from "@/components/objectives-list";
 import ObjectiveChartsForGoal from "@/components/objective-charts-for-goal";
 import { ClearDataModal } from "@/components/clear-data-modal";
 import MasteryAlertPopup from "@/components/mastery-alert-popup";
+import TestMasteryButton from "@/components/test-mastery-button";
 import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
 import { useMutation } from "@tanstack/react-query";

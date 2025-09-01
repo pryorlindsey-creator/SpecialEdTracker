@@ -57,8 +57,8 @@ export function parseTargetCriteria(criteria: string): {
   const percentMatch = criteriaLower.match(/(\d+)%/);
   const threshold = percentMatch ? parseInt(percentMatch[1]) : null;
   
-  // Extract consecutive count
-  const consecutiveMatch = criteriaLower.match(/(\d+)\s*consecutive|over\s*(\d+)|for\s*(\d+)/);
+  // Extract consecutive count - handle various patterns
+  const consecutiveMatch = criteriaLower.match(/(\d+(?:\.\d+)?)\s*consecutive|over\s*(\d+(?:\.\d+)?)|for\s*(\d+(?:\.\d+)?)/);
   const consecutiveCount = consecutiveMatch ? 
     parseInt(consecutiveMatch[1] || consecutiveMatch[2] || consecutiveMatch[3]) : 3; // Default to 3
   
@@ -156,10 +156,12 @@ export function detectMastery(
 
   // Check goals for mastery
   goals.forEach(goal => {
-    if (goal.status === 'mastered' || !goal.targetCriteria) return;
+    if (goal.status === 'mastered' || !goal.targetCriteria) {
+      return;
+    }
 
     const goalDataPoints = allDataPoints.filter(dp => 
-      dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
+      dp.goalId === goal.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
     );
 
     if (goalDataPoints.length === 0) return;
