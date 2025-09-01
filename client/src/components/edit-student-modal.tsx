@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -64,6 +64,18 @@ export default function EditStudentModal({ student, isOpen, onClose, onSuccess }
       relatedServices: existingServices,
     },
   });
+
+  // Reset form when student data changes
+  useEffect(() => {
+    const newExistingServices = student.relatedServices ? student.relatedServices.split(", ").filter(Boolean) : [];
+    setSelectedServices(newExistingServices);
+    form.reset({
+      name: student.name,
+      grade: student.grade || "",
+      iepDueDate: student.iepDueDate ? format(new Date(student.iepDueDate), "yyyy-MM-dd") : "",
+      relatedServices: newExistingServices,
+    });
+  }, [student, form]);
 
   const editStudentMutation = useMutation({
     mutationFn: async (data: EditStudentFormData) => {
