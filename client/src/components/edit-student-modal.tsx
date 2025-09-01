@@ -15,6 +15,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { format } from "date-fns";
 
 const RELATED_SERVICES_OPTIONS = [
+  "None",
   "Speech-Language Therapy",
   "Physical Therapy", 
   "Occupational Therapy",
@@ -197,34 +198,39 @@ export default function EditStudentModal({ student, isOpen, onClose, onSuccess }
                 <FormItem>
                   <FormLabel>Related Services</FormLabel>
                   <div className="space-y-2 mt-2">
-                    {/* Only show the services that are currently assigned to this student */}
-                    {existingServices.length > 0 ? (
-                      existingServices.map((service) => (
-                        <div key={service} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={service}
-                            checked={field.value?.includes(service) || false}
-                            onCheckedChange={(checked) => {
-                              const updatedServices = checked
-                                ? [...(field.value || []), service]
-                                : (field.value || []).filter((s) => s !== service);
-                              field.onChange(updatedServices);
-                              setSelectedServices(updatedServices);
-                            }}
-                          />
-                          <label 
-                            htmlFor={service} 
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                          >
-                            {service}
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-sm text-gray-500 italic">
-                        No related services currently assigned to this student.
+                    {RELATED_SERVICES_OPTIONS.map((service) => (
+                      <div key={service} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={service}
+                          checked={field.value?.includes(service) || false}
+                          onCheckedChange={(checked) => {
+                            const currentServices = field.value || [];
+                            let updatedServices;
+                            
+                            if (service === "None") {
+                              // If "None" is selected, clear all other services
+                              updatedServices = checked ? ["None"] : [];
+                            } else {
+                              // If any other service is selected, remove "None" and add/remove the service
+                              if (checked) {
+                                updatedServices = [...currentServices.filter(s => s !== "None"), service];
+                              } else {
+                                updatedServices = currentServices.filter(s => s !== service);
+                              }
+                            }
+                            
+                            field.onChange(updatedServices);
+                            setSelectedServices(updatedServices);
+                          }}
+                        />
+                        <label 
+                          htmlFor={service} 
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {service}
+                        </label>
                       </div>
-                    )}
+                    ))}
                   </div>
                   <FormMessage />
                 </FormItem>
