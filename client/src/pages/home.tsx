@@ -13,6 +13,7 @@ import DashboardCalendar from "@/components/dashboard-calendar";
 import { ReportingPeriodsButton } from "@/components/reporting-periods-modal";
 import ReportingPeriodsDisplay from "@/components/reporting-periods-display";
 import { ClearDataModal } from "@/components/clear-data-modal";
+import MonthlyReminderPopup from "@/components/monthly-reminder-popup";
 
 export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
@@ -314,6 +315,9 @@ export default function Home() {
         onClose={() => setIsClearAllDataModalOpen(false)}
         type="all"
       />
+
+      {/* Monthly Reminder Popup */}
+      <MonthlyReminderPopup />
     </div>
   );
 }
