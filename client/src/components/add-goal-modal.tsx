@@ -176,7 +176,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               name="targetCriteria"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Target Criteria for Mastery (Optional)</FormLabel>
+                  <FormLabel>Target Criteria for Mastery</FormLabel>
                   <FormControl>
                     <TargetCriteriaInput
                       value={field.value || ''}
@@ -362,7 +362,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                         name={`objectives.${index}.targetCriteria`}
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Target Criteria for Mastery (Optional)</FormLabel>
+                            <FormLabel>Target Criteria for Mastery</FormLabel>
                             <FormControl>
                               <TargetCriteriaInput
                                 value={field.value || ''}
