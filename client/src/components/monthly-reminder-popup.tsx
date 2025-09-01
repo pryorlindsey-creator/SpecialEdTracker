@@ -52,7 +52,8 @@ export default function MonthlyReminderPopup() {
   }, [students, reportingPeriodsFromDB]);
 
   const checkForUpcomingEvents = () => {
-    const currentDate = moment();
+    // Use UTC to avoid timezone issues
+    const currentDate = moment.utc();
     const currentMonth = currentDate.format('YYYY-MM');
     const lastShownMonth = localStorage.getItem('lastReminderMonth');
     
@@ -62,14 +63,14 @@ export default function MonthlyReminderPopup() {
     }
 
     const events: ReminderEvent[] = [];
-    const startOfMonth = moment().startOf('month');
-    const endOfMonth = moment().endOf('month');
+    const startOfMonth = moment.utc().startOf('month');
+    const endOfMonth = moment.utc().endOf('month');
 
     // Check for IEP due dates in current month
     if (students && Array.isArray(students)) {
       students.forEach((student: Student) => {
         if (student.iepDueDate) {
-          const dueDate = moment(student.iepDueDate);
+          const dueDate = moment.utc(student.iepDueDate);
           if (dueDate.isBetween(startOfMonth, endOfMonth, 'day', '[]')) {
             const daysUntil = dueDate.diff(currentDate, 'days');
             if (daysUntil >= 0) { // Only show future or today's events
@@ -113,8 +114,8 @@ export default function MonthlyReminderPopup() {
 
     if (reportingData && reportingData.periods && Array.isArray(reportingData.periods)) {
       reportingData.periods.forEach((period: ReportingPeriod) => {
-        const startDate = moment(period.startDate);
-        const endDate = moment(period.endDate);
+        const startDate = moment.utc(period.startDate);
+        const endDate = moment.utc(period.endDate);
 
         // Check if period start is in current month
         if (startDate.isBetween(startOfMonth, endOfMonth, 'day', '[]')) {
