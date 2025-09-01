@@ -56,6 +56,12 @@ export default function MonthlyReminderPopup() {
     const currentDate = moment.utc();
     const currentMonth = currentDate.format('YYYY-MM');
     const lastShownMonth = localStorage.getItem('lastReminderMonth');
+    const sessionShown = sessionStorage.getItem('reminderShownThisSession');
+    
+    // Don't show if already shown in this session
+    if (sessionShown === 'true') {
+      return;
+    }
     
     // Only show reminder once per month or if it's a new month
     if (lastShownMonth === currentMonth) {
@@ -155,6 +161,8 @@ export default function MonthlyReminderPopup() {
     if (events.length > 0) {
       setUpcomingEvents(events);
       setShowReminder(true);
+      // Mark as shown for this session
+      sessionStorage.setItem('reminderShownThisSession', 'true');
     }
   };
 
