@@ -507,11 +507,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Check if student already has 10 goals (maximum limit)
+      // Check if student already has 15 goals (maximum limit)
       const existingGoals = await storage.getGoalsByStudentId(studentId);
-      if (existingGoals.length >= 10) {
+      if (existingGoals.length >= 15) {
         console.log("Student already has maximum goals:", existingGoals.length);
-        return res.status(400).json({ message: "Student already has maximum of 10 goals" });
+        return res.status(400).json({ message: "Student already has maximum of 15 goals" });
       }
 
       const { objectives: objectivesData, ...goalRequestData } = req.body;
@@ -689,7 +689,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // No limit on number of objectives per goal
+      // Check if goal already has 10 objectives (maximum limit)
+      const existingObjectives = await storage.getObjectivesByGoalId(goalId);
+      if (existingObjectives.length >= 10) {
+        console.log("Goal already has maximum objectives:", existingObjectives.length);
+        return res.status(400).json({ message: "Goal already has maximum of 10 objectives" });
+      }
 
       // Get student ID from the goal
       const studentId = goal.studentId;

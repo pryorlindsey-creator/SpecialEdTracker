@@ -10,7 +10,7 @@ Preferred communication style: Simple, everyday language.
 
 Primary test student: User consistently works with Student 1 (ID: 5). User previously had 3 goals ("Literacy", "Behavior", and "Focus") with data points that were accidentally deleted during test data cleanup on July 18, 2025. These need to be recreated - Focus goal uses duration data collection type, Behavior uses frequency, Literacy uses percentage. All goals support full data entry workflow including duration-based measurements. All students now properly belong to user 4201332 for clean ownership during development.
 
-Goal limits: Each student can have a maximum of 10 goals (not required to have 10). Each goal can have unlimited objectives. Current system enforces the goal limit but allows indefinite objective creation.
+Goal limits: Each student can have a maximum of 15 goals (not required to have 15). Each goal can have a maximum of 10 objectives. Current system enforces both goal and objective limits with proper validation (September 1, 2025).
 
 ## System Architecture
 
