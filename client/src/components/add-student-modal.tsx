@@ -15,6 +15,7 @@ import { isUnauthorizedError } from "@/lib/authUtils";
 import { Check, X } from "lucide-react";
 
 const RELATED_SERVICES_OPTIONS = [
+  "None",
   "Speech-Language Therapy",
   "Physical Therapy", 
   "Occupational Therapy",
@@ -190,9 +191,21 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
                           id={service}
                           checked={field.value?.includes(service) || false}
                           onCheckedChange={(checked) => {
-                            const updatedServices = checked
-                              ? [...(field.value || []), service]
-                              : (field.value || []).filter((s) => s !== service);
+                            const currentServices = field.value || [];
+                            let updatedServices;
+                            
+                            if (service === "None") {
+                              // If "None" is selected, clear all other services
+                              updatedServices = checked ? ["None"] : [];
+                            } else {
+                              // If any other service is selected, remove "None" and add/remove the service
+                              if (checked) {
+                                updatedServices = [...currentServices.filter(s => s !== "None"), service];
+                              } else {
+                                updatedServices = currentServices.filter(s => s !== service);
+                              }
+                            }
+                            
                             field.onChange(updatedServices);
                             setSelectedServices(updatedServices);
                           }}
