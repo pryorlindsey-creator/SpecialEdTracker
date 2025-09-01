@@ -514,123 +514,128 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
           <CardTitle>Session Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label className="text-base font-medium text-gray-900 mb-4 block">
-              Level of Support (Select all that apply)
-            </Label>
-            <div className="space-y-4">
-              {(() => {
-                const baseSupportOptions = [
-                  { id: "independent", label: "Independent" },
-                  { id: "verbal", label: "Verbal" },
-                  { id: "visual", label: "Visual" },
-                  { id: "written", label: "Written" },
-                  { id: "model-of-task", label: "Model of Task" },
-                  { id: "self-correction", label: "Self-Correction" },
-                  { id: "gesture", label: "Gesture" },
-                ];
+          {/* Level of Support and Setting - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Level of Support */}
+            <div>
+              <Label className="text-base font-medium text-gray-900 mb-4 block">
+                Level of Support (Select all that apply)
+              </Label>
+              <div className="space-y-4">
+                {(() => {
+                  const baseSupportOptions = [
+                    { id: "independent", label: "Independent" },
+                    { id: "verbal", label: "Verbal" },
+                    { id: "visual", label: "Visual" },
+                    { id: "written", label: "Written" },
+                    { id: "model-of-task", label: "Model of Task" },
+                    { id: "self-correction", label: "Self-Correction" },
+                    { id: "gesture", label: "Gesture" },
+                  ];
 
-                // Add custom level of support from the selected goal if it exists and isn't already in the list
-                const supportOptions = [...baseSupportOptions];
-                if (selectedGoal?.levelOfSupport && 
-                    !baseSupportOptions.some(option => option.id === selectedGoal.levelOfSupport)) {
-                  supportOptions.push({ 
-                    id: selectedGoal.levelOfSupport, 
-                    label: selectedGoal.levelOfSupport.charAt(0).toUpperCase() + selectedGoal.levelOfSupport.slice(1)
-                  });
-                }
+                  // Add custom level of support from the selected goal if it exists and isn't already in the list
+                  const supportOptions = [...baseSupportOptions];
+                  if (selectedGoal?.levelOfSupport && 
+                      !baseSupportOptions.some(option => option.id === selectedGoal.levelOfSupport)) {
+                    supportOptions.push({ 
+                      id: selectedGoal.levelOfSupport, 
+                      label: selectedGoal.levelOfSupport.charAt(0).toUpperCase() + selectedGoal.levelOfSupport.slice(1)
+                    });
+                  }
 
-                return supportOptions;
-              })().map((option) => (
-                <div key={option.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={option.id}
-                    checked={levelOfSupport.includes(option.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setLevelOfSupport([...levelOfSupport, option.id]);
-                      } else {
-                        setLevelOfSupport(levelOfSupport.filter((value) => value !== option.id));
-                      }
-                    }}
-                    className="h-5 w-5"
-                    disabled={dataType === 'frequency' && !isCollecting}
-                  />
-                  <label 
-                    htmlFor={option.id} 
-                    className="text-base font-medium text-gray-900 cursor-pointer leading-none"
-                  >
-                    {option.label}
-                  </label>
-                </div>
-              ))}
+                  return supportOptions;
+                })().map((option) => (
+                  <div key={option.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={option.id}
+                      checked={levelOfSupport.includes(option.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setLevelOfSupport([...levelOfSupport, option.id]);
+                        } else {
+                          setLevelOfSupport(levelOfSupport.filter((value) => value !== option.id));
+                        }
+                      }}
+                      className="h-5 w-5"
+                      disabled={dataType === 'frequency' && !isCollecting}
+                    />
+                    <label 
+                      htmlFor={option.id} 
+                      className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                    >
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-          
-          <div>
-            <Label className="text-base font-medium text-gray-900 mb-4 block">
-              Setting (Select all that apply)
-            </Label>
-            <div className="space-y-4">
-              {(() => {
-                const settingOptions = [
-                  { id: "general-education", label: "General Education" },
-                  { id: "special-education", label: "Special Education" },
-                  { id: "small-group", label: "Small Group" },
-                  { id: "whole-group", label: "Whole Group" },
-                  { id: "1:1", label: "1:1" },
-                  { id: "custom", label: "Custom" },
-                ];
+            
+            {/* Setting */}
+            <div>
+              <Label className="text-base font-medium text-gray-900 mb-4 block">
+                Setting (Select all that apply)
+              </Label>
+              <div className="space-y-4">
+                {(() => {
+                  const settingOptions = [
+                    { id: "general-education", label: "General Education" },
+                    { id: "special-education", label: "Special Education" },
+                    { id: "small-group", label: "Small Group" },
+                    { id: "whole-group", label: "Whole Group" },
+                    { id: "1:1", label: "1:1" },
+                    { id: "custom", label: "Custom" },
+                  ];
 
-                return settingOptions;
-              })().map((option) => (
-                <div key={option.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={option.id}
-                    checked={setting.includes(option.id)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        const newSetting = [...setting, option.id];
-                        setSetting(newSetting);
-                        if (option.id === "custom") {
-                          setShowCustomSetting(true);
+                  return settingOptions;
+                })().map((option) => (
+                  <div key={option.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={option.id}
+                      checked={setting.includes(option.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          const newSetting = [...setting, option.id];
+                          setSetting(newSetting);
+                          if (option.id === "custom") {
+                            setShowCustomSetting(true);
+                          }
+                        } else {
+                          const newSetting = setting.filter((value) => value !== option.id);
+                          setSetting(newSetting);
+                          if (option.id === "custom") {
+                            setShowCustomSetting(false);
+                            setCustomSetting("");
+                          }
                         }
-                      } else {
-                        const newSetting = setting.filter((value) => value !== option.id);
-                        setSetting(newSetting);
-                        if (option.id === "custom") {
-                          setShowCustomSetting(false);
-                          setCustomSetting("");
-                        }
-                      }
-                    }}
-                    className="h-5 w-5"
-                    disabled={dataType === 'frequency' && !isCollecting}
-                  />
-                  <label 
-                    htmlFor={option.id} 
-                    className="text-base font-medium text-gray-900 cursor-pointer leading-none"
-                  >
-                    {option.label}
-                  </label>
-                </div>
-              ))}
-              
-              {/* Custom Setting Input */}
-              {showCustomSetting && (
-                <div className="ml-8 mt-3">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Custom Setting
-                  </Label>
-                  <Input
-                    value={customSetting}
-                    onChange={(e) => setCustomSetting(e.target.value)}
-                    placeholder="Enter custom setting..."
-                    className="w-full mt-1"
-                    disabled={dataType === 'frequency' && !isCollecting}
-                  />
-                </div>
-              )}
+                      }}
+                      className="h-5 w-5"
+                      disabled={dataType === 'frequency' && !isCollecting}
+                    />
+                    <label 
+                      htmlFor={option.id} 
+                      className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                    >
+                      {option.label}
+                    </label>
+                  </div>
+                ))}
+                
+                {/* Custom Setting Input */}
+                {showCustomSetting && (
+                  <div className="ml-8 mt-3">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Custom Setting
+                    </Label>
+                    <Input
+                      value={customSetting}
+                      onChange={(e) => setCustomSetting(e.target.value)}
+                      placeholder="Enter custom setting..."
+                      className="w-full mt-1"
+                      disabled={dataType === 'frequency' && !isCollecting}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           

@@ -663,179 +663,184 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
             )}
           </div>
 
-          {/* Level of Support */}
-          <FormField
-            control={form.control}
-            name="levelOfSupport"
-            render={({ field }) => {
-              const baseSupportOptions = [
-                { id: "independent", label: "Independent" },
-                { id: "verbal", label: "Verbal" },
-                { id: "visual", label: "Visual" },
-                { id: "written", label: "Written" },
-                { id: "model-of-task", label: "Model of Task" },
-                { id: "self-correction", label: "Self-Correction" },
-                { id: "gesture", label: "Gesture" },
-              ];
 
-              // Only add custom level of support if it's truly custom (not one of the standard options)
-              const standardSupportIds = baseSupportOptions.map(option => option.id);
-              const supportOptions = [...baseSupportOptions];
-              
-              if (selectedGoal?.levelOfSupport && selectedGoal.levelOfSupport.trim() !== '') {
-                // Parse the level of support - it might be a JSON array or a string
-                let goalSupportLevels = [];
-                try {
-                  // Try to parse as JSON array first
-                  const parsed = JSON.parse(selectedGoal.levelOfSupport);
-                  goalSupportLevels = Array.isArray(parsed) ? parsed : [parsed];
-                } catch {
-                  // If not JSON, treat as single string
-                  goalSupportLevels = [selectedGoal.levelOfSupport];
-                }
+
+          {/* Level of Support and Setting - Side by Side */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Level of Support */}
+            <FormField
+              control={form.control}
+              name="levelOfSupport"
+              render={({ field }) => {
+                const baseSupportOptions = [
+                  { id: "independent", label: "Independent" },
+                  { id: "verbal", label: "Verbal" },
+                  { id: "visual", label: "Visual" },
+                  { id: "written", label: "Written" },
+                  { id: "model-of-task", label: "Model of Task" },
+                  { id: "self-correction", label: "Self-Correction" },
+                  { id: "gesture", label: "Gesture" },
+                ];
+
+                // Only add custom level of support if it's truly custom (not one of the standard options)
+                const standardSupportIds = baseSupportOptions.map(option => option.id);
+                const supportOptions = [...baseSupportOptions];
                 
-                // Add only truly custom support levels (not standard ones)
-                goalSupportLevels.forEach(level => {
-                  const levelLower = level.toLowerCase();
-                  const isStandardOption = standardSupportIds.includes(levelLower);
-                  const isCustomKeyword = levelLower === 'custom';
-                  
-                  if (!isStandardOption && !isCustomKeyword && level.trim() !== '') {
-                    // Check if we haven't already added this custom level
-                    if (!supportOptions.some(option => option.id === level)) {
-                      supportOptions.push({ 
-                        id: level, 
-                        label: level.charAt(0).toUpperCase() + level.slice(1)
-                      });
-                    }
+                if (selectedGoal?.levelOfSupport && selectedGoal.levelOfSupport.trim() !== '') {
+                  // Parse the level of support - it might be a JSON array or a string
+                  let goalSupportLevels = [];
+                  try {
+                    // Try to parse as JSON array first
+                    const parsed = JSON.parse(selectedGoal.levelOfSupport);
+                    goalSupportLevels = Array.isArray(parsed) ? parsed : [parsed];
+                  } catch {
+                    // If not JSON, treat as single string
+                    goalSupportLevels = [selectedGoal.levelOfSupport];
                   }
-                });
-              }
-
-              return (
-                <FormItem>
-                  <FormLabel className="text-base font-medium text-gray-900 mb-4 block">
-                    Level of Support (Select all that apply)
-                  </FormLabel>
-                  <div className="space-y-4">
-                    {supportOptions.map((option) => (
-                      <div key={option.id} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={option.id}
-                          checked={field.value?.includes(option.id) || false}
-                          onCheckedChange={(checked) => {
-                            const currentValues = field.value || [];
-                            if (checked) {
-                              field.onChange([...currentValues, option.id]);
-                            } else {
-                              field.onChange(currentValues.filter((value) => value !== option.id));
-                            }
-                          }}
-                          className="h-5 w-5"
-                        />
-                        <label 
-                          htmlFor={option.id} 
-                          className="text-base font-medium text-gray-900 cursor-pointer leading-none"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
-
-          {/* Setting */}
-          <FormField
-            control={form.control}
-            name="setting"
-            render={({ field }) => {
-              const settingOptions = [
-                { id: "general-education", label: "General Education" },
-                { id: "special-education", label: "Special Education" },
-                { id: "small-group", label: "Small Group" },
-                { id: "whole-group", label: "Whole Group" },
-                { id: "1:1", label: "1:1" },
-                { id: "custom", label: "Custom" },
-              ];
-
-              // Update showCustomSetting when field value changes
-              useEffect(() => {
-                setShowCustomSetting(field.value?.includes("custom") || false);
-              }, [field.value]);
-
-              return (
-                <FormItem>
-                  <FormLabel className="text-base font-medium text-gray-900 mb-4 block">
-                    Setting (Select all that apply)
-                  </FormLabel>
-                  <div className="space-y-4">
-                    {settingOptions.map((option) => (
-                      <div key={option.id} className="flex items-center space-x-3">
-                        <Checkbox
-                          id={option.id}
-                          checked={field.value?.includes(option.id) || false}
-                          onCheckedChange={(checked) => {
-                            const currentValues = field.value || [];
-                            if (checked) {
-                              const newValues = [...currentValues, option.id];
-                              field.onChange(newValues);
-                              if (option.id === "custom") {
-                                setShowCustomSetting(true);
-                              }
-                            } else {
-                              const newValues = currentValues.filter((value) => value !== option.id);
-                              field.onChange(newValues);
-                              if (option.id === "custom") {
-                                setShowCustomSetting(false);
-                                form.setValue("customSetting", "");
-                              }
-                            }
-                          }}
-                          className="h-5 w-5"
-                        />
-                        <label 
-                          htmlFor={option.id} 
-                          className="text-base font-medium text-gray-900 cursor-pointer leading-none"
-                        >
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
+                  
+                  // Add only truly custom support levels (not standard ones)
+                  goalSupportLevels.forEach(level => {
+                    const levelLower = level.toLowerCase();
+                    const isStandardOption = standardSupportIds.includes(levelLower);
+                    const isCustomKeyword = levelLower === 'custom';
                     
-                    {/* Custom Setting Input */}
-                    {showCustomSetting && (
-                      <div className="ml-8 mt-3">
-                        <FormField
-                          control={form.control}
-                          name="customSetting"
-                          render={({ field: customField }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-medium text-gray-700">
-                                Custom Setting
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder="Enter custom setting..."
-                                  {...customField}
-                                  className="w-full"
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              );
-            }}
-          />
+                    if (!isStandardOption && !isCustomKeyword && level.trim() !== '') {
+                      // Check if we haven't already added this custom level
+                      if (!supportOptions.some(option => option.id === level)) {
+                        supportOptions.push({ 
+                          id: level, 
+                          label: level.charAt(0).toUpperCase() + level.slice(1)
+                        });
+                      }
+                    }
+                  });
+                }
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium text-gray-900 mb-4 block">
+                      Level of Support (Select all that apply)
+                    </FormLabel>
+                    <div className="space-y-4">
+                      {supportOptions.map((option) => (
+                        <div key={option.id} className="flex items-center space-x-3">
+                          <Checkbox
+                            id={option.id}
+                            checked={field.value?.includes(option.id) || false}
+                            onCheckedChange={(checked) => {
+                              const currentValues = field.value || [];
+                              if (checked) {
+                                field.onChange([...currentValues, option.id]);
+                              } else {
+                                field.onChange(currentValues.filter((value) => value !== option.id));
+                              }
+                            }}
+                            className="h-5 w-5"
+                          />
+                          <label 
+                            htmlFor={option.id} 
+                            className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                          >
+                            {option.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+
+            {/* Setting */}
+            <FormField
+              control={form.control}
+              name="setting"
+              render={({ field }) => {
+                const settingOptions = [
+                  { id: "general-education", label: "General Education" },
+                  { id: "special-education", label: "Special Education" },
+                  { id: "small-group", label: "Small Group" },
+                  { id: "whole-group", label: "Whole Group" },
+                  { id: "1:1", label: "1:1" },
+                  { id: "custom", label: "Custom" },
+                ];
+
+                // Update showCustomSetting when field value changes
+                useEffect(() => {
+                  setShowCustomSetting(field.value?.includes("custom") || false);
+                }, [field.value]);
+
+                return (
+                  <FormItem>
+                    <FormLabel className="text-base font-medium text-gray-900 mb-4 block">
+                      Setting (Select all that apply)
+                    </FormLabel>
+                    <div className="space-y-4">
+                      {settingOptions.map((option) => (
+                        <div key={option.id} className="flex items-center space-x-3">
+                          <Checkbox
+                            id={option.id}
+                            checked={field.value?.includes(option.id) || false}
+                            onCheckedChange={(checked) => {
+                              const currentValues = field.value || [];
+                              if (checked) {
+                                const newValues = [...currentValues, option.id];
+                                field.onChange(newValues);
+                                if (option.id === "custom") {
+                                  setShowCustomSetting(true);
+                                }
+                              } else {
+                                const newValues = currentValues.filter((value) => value !== option.id);
+                                field.onChange(newValues);
+                                if (option.id === "custom") {
+                                  setShowCustomSetting(false);
+                                  form.setValue("customSetting", "");
+                                }
+                              }
+                            }}
+                            className="h-5 w-5"
+                          />
+                          <label 
+                            htmlFor={option.id} 
+                            className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                          >
+                            {option.label}
+                          </label>
+                        </div>
+                      ))}
+                      
+                      {/* Custom Setting Input */}
+                      {showCustomSetting && (
+                        <div className="ml-8 mt-3">
+                          <FormField
+                            control={form.control}
+                            name="customSetting"
+                            render={({ field: customField }) => (
+                              <FormItem>
+                                <FormLabel className="text-sm font-medium text-gray-700">
+                                  Custom Setting
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    placeholder="Enter custom setting..."
+                                    {...customField}
+                                    className="w-full"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
+            />
+          </div>
 
           {/* Session Notes */}
           <FormField
