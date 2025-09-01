@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -763,7 +763,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
               ];
 
               // Update showCustomSetting when field value changes
-              React.useEffect(() => {
+              useEffect(() => {
                 setShowCustomSetting(field.value?.includes("custom") || false);
               }, [field.value]);
 
