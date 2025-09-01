@@ -41,14 +41,20 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
     refetchInterval: 5000, // Refresh every 5 seconds to catch new data
   });
 
-  const { data: objectivesData = {} } = useQuery({
+  const { data: objectivesData = {}, refetch: refetchObjectives } = useQuery({
     queryKey: [`/api/students/${studentId}/objectives`],
     queryFn: async () => {
+      console.log('🔄 Fetching objectives for goals:', goals.map(g => g.id));
       const objectivesByGoal: { [goalId: number]: any[] } = {};
       
       for (const goal of (goals as Goal[])) {
         try {
-          const objectives = await apiRequest('GET', `/api/goals/${goal.id}/objectives`);
+          // Force fresh fetch without cache
+          const response = await fetch(`/api/goals/${goal.id}/objectives`, {
+            headers: { 'Cache-Control': 'no-cache' }
+          });
+          const objectives = await response.json();
+          console.log(`📋 Fresh response for goal ${goal.id}:`, objectives);
           objectivesByGoal[goal.id] = Array.isArray(objectives) ? objectives : [];
         } catch (error) {
           console.error(`Failed to fetch objectives for goal ${goal.id}:`, error);
@@ -56,10 +62,20 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
         }
       }
       
+      console.log('📋 Final objectives data:', objectivesByGoal);
       return objectivesByGoal;
     },
     enabled: (goals as Goal[]).length > 0,
+    staleTime: 0,
+    gcTime: 0, // Don't cache
   });
+
+  // Force refresh objectives when goals change
+  useEffect(() => {
+    if (goals.length > 0) {
+      refetchObjectives();
+    }
+  }, [goals.length, refetchObjectives]);
 
   // Check for mastery when data changes
   useEffect(() => {
