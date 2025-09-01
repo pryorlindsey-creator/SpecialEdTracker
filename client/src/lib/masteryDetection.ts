@@ -57,10 +57,22 @@ export function parseTargetCriteria(criteria: string): {
   const percentMatch = criteriaLower.match(/(\d+)%/);
   const threshold = percentMatch ? parseInt(percentMatch[1]) : null;
   
-  // Extract consecutive count - handle various patterns
+  // Extract consecutive count - handle various patterns including "X out of Y"
+  const outOfMatch = criteriaLower.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+(?:\.\d+)?)/);
   const consecutiveMatch = criteriaLower.match(/(\d+(?:\.\d+)?)\s*consecutive|over\s*(\d+(?:\.\d+)?)|for\s*(\d+(?:\.\d+)?)/);
-  const consecutiveCount = consecutiveMatch ? 
-    parseInt(consecutiveMatch[1] || consecutiveMatch[2] || consecutiveMatch[3]) : 3; // Default to 3
+  
+  let consecutiveCount: number;
+  let totalCount: number | null = null;
+  
+  if (outOfMatch) {
+    // Handle "X out of Y" pattern
+    consecutiveCount = parseInt(outOfMatch[1]);
+    totalCount = parseInt(outOfMatch[2]);
+  } else if (consecutiveMatch) {
+    consecutiveCount = parseInt(consecutiveMatch[1] || consecutiveMatch[2] || consecutiveMatch[3]);
+  } else {
+    consecutiveCount = 3; // Default to 3
+  }
   
   // Check for frequency reduction goals
   const isFrequencyReduction = criteriaLower.includes('reduce') || 
@@ -73,7 +85,8 @@ export function parseTargetCriteria(criteria: string): {
   return {
     threshold,
     consecutiveCount,
-    isFrequencyReduction
+    isFrequencyReduction,
+    totalCount
   };
 }
 
@@ -95,48 +108,90 @@ export function checkMastery(
     moment(b.date).valueOf() - moment(a.date).valueOf()
   );
 
-  const { threshold, consecutiveCount, isFrequencyReduction } = criteria;
+  const { threshold, consecutiveCount, isFrequencyReduction, totalCount } = criteria;
 
-  // For frequency reduction goals, check if recent values are below threshold
-  if (dataCollectionType === 'frequency' && isFrequencyReduction) {
-    const recentPoints = sortedPoints.slice(0, consecutiveCount);
+  // Handle "X out of Y" pattern
+  if (totalCount && totalCount > 0) {
+    const recentPoints = sortedPoints.slice(0, totalCount);
     
-    if (recentPoints.length < consecutiveCount) {
+    if (recentPoints.length < totalCount) {
       return { isMastered: false };
     }
 
-    const allBelowThreshold = recentPoints.every(point => 
-      parseFloat(point.progressValue) <= threshold
-    );
+    // For frequency reduction goals
+    if (dataCollectionType === 'frequency' && isFrequencyReduction) {
+      const belowThresholdCount = recentPoints.filter(point => {
+        const value = parseFloat(point.progressValue);
+        return value <= threshold;
+      }).length;
 
-    if (allBelowThreshold) {
-      return {
-        isMastered: true,
-        masteryDate: recentPoints[recentPoints.length - 1].date,
-        dataPointsUsed: recentPoints.map(p => p.id)
-      };
+      if (belowThresholdCount >= consecutiveCount) {
+        return {
+          isMastered: true,
+          masteryDate: recentPoints[recentPoints.length - 1].date,
+          dataPointsUsed: recentPoints.map(p => p.id)
+        };
+      }
+    }
+    // For percentage/accuracy goals
+    else {
+      const aboveThresholdCount = recentPoints.filter(point => {
+        const value = parseFloat(point.progressValue);
+        return value >= threshold;
+      }).length;
+
+      if (aboveThresholdCount >= consecutiveCount) {
+        return {
+          isMastered: true,
+          masteryDate: recentPoints[recentPoints.length - 1].date,
+          dataPointsUsed: recentPoints.map(p => p.id)
+        };
+      }
     }
   }
-
-  // For percentage/accuracy goals, check if recent values meet or exceed threshold
+  // Handle consecutive pattern (original logic)
   else {
-    const recentPoints = sortedPoints.slice(0, consecutiveCount);
-    
-    if (recentPoints.length < consecutiveCount) {
-      return { isMastered: false };
+    // For frequency reduction goals, check if recent values are below threshold
+    if (dataCollectionType === 'frequency' && isFrequencyReduction) {
+      const recentPoints = sortedPoints.slice(0, consecutiveCount);
+      
+      if (recentPoints.length < consecutiveCount) {
+        return { isMastered: false };
+      }
+
+      const allBelowThreshold = recentPoints.every(point => 
+        parseFloat(point.progressValue) <= threshold
+      );
+
+      if (allBelowThreshold) {
+        return {
+          isMastered: true,
+          masteryDate: recentPoints[recentPoints.length - 1].date,
+          dataPointsUsed: recentPoints.map(p => p.id)
+        };
+      }
     }
 
-    const allMeetThreshold = recentPoints.every(point => {
-      const value = parseFloat(point.progressValue);
-      return value >= threshold;
-    });
+    // For percentage/accuracy goals, check if recent values meet or exceed threshold
+    else {
+      const recentPoints = sortedPoints.slice(0, consecutiveCount);
+      
+      if (recentPoints.length < consecutiveCount) {
+        return { isMastered: false };
+      }
 
-    if (allMeetThreshold) {
-      return {
-        isMastered: true,
-        masteryDate: recentPoints[recentPoints.length - 1].date,
-        dataPointsUsed: recentPoints.map(p => p.id)
-      };
+      const allMeetThreshold = recentPoints.every(point => {
+        const value = parseFloat(point.progressValue);
+        return value >= threshold;
+      });
+
+      if (allMeetThreshold) {
+        return {
+          isMastered: true,
+          masteryDate: recentPoints[recentPoints.length - 1].date,
+          dataPointsUsed: recentPoints.map(p => p.id)
+        };
+      }
     }
   }
 
