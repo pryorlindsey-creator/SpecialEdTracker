@@ -25,6 +25,8 @@ const dataEntrySchema = z.object({
   // noResponseCount: z.number().min(0).optional(), // pending database migration
   durationUnit: z.enum(["seconds", "minutes"]).optional(),
   levelOfSupport: z.array(z.string()).min(1, "At least one level of support is required"),
+  setting: z.array(z.string()).min(1, "At least one setting is required"),
+  customSetting: z.string().optional(),
   anecdotalInfo: z.string().optional(),
 }).refine((data) => {
   // For duration goals, durationUnit is required
@@ -96,6 +98,7 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   const [durationUnit, setDurationUnit] = useState<string>("minutes");
   const [objectives, setObjectives] = useState<Objective[]>([]);
+  const [showCustomSetting, setShowCustomSetting] = useState(false);
 
   // Find the selected goal to get its data collection type
   useEffect(() => {
@@ -116,6 +119,8 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
       progressValue: 0,
       durationUnit: "minutes", // Default to minutes for duration
       levelOfSupport: [],
+      setting: [],
+      customSetting: "",
       anecdotalInfo: "",
     },
   });
@@ -736,6 +741,95 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                         </label>
                       </div>
                     ))}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              );
+            }}
+          />
+
+          {/* Setting */}
+          <FormField
+            control={form.control}
+            name="setting"
+            render={({ field }) => {
+              const settingOptions = [
+                { id: "general-education", label: "General Education" },
+                { id: "special-education", label: "Special Education" },
+                { id: "small-group", label: "Small Group" },
+                { id: "whole-group", label: "Whole Group" },
+                { id: "1:1", label: "1:1" },
+                { id: "custom", label: "Custom" },
+              ];
+
+              // Update showCustomSetting when field value changes
+              React.useEffect(() => {
+                setShowCustomSetting(field.value?.includes("custom") || false);
+              }, [field.value]);
+
+              return (
+                <FormItem>
+                  <FormLabel className="text-base font-medium text-gray-900 mb-4 block">
+                    Setting (Select all that apply)
+                  </FormLabel>
+                  <div className="space-y-4">
+                    {settingOptions.map((option) => (
+                      <div key={option.id} className="flex items-center space-x-3">
+                        <Checkbox
+                          id={option.id}
+                          checked={field.value?.includes(option.id) || false}
+                          onCheckedChange={(checked) => {
+                            const currentValues = field.value || [];
+                            if (checked) {
+                              const newValues = [...currentValues, option.id];
+                              field.onChange(newValues);
+                              if (option.id === "custom") {
+                                setShowCustomSetting(true);
+                              }
+                            } else {
+                              const newValues = currentValues.filter((value) => value !== option.id);
+                              field.onChange(newValues);
+                              if (option.id === "custom") {
+                                setShowCustomSetting(false);
+                                form.setValue("customSetting", "");
+                              }
+                            }
+                          }}
+                          className="h-5 w-5"
+                        />
+                        <label 
+                          htmlFor={option.id} 
+                          className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                        >
+                          {option.label}
+                        </label>
+                      </div>
+                    ))}
+                    
+                    {/* Custom Setting Input */}
+                    {showCustomSetting && (
+                      <div className="ml-8 mt-3">
+                        <FormField
+                          control={form.control}
+                          name="customSetting"
+                          render={({ field: customField }) => (
+                            <FormItem>
+                              <FormLabel className="text-sm font-medium text-gray-700">
+                                Custom Setting
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter custom setting..."
+                                  {...customField}
+                                  className="w-full"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>

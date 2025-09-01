@@ -92,6 +92,7 @@ export const dataPoints = pgTable("data_points", {
   // noResponseCount: integer("no_response_count"), // count of no response trials for accuracy data (pending migration)
   durationUnit: varchar("duration_unit"), // seconds, minutes for duration data collection
   levelOfSupport: text("level_of_support"), // support levels as JSON array string or single value
+  setting: text("setting"), // settings as JSON array string or single value (general-education, special-education, etc.)
   anecdotalInfo: text("anecdotal_info"),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -34,6 +34,9 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
   const [percentageTrials, setPercentageTrials] = useState({ correct: 0, total: 0, noResponse: 0 });
   const [notes, setNotes] = useState("");
   const [levelOfSupport, setLevelOfSupport] = useState<string[]>([]);
+  const [setting, setSetting] = useState<string[]>([]);
+  const [customSetting, setCustomSetting] = useState("");
+  const [showCustomSetting, setShowCustomSetting] = useState(false);
 
   const selectedGoal = goals.find(g => g.id === goalId);
   const selectedObjective = objectives.find(obj => obj.id === objectiveId);
@@ -107,6 +110,9 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
     setPercentageTrials({ correct: 0, total: 0, noResponse: 0 });
     setNotes("");
     setLevelOfSupport([]);
+    setSetting([]);
+    setCustomSetting("");
+    setShowCustomSetting(false);
     toast({
       title: "Session Reset",
       description: "All data has been cleared.",
@@ -214,6 +220,7 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
         // noResponseCount: dataType === 'percentage' ? percentageTrials.noResponse : 0, // pending database migration
         durationUnit,
         levelOfSupport,
+        setting: setting.concat(showCustomSetting && customSetting ? [customSetting] : []),
         anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}${objectiveId ? ` - Objective ${objectiveId}` : ''}`
       };
 
@@ -557,6 +564,73 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                   </label>
                 </div>
               ))}
+            </div>
+          </div>
+          
+          <div>
+            <Label className="text-base font-medium text-gray-900 mb-4 block">
+              Setting (Select all that apply)
+            </Label>
+            <div className="space-y-4">
+              {(() => {
+                const settingOptions = [
+                  { id: "general-education", label: "General Education" },
+                  { id: "special-education", label: "Special Education" },
+                  { id: "small-group", label: "Small Group" },
+                  { id: "whole-group", label: "Whole Group" },
+                  { id: "1:1", label: "1:1" },
+                  { id: "custom", label: "Custom" },
+                ];
+
+                return settingOptions;
+              })().map((option) => (
+                <div key={option.id} className="flex items-center space-x-3">
+                  <Checkbox
+                    id={option.id}
+                    checked={setting.includes(option.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        const newSetting = [...setting, option.id];
+                        setSetting(newSetting);
+                        if (option.id === "custom") {
+                          setShowCustomSetting(true);
+                        }
+                      } else {
+                        const newSetting = setting.filter((value) => value !== option.id);
+                        setSetting(newSetting);
+                        if (option.id === "custom") {
+                          setShowCustomSetting(false);
+                          setCustomSetting("");
+                        }
+                      }
+                    }}
+                    className="h-5 w-5"
+                    disabled={dataType === 'frequency' && !isCollecting}
+                  />
+                  <label 
+                    htmlFor={option.id} 
+                    className="text-base font-medium text-gray-900 cursor-pointer leading-none"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+              
+              {/* Custom Setting Input */}
+              {showCustomSetting && (
+                <div className="ml-8 mt-3">
+                  <Label className="text-sm font-medium text-gray-700">
+                    Custom Setting
+                  </Label>
+                  <Input
+                    value={customSetting}
+                    onChange={(e) => setCustomSetting(e.target.value)}
+                    placeholder="Enter custom setting..."
+                    className="w-full mt-1"
+                    disabled={dataType === 'frequency' && !isCollecting}
+                  />
+                </div>
+              )}
             </div>
           </div>
           
