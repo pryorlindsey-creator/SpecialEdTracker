@@ -2,8 +2,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Calendar, Edit2, Trash2 } from "lucide-react";
+import { Calendar, Edit2, Trash2, Bell } from "lucide-react";
 import { format } from "date-fns";
+import { useMasteryReview } from "@/hooks/use-mastery-review";
 
 interface Goal {
   id: number;
@@ -22,11 +23,14 @@ interface Goal {
 
 interface GoalProgressCardProps {
   goal: Goal;
+  studentId: number;
   onEditGoal?: () => void;
   onDeleteGoal?: () => void;
 }
 
-export default function GoalProgressCard({ goal, onEditGoal, onDeleteGoal }: GoalProgressCardProps) {
+export default function GoalProgressCard({ goal, studentId, onEditGoal, onDeleteGoal }: GoalProgressCardProps) {
+  const { needsReview, markAsReviewed } = useMasteryReview(studentId);
+  const showReviewNotification = needsReview(goal.id, 'goal');
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'mastered':
@@ -62,12 +66,21 @@ export default function GoalProgressCard({ goal, onEditGoal, onDeleteGoal }: Goa
                 <strong>Target:</strong> {goal.targetCriteria}
               </p>
             )}
-            <div className="flex items-center mt-2">
+            <div className="flex items-center gap-2 mt-2">
               <Badge className={getStatusColor(goal.status)}>
                 {goal.status === 'mastered' ? 'Mastered' : 
                  goal.status === 'active' ? 'Active' : 
                  goal.status === 'discontinued' ? 'Discontinued' : goal.status}
               </Badge>
+              {showReviewNotification && (
+                <Badge 
+                  className="bg-orange-100 text-orange-800 cursor-pointer hover:bg-orange-200"
+                  onClick={() => markAsReviewed(goal.id, 'goal')}
+                >
+                  <Bell className="h-3 w-3 mr-1" />
+                  Review Mastery
+                </Badge>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 ml-4">

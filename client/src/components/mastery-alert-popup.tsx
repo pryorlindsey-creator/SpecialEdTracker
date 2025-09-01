@@ -90,6 +90,19 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
     const newDismissed = [...currentDismissed, ...masteryAlerts.map(a => a.id)];
     sessionStorage.setItem(sessionKey, JSON.stringify(newDismissed));
     
+    // Store items needing review
+    const reviewKey = `masteryAlerts_needsReview_${studentId}`;
+    const currentNeedsReview = JSON.parse(localStorage.getItem(reviewKey) || '[]');
+    const itemsToReview = masteryAlerts.map(alert => ({
+      id: alert.id,
+      type: alert.type,
+      itemId: alert.itemId,
+      title: alert.title,
+      targetCriteria: alert.targetCriteria,
+      masteryDate: alert.masteryDate
+    }));
+    localStorage.setItem(reviewKey, JSON.stringify([...currentNeedsReview, ...itemsToReview]));
+    
     setDismissedAlerts(prev => [...prev, ...masteryAlerts.map(a => a.id)]);
   };
 
@@ -113,11 +126,14 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
       const { queryClient } = await import('@/lib/queryClient');
       queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
       queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/objectives`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/all-data-points`] });
       
       if (alert.type === 'goal') {
         queryClient.invalidateQueries({ queryKey: [`/api/goals/${alert.itemId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/goals/${alert.itemId}/objectives`] });
       } else {
         queryClient.invalidateQueries({ queryKey: [`/api/objectives/${alert.itemId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/objectives/${alert.itemId}/progress`] });
       }
       
       // If no more alerts, close the dialog

@@ -585,6 +585,7 @@ export default function StudentDetail() {
                         lastScore: (goal as any).lastScore || 0,
                         dataPointsCount: (goal as any).dataPointsCount || 0,
                       }}
+                      studentId={studentId!}
                       onEditGoal={() => {
                         setEditingGoal(goal);
                         setIsEditGoalModalOpen(true);

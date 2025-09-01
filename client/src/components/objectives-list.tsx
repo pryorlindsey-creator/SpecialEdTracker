@@ -11,10 +11,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit2, Trash2, Calendar } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, Bell, CheckCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { Objective } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
+import { useMasteryReview } from "@/hooks/use-mastery-review";
 
 // Interface for objective progress data
 interface ObjectiveProgress {
@@ -53,6 +54,7 @@ interface ObjectivesListProps {
 
 export default function ObjectivesList({ goalId, studentId }: ObjectivesListProps) {
   const { toast } = useToast();
+  const { needsReview, markAsReviewed } = useMasteryReview(studentId);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingObjective, setEditingObjective] = useState<Objective | null>(null);
   const [deletingObjectiveId, setDeletingObjectiveId] = useState<number | null>(null);
@@ -283,6 +285,15 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                           >
                             {objective.status.charAt(0).toUpperCase() + objective.status.slice(1)}
                           </span>
+                          {needsReview(objective.id, 'objective') && (
+                            <span 
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 cursor-pointer hover:bg-orange-200"
+                              onClick={() => markAsReviewed(objective.id, 'objective')}
+                            >
+                              <Bell className="h-3 w-3 mr-1" />
+                              Review Mastery
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2 ml-4">
