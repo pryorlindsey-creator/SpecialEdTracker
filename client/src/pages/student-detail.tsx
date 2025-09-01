@@ -8,7 +8,7 @@ import type { students, goals, dataPoints } from "@/../../shared/schema";
 type Student = typeof students.$inferSelect;
 type Goal = typeof goals.$inferSelect;
 type DataPoint = typeof dataPoints.$inferSelect;
-import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap, Trash2, UserX } from "lucide-react";
+import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, RefreshCw, Timer, Zap, Trash2, UserX, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -795,6 +795,18 @@ export default function StudentDetail() {
               </>
             ) : (
               <div className="space-y-8">
+                {/* View Session Notes Button */}
+                <div className="flex justify-end mb-6">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setActiveTab("raw-data")}
+                    className="flex items-center gap-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View Session Notes
+                  </Button>
+                </div>
+                
                 {goals.map((goal) => (
                   <div key={goal.id} className="space-y-6">
                     {/* Goal Chart */}
