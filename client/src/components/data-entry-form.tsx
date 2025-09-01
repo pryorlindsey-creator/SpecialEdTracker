@@ -666,9 +666,10 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
 
 
           {/* Level of Support and Setting - Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Level of Support */}
-            <FormField
+            <div className="flex-1">
+              <FormField
               control={form.control}
               name="levelOfSupport"
               render={({ field }) => {
@@ -750,10 +751,12 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                   </FormItem>
                 );
               }}
-            />
+              />
+            </div>
 
             {/* Setting */}
-            <FormField
+            <div className="flex-1">
+              <FormField
               control={form.control}
               name="setting"
               render={({ field }) => {
@@ -839,7 +842,8 @@ export default function DataEntryForm({ studentId, goals, selectedGoalId, onSucc
                   </FormItem>
                 );
               }}
-            />
+              />
+            </div>
           </div>
 
           {/* Session Notes */}

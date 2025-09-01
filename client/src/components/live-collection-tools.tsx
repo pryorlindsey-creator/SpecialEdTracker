@@ -515,9 +515,9 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Level of Support and Setting - Side by Side */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {/* Level of Support */}
-            <div>
+            <div className="flex-1">
               <Label className="text-base font-medium text-gray-900 mb-4 block">
                 Level of Support (Select all that apply)
               </Label>
@@ -571,7 +571,7 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
             </div>
             
             {/* Setting */}
-            <div>
+            <div className="flex-1">
               <Label className="text-base font-medium text-gray-900 mb-4 block">
                 Setting (Select all that apply)
               </Label>
