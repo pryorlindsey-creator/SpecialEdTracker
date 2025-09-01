@@ -463,27 +463,45 @@ export default function StudentDetail() {
 
         {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 bg-white shadow-sm">
-            <TabsTrigger value="overview" className="flex items-center">
+          <TabsList className="grid w-full grid-cols-6 bg-white shadow-sm border rounded-lg">
+            <TabsTrigger 
+              value="overview" 
+              className="flex items-center data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:font-semibold data-[state=active]:border-blue-300 transition-all duration-200"
+            >
               Overview
             </TabsTrigger>
-            <TabsTrigger value="goals" className="flex items-center">
+            <TabsTrigger 
+              value="goals" 
+              className="flex items-center data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:font-semibold data-[state=active]:border-blue-300 transition-all duration-200"
+            >
               <Target className="h-4 w-4 mr-2" />
               Goals & Progress
             </TabsTrigger>
-            <TabsTrigger value="live-collection" className="flex items-center">
+            <TabsTrigger 
+              value="live-collection" 
+              className="flex items-center data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:font-semibold data-[state=active]:border-blue-300 transition-all duration-200"
+            >
               <Zap className="h-4 w-4 mr-2" />
               Live Collection
             </TabsTrigger>
-            <TabsTrigger value="data-entry" className="flex items-center">
+            <TabsTrigger 
+              value="data-entry" 
+              className="flex items-center data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:font-semibold data-[state=active]:border-blue-300 transition-all duration-200"
+            >
               <Edit className="h-4 w-4 mr-2" />
               Data Entry
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center">
+            <TabsTrigger 
+              value="reports" 
+              className="flex items-center data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:font-semibold data-[state=active]:border-blue-300 transition-all duration-200"
+            >
               <ChartLine className="h-4 w-4 mr-2" />
               Reports
             </TabsTrigger>
-            <TabsTrigger value="raw-data" className="flex items-center">
+            <TabsTrigger 
+              value="raw-data" 
+              className="flex items-center data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:font-semibold data-[state=active]:border-blue-300 transition-all duration-200"
+            >
               <Table className="h-4 w-4 mr-2" />
               Raw Data
             </TabsTrigger>
