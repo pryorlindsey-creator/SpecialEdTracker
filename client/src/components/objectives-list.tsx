@@ -277,7 +277,7 @@ export default function ObjectivesList({ goalId, studentId }: ObjectivesListProp
                               objective.status === "active"
                                 ? "bg-green-100 text-green-800"
                                 : objective.status === "mastered"
-                                ? "bg-green-100 text-green-800"
+                                ? "bg-red-100 text-red-800"
                                 : "bg-gray-100 text-gray-800"
                             }`}
                           >

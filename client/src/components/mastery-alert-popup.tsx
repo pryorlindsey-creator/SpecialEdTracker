@@ -109,6 +109,17 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
       // Remove this alert from the list
       setMasteryAlerts(prev => prev.filter(a => a.id !== alert.id));
       
+      // Force refresh of relevant data to update UI
+      const { queryClient } = await import('@/lib/queryClient');
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/goals`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/students/${studentId}/objectives`] });
+      
+      if (alert.type === 'goal') {
+        queryClient.invalidateQueries({ queryKey: [`/api/goals/${alert.itemId}`] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: [`/api/objectives/${alert.itemId}`] });
+      }
+      
       // If no more alerts, close the dialog
       if (masteryAlerts.length === 1) {
         setShowAlert(false);
