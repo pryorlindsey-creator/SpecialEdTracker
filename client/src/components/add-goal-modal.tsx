@@ -284,7 +284,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                   </div>
                   
                   {/* Custom Support Option */}
-                  <div className="mt-3 pt-3 border-t border-gray-200">
+                  <div className="mt-3">
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="custom-support"
