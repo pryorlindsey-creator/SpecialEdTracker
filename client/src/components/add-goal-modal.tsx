@@ -300,7 +300,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                         htmlFor="custom-support"
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                       >
-                        Custom Level of Support
+                        Custom
                       </label>
                     </div>
                   </div>
