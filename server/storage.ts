@@ -254,6 +254,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteGoal(id: number): Promise<void> {
+    // First delete all data points associated with this goal
+    await db.delete(dataPoints).where(eq(dataPoints.goalId, id));
+    
+    // Then delete all objectives associated with this goal
+    await db.delete(objectives).where(eq(objectives.goalId, id));
+    
+    // Finally delete the goal itself
     await db.delete(goals).where(eq(goals.id, id));
   }
 
