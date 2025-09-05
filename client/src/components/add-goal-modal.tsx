@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Plus, Trash2 } from "lucide-react";
@@ -27,7 +28,7 @@ const addGoalSchema = z.object({
   title: z.string().min(1, "Goal title is required"),
   description: z.string().min(1, "Goal description is required"),
   targetCriteria: z.string().optional(),
-  levelOfSupport: z.string().optional(),
+  levelOfSupport: z.array(z.string()).optional().default([]),
   customLevelOfSupport: z.string().optional(),
   dataCollectionType: z.string().default("percentage"),
   frequencyDirection: z.string().optional(),
@@ -54,7 +55,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
       title: "",
       description: "",
       targetCriteria: "",
-      levelOfSupport: "",
+      levelOfSupport: [],
       customLevelOfSupport: "",
       dataCollectionType: "percentage",
       frequencyDirection: "",
@@ -65,8 +66,12 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
 
   const addGoalMutation = useMutation({
     mutationFn: async (data: AddGoalFormData) => {
-      // Use custom level of support if provided, otherwise use the selected option
-      const finalLevelOfSupport = data.levelOfSupport === "custom" ? data.customLevelOfSupport : data.levelOfSupport;
+      // Combine selected support levels with custom level if provided
+      let finalLevelOfSupport = [...(data.levelOfSupport || [])];
+      if (isCustomSupport && data.customLevelOfSupport) {
+        finalLevelOfSupport.push(data.customLevelOfSupport);
+      }
+      
       const { customLevelOfSupport, objectives, ...requestData } = data;
       const goalData = { ...requestData, levelOfSupport: finalLevelOfSupport, objectives };
       await apiRequest("POST", `/api/students/${studentId}/goals`, goalData);
@@ -114,6 +119,16 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
     setIsCustomSupport(false);
     onClose();
   };
+
+  const supportLevels = [
+    { id: "independent", label: "Independent" },
+    { id: "verbal", label: "Verbal" },
+    { id: "visual", label: "Visual" },
+    { id: "written", label: "Written" },
+    { id: "model-of-task", label: "Model of Task" },
+    { id: "self-correction", label: "Self-Correction" },
+    { id: "gesture", label: "Gesture" }
+  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -242,33 +257,54 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               name="levelOfSupport"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Level of Support</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setIsCustomSupport(value === "custom");
-                      if (value !== "custom") {
-                        form.setValue("customLevelOfSupport", "");
-                      }
-                    }} 
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select support level..." />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="independent">Independent</SelectItem>
-                      <SelectItem value="verbal">Verbal</SelectItem>
-                      <SelectItem value="visual">Visual</SelectItem>
-                      <SelectItem value="written">Written</SelectItem>
-                      <SelectItem value="model-of-task">Model of Task</SelectItem>
-                      <SelectItem value="self-correction">Self-Correction</SelectItem>
-                      <SelectItem value="gesture">Gesture</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Level of Support (Select Multiple)</FormLabel>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    {supportLevels.map((level) => (
+                      <div key={level.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={level.id}
+                          checked={field.value?.includes(level.id) || false}
+                          onCheckedChange={(checked) => {
+                            const currentValues = field.value || [];
+                            if (checked) {
+                              field.onChange([...currentValues, level.id]);
+                            } else {
+                              field.onChange(currentValues.filter(value => value !== level.id));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={level.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        >
+                          {level.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Custom Support Option */}
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="custom-support"
+                        checked={isCustomSupport}
+                        onCheckedChange={(checked) => {
+                          setIsCustomSupport(checked as boolean);
+                          if (!checked) {
+                            form.setValue("customLevelOfSupport", "");
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor="custom-support"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Custom Level of Support
+                      </label>
+                    </div>
+                  </div>
+                  
                   <FormMessage />
                 </FormItem>
               )}
