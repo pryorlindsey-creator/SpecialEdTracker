@@ -348,12 +348,20 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
               </div>
               <div className="text-lg text-gray-600">Occurrences</div>
             </div>
+            {!isCollecting && (
+              <div className="text-center mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-yellow-800 text-sm font-medium">
+                  Click "Start Session" above to enable the frequency counter buttons
+                </p>
+              </div>
+            )}
             <div className="flex justify-center space-x-4">
               <Button 
                 size="lg" 
                 onClick={incrementFrequency}
-                className="h-16 w-16 rounded-full text-2xl"
+                className={`h-16 w-16 rounded-full text-2xl ${!isCollecting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!isCollecting}
+                title={!isCollecting ? "Start session to enable" : "Add occurrence"}
               >
                 <Plus className="h-8 w-8" />
               </Button>
@@ -361,8 +369,9 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                 size="lg" 
                 variant="outline" 
                 onClick={decrementFrequency}
-                className="h-16 w-16 rounded-full text-2xl"
+                className={`h-16 w-16 rounded-full text-2xl ${!isCollecting || frequencyCount === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={!isCollecting || frequencyCount === 0}
+                title={!isCollecting ? "Start session to enable" : frequencyCount === 0 ? "No occurrences to remove" : "Remove occurrence"}
               >
                 <Minus className="h-8 w-8" />
               </Button>
