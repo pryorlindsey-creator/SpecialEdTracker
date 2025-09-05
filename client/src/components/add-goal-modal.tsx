@@ -257,7 +257,7 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
               name="levelOfSupport"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Level of Support (Select Multiple)</FormLabel>
+                  <FormLabel>Level of Support (Select all that apply)</FormLabel>
                   <div className="grid grid-cols-2 gap-3 mt-2">
                     {supportLevels.map((level) => (
                       <div key={level.id} className="flex items-center space-x-2">
