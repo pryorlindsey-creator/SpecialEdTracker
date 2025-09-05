@@ -281,10 +281,8 @@ export default function AddGoalModal({ studentId, isOpen, onClose, onSuccess }: 
                         </label>
                       </div>
                     ))}
-                  </div>
-                  
-                  {/* Custom Support Option */}
-                  <div className="mt-3">
+                    
+                    {/* Custom Support Option - included in grid for consistent spacing */}
                     <div className="flex items-center space-x-2">
                       <Checkbox
                         id="custom-support"
