@@ -891,9 +891,52 @@ export default function StudentDetail() {
       <AlertDialog open={!!deletingGoalId} onOpenChange={() => setDeletingGoalId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Goal</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this goal? This action cannot be undone and will permanently delete all associated objectives and data points.
+            <AlertDialogTitle className="text-red-600 flex items-center">
+              <Trash2 className="h-5 w-5 mr-2" />
+              Delete Goal
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              {(() => {
+                if (!deletingGoalId) return null;
+                
+                const goalToDelete = goals?.find(g => g.id === deletingGoalId);
+                const objectivesForGoal = objectives?.filter(obj => obj.goalId === deletingGoalId) || [];
+                const dataPointsForGoal = allDataPoints?.filter(dp => dp.goalId === deletingGoalId) || [];
+                
+                return (
+                  <>
+                    <div className="font-semibold text-gray-900">
+                      You are about to permanently delete the goal:
+                    </div>
+                    <div className="bg-gray-50 p-3 rounded-md border-l-4 border-red-400">
+                      <div className="font-medium text-gray-900">"{goalToDelete?.title || 'Unknown Goal'}"</div>
+                      {goalToDelete?.description && (
+                        <div className="text-sm text-gray-600 mt-1">{goalToDelete.description}</div>
+                      )}
+                    </div>
+                    
+                    <div className="bg-red-50 p-4 rounded-md border border-red-200">
+                      <div className="text-red-800 font-medium mb-2">⚠️ This will permanently delete:</div>
+                      <ul className="text-red-700 text-sm space-y-1 list-disc list-inside">
+                        <li>
+                          <strong>{objectivesForGoal.length}</strong> objective{objectivesForGoal.length !== 1 ? 's' : ''} 
+                          {objectivesForGoal.length > 0 && ' associated with this goal'}
+                        </li>
+                        <li>
+                          <strong>{dataPointsForGoal.length}</strong> data point{dataPointsForGoal.length !== 1 ? 's' : ''} 
+                          {dataPointsForGoal.length > 0 && ' containing student progress data'}
+                        </li>
+                        <li>All progress tracking and historical data</li>
+                        <li>Any mastery records for this goal</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600">
+                      <strong>This action cannot be undone.</strong> Consider exporting reports before deleting if you need to keep records.
+                    </div>
+                  </>
+                );
+              })()}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -902,7 +945,7 @@ export default function StudentDetail() {
               onClick={() => deletingGoalId && deleteGoalMutation.mutate(deletingGoalId)}
               className="bg-red-600 hover:bg-red-700"
             >
-              Delete Goal
+              Yes, Delete Goal
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
