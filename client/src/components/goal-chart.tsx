@@ -32,6 +32,11 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     return savedFilter || 'all';
   });
 
+  const [supportFilter, setSupportFilter] = useState<'all' | 'split'>(() => {
+    const savedSupportFilter = sessionStorage.getItem(`supportFilter_${goalId}`) as 'all' | 'split';
+    return savedSupportFilter || 'all';
+  });
+
   // Listen for changes to sessionStorage chart type preference
   useEffect(() => {
     const checkForChartTypeChange = () => {
@@ -200,15 +205,39 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     };
   }
 
+  // Helper function to check if support levels include "independent"
+  const hasIndependentSupport = (supportData: string) => {
+    if (!supportData || supportData === 'Not specified') return true; // Treat no support as independent
+    try {
+      const supportLevels = JSON.parse(supportData);
+      return Array.isArray(supportLevels) && supportLevels.includes('independent');
+    } catch {
+      return supportData === 'independent';
+    }
+  };
+
   // Filter data based on selection
   const filteredData = dataFilter === 'objectives' 
     ? chartData.filter(item => item.isObjectiveSpecific)
     : chartData;
 
+  // Split data by support level for percentage goals when support filter is 'split'
+  const independentData = supportFilter === 'split' && goal.dataCollectionType === 'percentage'
+    ? filteredData.filter(item => hasIndependentSupport(item.support))
+    : filteredData;
+
+  const otherSupportData = supportFilter === 'split' && goal.dataCollectionType === 'percentage'
+    ? filteredData.filter(item => !hasIndependentSupport(item.support))
+    : [];
+
   // For frequency charts, use original values instead of progress values
   const displayData = goal.dataCollectionType === 'frequency' || goal.dataCollectionType === 'duration'
-    ? filteredData.map((d: any) => ({ ...d, progress: d.originalValue }))
-    : filteredData;
+    ? independentData.map((d: any) => ({ ...d, progress: d.originalValue }))
+    : independentData;
+
+  const displayDataOtherSupport = goal.dataCollectionType === 'frequency' || goal.dataCollectionType === 'duration'
+    ? otherSupportData.map((d: any) => ({ ...d, progress: d.originalValue }))
+    : otherSupportData;
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -353,6 +382,21 @@ export default function GoalChart({ goalId }: GoalChartProps) {
             >
               {dataFilter === 'all' ? 'Show Only Objectives' : 'Show All Data'}
             </Button>
+
+            {/* Support Level Filter Toggle - Only for percentage goals */}
+            {goal.dataCollectionType === 'percentage' && (
+              <Button
+                variant={supportFilter === 'split' ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  const newFilter = supportFilter === 'all' ? 'split' : 'all';
+                  setSupportFilter(newFilter);
+                  sessionStorage.setItem(`supportFilter_${goalId}`, newFilter);
+                }}
+              >
+                {supportFilter === 'all' ? 'Split by Support' : 'Show All Together'}
+              </Button>
+            )}
             
             <Button variant="outline" size="sm">
               <Download className="h-4 w-4 mr-1" />
@@ -382,9 +426,160 @@ export default function GoalChart({ goalId }: GoalChartProps) {
           </div>
         ) : (
           <>
-            {/* Chart Container */}
-            <div className="h-80 mb-6">
-              {selectedChartType === 'line' && (
+            {/* Chart Container - Single or Dual based on support filter */}
+            {supportFilter === 'split' && goal.dataCollectionType === 'percentage' ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Independent Support Chart */}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-3 text-center">Independent Support Data</h4>
+                  <div className="h-80">
+                    {displayData.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                        No independent support data points
+                      </div>
+                    ) : (
+                      <div className="h-full">
+                        {/* Render chart based on selected type for independent data */}
+                        {selectedChartType === 'line' && (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={displayData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                              <YAxis 
+                                domain={yAxisConfig.domain}
+                                ticks={yAxisConfig.ticks}
+                                stroke="#666"
+                                fontSize={11}
+                                tickFormatter={yAxisConfig.tickFormatter}
+                              />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Line
+                                type="monotone"
+                                dataKey="progress"
+                                stroke="#2563EB"
+                                strokeWidth={2}
+                                dot={{ fill: "#2563EB", r: 4 }}
+                                name="Independent Progress"
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        )}
+                        {selectedChartType === 'bar' && (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={displayData}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                              <YAxis 
+                                domain={yAxisConfig.domain}
+                                ticks={yAxisConfig.ticks}
+                                stroke="#666"
+                                fontSize={11}
+                                tickFormatter={yAxisConfig.tickFormatter}
+                              />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Bar dataKey="progress" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        )}
+                        {selectedChartType === 'pie' && (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={displayData.map((item: any, index: number) => ({
+                                  ...item,
+                                  name: item.date,
+                                  value: item.progress,
+                                  fill: `hsl(${200 + (index * 30)}, 70%, 50%)`
+                                }))}
+                                cx="50%" cy="50%" outerRadius={80} fill="#2563EB" dataKey="value"
+                                label={({ name, value }) => `${name}: ${yAxisConfig.tickFormatter(value)}`}
+                              />
+                              <Tooltip formatter={(value: any) => [yAxisConfig.tickFormatter(value), 'Independent Progress']} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Other Support Chart */}
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-orange-800 mb-3 text-center">Any Other Support Data</h4>
+                  <div className="h-80">
+                    {displayDataOtherSupport.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                        No other support data points
+                      </div>
+                    ) : (
+                      <div className="h-full">
+                        {/* Render chart based on selected type for other support data */}
+                        {selectedChartType === 'line' && (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={displayDataOtherSupport}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                              <YAxis 
+                                domain={yAxisConfig.domain}
+                                ticks={yAxisConfig.ticks}
+                                stroke="#666"
+                                fontSize={11}
+                                tickFormatter={yAxisConfig.tickFormatter}
+                              />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Line
+                                type="monotone"
+                                dataKey="progress"
+                                stroke="#F97316"
+                                strokeWidth={2}
+                                dot={{ fill: "#F97316", r: 4 }}
+                                name="Supported Progress"
+                              />
+                            </LineChart>
+                          </ResponsiveContainer>
+                        )}
+                        {selectedChartType === 'bar' && (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={displayDataOtherSupport}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                              <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                              <YAxis 
+                                domain={yAxisConfig.domain}
+                                ticks={yAxisConfig.ticks}
+                                stroke="#666"
+                                fontSize={11}
+                                tickFormatter={yAxisConfig.tickFormatter}
+                              />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Bar dataKey="progress" fill="#F97316" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        )}
+                        {selectedChartType === 'pie' && (
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={displayDataOtherSupport.map((item: any, index: number) => ({
+                                  ...item,
+                                  name: item.date,
+                                  value: item.progress,
+                                  fill: `hsl(${30 + (index * 30)}, 70%, 50%)`
+                                }))}
+                                cx="50%" cy="50%" outerRadius={80} fill="#F97316" dataKey="value"
+                                label={({ name, value }) => `${name}: ${yAxisConfig.tickFormatter(value)}`}
+                              />
+                              <Tooltip formatter={(value: any) => [yAxisConfig.tickFormatter(value), 'Supported Progress']} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="h-80 mb-6">
+                {selectedChartType === 'line' && (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={displayData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -510,7 +705,8 @@ export default function GoalChart({ goalId }: GoalChartProps) {
                   </PieChart>
                 </ResponsiveContainer>
               )}
-            </div>
+              </div>
+            )}
 
             {/* Data Type Legend */}
             <div className="flex justify-center gap-6 mb-4 p-3 bg-gray-50 rounded-lg">
