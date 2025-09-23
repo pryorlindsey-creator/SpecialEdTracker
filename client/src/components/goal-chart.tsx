@@ -331,7 +331,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
               Progress Chart: {goal.title}
             </h3>
             {selectedPeriod && (
-              <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+              <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
                 <Filter className="h-3 w-3" />
                 Period {selectedPeriod.periodNumber}
               </div>
