@@ -4,16 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, ComposedChart } from "recharts";
-import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3, TrendingUp } from "lucide-react";
+import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3, TrendingUp, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { filterDataPointsByCurrentPeriod, ReportingData } from "@/lib/utils";
 
 interface GoalChartProps {
   goalId: number;
+  forReports?: boolean; // Optional: if true, filter data by current reporting period
 }
 
 type ChartType = 'line' | 'pie' | 'bar';
 
-export default function GoalChart({ goalId }: GoalChartProps) {
+export default function GoalChart({ goalId, forReports = false }: GoalChartProps) {
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     // Get chart type preference from sessionStorage
     const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
@@ -61,6 +63,12 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     gcTime: 0,
   });
 
+  // Fetch reporting periods data if this is for reports
+  const { data: reportingData } = useQuery<ReportingData>({
+    queryKey: ['/api/reporting-periods'],
+    enabled: forReports,
+  });
+
 
 
   if (isLoading) {
@@ -102,6 +110,11 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     filteredDataPoints = filteredDataPoints.filter((point: any) => point.isObjectiveSpecific === true);
     console.log('🎯 Filtered data points count:', filteredDataPoints.length);
     console.log('📋 Filtered data sample:', filteredDataPoints.slice(0, 2));
+  }
+
+  // Apply reporting period filtering if this is for reports
+  if (forReports && reportingData) {
+    filteredDataPoints = filterDataPointsByCurrentPeriod(filteredDataPoints, reportingData);
   }
   
   const chartData = filteredDataPoints
@@ -318,9 +331,17 @@ export default function GoalChart({ goalId }: GoalChartProps) {
     <Card data-goal-id={goalId}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Progress Chart: {goal.title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Progress Chart: {goal.title}
+            </h3>
+            {forReports && reportingData && (
+              <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
+                <Filter className="h-3 w-3" />
+                Current Period Only
+              </div>
+            )}
+          </div>
           <div className="flex items-center space-x-2">
             <Select
               value={selectedChartType}
