@@ -467,8 +467,8 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
           /* Dual Chart Layout */
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Other Support Chart */}
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <h4 className="text-sm font-semibold text-orange-800 mb-3 text-center">
+            <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+              <h4 className="text-sm font-semibold text-purple-800 mb-3 text-center">
                 With Support-Data
               </h4>
               <div className="h-80">
@@ -496,9 +496,9 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                       <Line 
                         type="monotone" 
                         dataKey="progress" 
-                        stroke="#F97316" 
+                        stroke="#A855F7" 
                         strokeWidth={2}
-                        dot={{ fill: '#F97316', strokeWidth: 2, r: 4 }}
+                        dot={{ fill: '#A855F7', strokeWidth: 2, r: 4 }}
                         activeDot={{ r: 6 }}
                         name="Other Support"
                       />
@@ -527,7 +527,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                       <Legend />
                       <Bar 
                         dataKey="progress" 
-                        fill="#F97316" 
+                        fill="#A855F7" 
                         name="Other Support"
                       />
                     </BarChart>
@@ -542,11 +542,11 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         labelLine={false}
                         label={({ date, progress }: any) => `${date}: ${progress}${isPercentageFormat ? '%' : ''}`}
                         outerRadius={80}
-                        fill="#F97316"
+                        fill="#A855F7"
                         dataKey="progress"
                       >
                         {otherSupportLineBarData.map((entry: any, index: number) => (
-                          <Cell key={`cell-${index}`} fill="#F97316" />
+                          <Cell key={`cell-${index}`} fill="#A855F7" />
                         ))}
                       </Pie>
                       <Tooltip formatter={(value: any) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']} />
