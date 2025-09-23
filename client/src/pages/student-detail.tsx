@@ -12,6 +12,7 @@ import { ArrowLeft, Plus, Printer, ChartLine, Target, Edit, Table, BarChart3, Re
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,7 @@ import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { ReportingPeriod, ReportingData, getCurrentReportingPeriod } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -59,6 +61,7 @@ export default function StudentDetail() {
   const [selectedObjectiveId, setSelectedObjectiveId] = useState<number | null>(null);
   const [editingGoal, setEditingGoal] = useState<any>(null);
   const [deletingGoalId, setDeletingGoalId] = useState<number | null>(null);
+  const [selectedReportingPeriod, setSelectedReportingPeriod] = useState<ReportingPeriod | null>(null);
 
   const studentId = params.id ? parseInt(params.id) : null;
   
@@ -98,6 +101,19 @@ export default function StudentDetail() {
     staleTime: 0,
     refetchOnMount: 'always',
   });
+
+  // Query for reporting periods data
+  const { data: reportingData } = useQuery<ReportingData>({
+    queryKey: ['/api/reporting-periods'],
+  });
+
+  // Set default selected reporting period to current period when reporting data loads
+  useEffect(() => {
+    if (reportingData && !selectedReportingPeriod) {
+      const currentPeriod = getCurrentReportingPeriod(reportingData);
+      setSelectedReportingPeriod(currentPeriod);
+    }
+  }, [reportingData, selectedReportingPeriod]);
   
 
 
@@ -794,12 +810,40 @@ export default function StudentDetail() {
                   </Button>
                 </div>
                 {/* Individual Goal Chart with Type Selection */}
-                <GoalChart goalId={selectedGoalId} forReports={true} />
+                <GoalChart goalId={selectedGoalId} selectedPeriod={selectedReportingPeriod} />
               </>
             ) : (
               <div className="space-y-8">
-                {/* View Session Notes Button */}
-                <div className="flex justify-end mb-6">
+                {/* Reporting Period Selector and Session Notes Button */}
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm font-medium text-gray-700">
+                      Reporting Period:
+                    </label>
+                    <Select
+                      value={selectedReportingPeriod?.periodNumber?.toString() || ""}
+                      onValueChange={(value) => {
+                        if (value === "all") {
+                          setSelectedReportingPeriod(null);
+                        } else {
+                          const period = reportingData?.periods.find(p => p.periodNumber.toString() === value);
+                          setSelectedReportingPeriod(period || null);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-60">
+                        <SelectValue placeholder="Select reporting period" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Periods</SelectItem>
+                        {reportingData?.periods.map((period) => (
+                          <SelectItem key={period.periodNumber} value={period.periodNumber.toString()}>
+                            Period {period.periodNumber} ({format(new Date(period.startDate), 'MMM d')} - {format(new Date(period.endDate), 'MMM d, yyyy')})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <Button 
                     variant="outline" 
                     onClick={() => setActiveTab("raw-data")}
@@ -816,7 +860,7 @@ export default function StudentDetail() {
                     <StudentScatterplot 
                       studentId={studentId || 0} 
                       goalId={goal.id}
-                      forReports={true}
+                      selectedPeriod={selectedReportingPeriod}
                     />
                     
                     {/* Objectives Charts for this Goal */}
