@@ -609,7 +609,6 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                         }
                       }}
                       className="h-5 w-5"
-                      disabled={dataType === 'frequency' && !isCollecting}
                     />
                     <label 
                       htmlFor={option.id} 
@@ -631,7 +630,6 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                       onChange={(e) => setCustomSupport(e.target.value)}
                       placeholder="Enter custom level of support..."
                       className="w-full mt-1"
-                      disabled={dataType === 'frequency' && !isCollecting}
                     />
                   </div>
                 )}
@@ -677,7 +675,6 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                         }
                       }}
                       className="h-5 w-5"
-                      disabled={dataType === 'frequency' && !isCollecting}
                     />
                     <label 
                       htmlFor={option.id} 
@@ -699,7 +696,6 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                       onChange={(e) => setCustomSetting(e.target.value)}
                       placeholder="Enter custom setting..."
                       className="w-full mt-1"
-                      disabled={dataType === 'frequency' && !isCollecting}
                     />
                   </div>
                 )}
@@ -714,7 +710,6 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add notes about this observation session..."
               className="mt-1"
-              disabled={dataType === 'frequency' && !isCollecting}
             />
           </div>
         </CardContent>
