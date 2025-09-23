@@ -492,7 +492,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
-                      <Legend />
+
                       <Line 
                         type="monotone" 
                         dataKey="progress" 
@@ -524,7 +524,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
-                      <Legend />
+
                       <Bar 
                         dataKey="progress" 
                         fill="#A855F7" 
@@ -582,7 +582,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
-                      <Legend />
+
                       <Line 
                         type="monotone" 
                         dataKey="progress" 
@@ -614,7 +614,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
-                      <Legend />
+
                       <Bar 
                         dataKey="progress" 
                         fill="#2563EB" 
@@ -669,7 +669,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                     formatter={(value: any, name: string) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
-                  <Legend />
+
                   <Line 
                     type="monotone" 
                     dataKey="progress" 
@@ -701,7 +701,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                     formatter={(value: any, name: string) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
-                  <Legend />
+
                   <Bar 
                     dataKey="progress" 
                     fill="#3b82f6" 
