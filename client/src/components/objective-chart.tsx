@@ -42,10 +42,31 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
     return savedChartType || 'line';
   });
 
+  const [supportFilter, setSupportFilter] = useState<'all' | 'split'>(() => {
+    const savedSupportFilter = sessionStorage.getItem(`objectiveSupportFilter_${objectiveId}`) as 'all' | 'split';
+    return savedSupportFilter || 'all';
+  });
+
   // Save chart type preference when it changes
   useEffect(() => {
     sessionStorage.setItem(`objectiveChartType_${objectiveId}`, selectedChartType);
   }, [selectedChartType, objectiveId]);
+
+  // Helper function to check if support levels include "independent"
+  const hasIndependentSupport = (supportData: string) => {
+    if (!supportData || supportData === 'Not specified') return true; // Treat no support as independent
+    try {
+      const supportLevels = JSON.parse(supportData);
+      return Array.isArray(supportLevels) && supportLevels.includes('independent');
+    } catch {
+      return supportData === 'independent';
+    }
+  };
+  // Get goal data to access dataCollectionType
+  const { data: goal, isLoading: goalLoading } = useQuery({
+    queryKey: [`/api/goals/${goalId}`],
+  });
+
   // Get objective data
   const { data: objective, isLoading: objectiveLoading } = useQuery({
     queryKey: [`/api/objectives/${objectiveId}/progress`],
@@ -56,7 +77,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
     queryKey: [`/api/goals/${goalId}/data-points`],
   });
 
-  if (objectiveLoading || dataLoading) {
+  if (objectiveLoading || dataLoading || goalLoading) {
     return (
       <Card>
         <CardHeader>
@@ -111,6 +132,15 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
     }))
     .sort((a: any, b: any) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     .slice(-10);
+
+  // Split data by support level for percentage goals when support filter is 'split'
+  const independentData = supportFilter === 'split' && goal?.dataCollectionType === 'percentage'
+    ? chartData.filter(item => hasIndependentSupport(item.support))
+    : chartData;
+
+  const otherSupportData = supportFilter === 'split' && goal?.dataCollectionType === 'percentage'
+    ? chartData.filter(item => !hasIndependentSupport(item.support))
+    : [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -211,6 +241,21 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            {/* Support Level Filter Toggle - Only for percentage goals */}
+            {goal?.dataCollectionType === 'percentage' && (
+              <Button
+                variant={supportFilter === 'split' ? "default" : "outline"}
+                size="sm"
+                onClick={() => {
+                  const newFilter = supportFilter === 'all' ? 'split' : 'all';
+                  setSupportFilter(newFilter);
+                  sessionStorage.setItem(`objectiveSupportFilter_${objectiveId}`, newFilter);
+                }}
+              >
+                {supportFilter === 'all' ? 'Split by Support' : 'Show All Together'}
+              </Button>
+            )}
           </div>
 
         </div>
@@ -223,93 +268,235 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
             <p className="text-sm text-gray-500 mt-1">Add some objective-specific data points to see the progress chart</p>
           </div>
         ) : (
-          <div className="h-80 mb-4">
-            {selectedChartType === 'line' && (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#666"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="#666"
-                    fontSize={12}
-                    domain={[0, 100]}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    formatter={(value: any, name: string) => [`${value}%`, 'Progress']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                  />
+          <>
+            {/* Chart Container - Single or Dual based on support filter */}
+            {supportFilter === 'split' && goal?.dataCollectionType === 'percentage' ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* With Support Chart */}
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h4 className="text-sm font-semibold text-purple-800 mb-3 text-center">
+                    With Support-Data
+                  </h4>
+                  <div className="h-80">
+                    {otherSupportData.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                        No with support data points
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        {selectedChartType === 'line' && (
+                          <LineChart data={otherSupportData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                            <YAxis 
+                              domain={[0, 100]}
+                              stroke="#666"
+                              fontSize={11}
+                              tickFormatter={(value) => `${value}%`}
+                            />
+                            <Tooltip
+                              formatter={(value: any) => [`${value}%`, 'Progress']}
+                              labelFormatter={(label) => `Date: ${label}`}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="progress"
+                              stroke="#A855F7"
+                              strokeWidth={2}
+                              dot={{ fill: "#A855F7", r: 4 }}
+                              name="With Support"
+                            />
+                          </LineChart>
+                        )}
+                        {selectedChartType === 'bar' && (
+                          <BarChart data={otherSupportData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                            <YAxis 
+                              domain={[0, 100]}
+                              stroke="#666"
+                              fontSize={11}
+                              tickFormatter={(value) => `${value}%`}
+                            />
+                            <Tooltip
+                              formatter={(value: any) => [`${value}%`, 'Progress']}
+                              labelFormatter={(label) => `Date: ${label}`}
+                            />
+                            <Bar dataKey="progress" fill="#A855F7" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        )}
+                        {selectedChartType === 'pie' && (
+                          <RechartsPieChart>
+                            <Pie
+                              data={otherSupportData}
+                              cx="50%" cy="50%" outerRadius={80} fill="#A855F7" dataKey="progress"
+                              label={({ date, progress }: any) => `${date}: ${progress}%`}
+                            />
+                            <Tooltip formatter={(value: any) => [`${value}%`, 'With Support']} />
+                          </RechartsPieChart>
+                        )}
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Independent Support Chart */}
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-semibold text-blue-800 mb-3 text-center">
+                    Independent-Data
+                  </h4>
+                  <div className="h-80">
+                    {independentData.length === 0 ? (
+                      <div className="flex items-center justify-center h-full text-gray-500 text-sm">
+                        No independent data points
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        {selectedChartType === 'line' && (
+                          <LineChart data={independentData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                            <YAxis 
+                              domain={[0, 100]}
+                              stroke="#666"
+                              fontSize={11}
+                              tickFormatter={(value) => `${value}%`}
+                            />
+                            <Tooltip
+                              formatter={(value: any) => [`${value}%`, 'Progress']}
+                              labelFormatter={(label) => `Date: ${label}`}
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="progress"
+                              stroke="#2563EB"
+                              strokeWidth={2}
+                              dot={{ fill: "#2563EB", r: 4 }}
+                              name="Independent"
+                            />
+                          </LineChart>
+                        )}
+                        {selectedChartType === 'bar' && (
+                          <BarChart data={independentData}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+                            <YAxis 
+                              domain={[0, 100]}
+                              stroke="#666"
+                              fontSize={11}
+                              tickFormatter={(value) => `${value}%`}
+                            />
+                            <Tooltip
+                              formatter={(value: any) => [`${value}%`, 'Progress']}
+                              labelFormatter={(label) => `Date: ${label}`}
+                            />
+                            <Bar dataKey="progress" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                          </BarChart>
+                        )}
+                        {selectedChartType === 'pie' && (
+                          <RechartsPieChart>
+                            <Pie
+                              data={independentData}
+                              cx="50%" cy="50%" outerRadius={80} fill="#2563EB" dataKey="progress"
+                              label={({ date, progress }: any) => `${date}: ${progress}%`}
+                            />
+                            <Tooltip formatter={(value: any) => [`${value}%`, 'Independent']} />
+                          </RechartsPieChart>
+                        )}
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Single Chart Layout */
+              <div className="h-80 mb-4">
+                {selectedChartType === 'line' && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="#666"
+                        fontSize={12}
+                      />
+                      <YAxis 
+                        stroke="#666"
+                        fontSize={12}
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <Tooltip
+                        formatter={(value: any, name: string) => [`${value}%`, 'Progress']}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="progress" 
+                        stroke="#3b82f6" 
+                        strokeWidth={2}
+                        dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Progress"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
 
-                  <Line 
-                    type="monotone" 
-                    dataKey="progress" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6 }}
-                    name="Progress"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+                {selectedChartType === 'bar' && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke="#666"
+                        fontSize={12}
+                      />
+                      <YAxis 
+                        stroke="#666"
+                        fontSize={12}
+                        domain={[0, 100]}
+                        tickFormatter={(value) => `${value}%`}
+                      />
+                      <Tooltip
+                        formatter={(value: any) => [`${value}%`, 'Progress']}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Bar 
+                        dataKey="progress" 
+                        fill="#3b82f6" 
+                        name="Progress"
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+
+                {selectedChartType === 'pie' && chartData.length > 0 && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ date, progress }: any) => `${date}: ${progress}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="progress"
+                      >
+                        {chartData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any) => [`${value}%`, 'Progress']} />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
             )}
-
-            {selectedChartType === 'bar' && (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="#666"
-                    fontSize={12}
-                  />
-                  <YAxis 
-                    stroke="#666"
-                    fontSize={12}
-                    domain={[0, 100]}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <Tooltip
-                    formatter={(value: any) => [`${value}%`, 'Progress']}
-                    labelFormatter={(label) => `Date: ${label}`}
-                  />
-
-                  <Bar 
-                    dataKey="progress" 
-                    fill="#3b82f6" 
-                    name="Progress"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-
-            {selectedChartType === 'pie' && chartData.length > 0 && (
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ date, progress }: any) => `${date}: ${progress}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="progress"
-                  >
-                    {chartData.map((entry: any, index: number) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: any) => [`${value}%`, 'Progress']} />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+          </>
         )}
-
+        
         {/* Objective Statistics */}
         {objective?.currentProgress !== undefined && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
