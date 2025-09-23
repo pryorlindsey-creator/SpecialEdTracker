@@ -11,12 +11,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TrendingUp, Calendar, ChevronDown, LineChart as LineChartIcon, BarChart3, PieChart, Filter } from "lucide-react";
 import { format } from "date-fns";
-import { filterDataPointsByCurrentPeriod, ReportingData } from "@/lib/utils";
+import { filterDataPointsByPeriod, ReportingPeriod } from "@/lib/utils";
 
 interface StudentScatterplotProps {
   studentId: number;
   goalId?: number; // Optional: if provided, show only this goal's data
-  forReports?: boolean; // Optional: if true, filter data by current reporting period
+  selectedPeriod?: ReportingPeriod | null; // Optional: if provided, filter data by specific reporting period
 }
 
 interface DataPoint {
@@ -50,7 +50,7 @@ const GOAL_COLORS = [
 
 type ChartType = 'line' | 'bar' | 'pie';
 
-export default function StudentScatterplot({ studentId, goalId, forReports = false }: StudentScatterplotProps) {
+export default function StudentScatterplot({ studentId, goalId, selectedPeriod }: StudentScatterplotProps) {
   const [showTrendLine, setShowTrendLine] = useState(() => {
     // Get trend line preference from sessionStorage
     const savedTrendPref = sessionStorage.getItem(`scatterTrend_${studentId}_${goalId || 'all'}`);
@@ -110,11 +110,6 @@ export default function StudentScatterplot({ studentId, goalId, forReports = fal
     enabled: !!studentId,
   });
 
-  // Fetch reporting periods data if this is for reports
-  const { data: reportingData } = useQuery<ReportingData>({
-    queryKey: ['/api/reporting-periods'],
-    enabled: forReports,
-  });
 
   // Debug logging for data persistence issues
   console.log(`[SCATTERPLOT DEBUG] Student ${studentId}, Goals: ${goals?.length || 0}, DataPoints: ${allDataPoints?.length || 0}`);
@@ -154,9 +149,9 @@ export default function StudentScatterplot({ studentId, goalId, forReports = fal
     ? allDataPoints?.filter((dp: DataPoint) => dp.goalId === goalId) || []
     : allDataPoints || [];
 
-  // Apply reporting period filtering if this is for reports
-  if (forReports && reportingData) {
-    filteredDataPoints = filterDataPointsByCurrentPeriod(filteredDataPoints, reportingData);
+  // Apply reporting period filtering if a specific period is selected
+  if (selectedPeriod) {
+    filteredDataPoints = filterDataPointsByPeriod(filteredDataPoints, selectedPeriod);
   }
 
   // Process data points for scatterplot
@@ -392,10 +387,10 @@ export default function StudentScatterplot({ studentId, goalId, forReports = fal
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5" />
               <CardTitle>{chartTitle}</CardTitle>
-              {forReports && reportingData && (
+              {selectedPeriod && (
                 <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
                   <Filter className="h-3 w-3" />
-                  Current Period Only
+                  Period {selectedPeriod.periodNumber}
                 </div>
               )}
             </div>

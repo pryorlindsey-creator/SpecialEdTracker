@@ -6,16 +6,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, ComposedChart } from "recharts";
 import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3, TrendingUp, Filter } from "lucide-react";
 import { format } from "date-fns";
-import { filterDataPointsByCurrentPeriod, ReportingData } from "@/lib/utils";
+import { filterDataPointsByPeriod, ReportingPeriod } from "@/lib/utils";
 
 interface GoalChartProps {
   goalId: number;
-  forReports?: boolean; // Optional: if true, filter data by current reporting period
+  selectedPeriod?: ReportingPeriod | null; // Optional: if provided, filter data by specific reporting period
 }
 
 type ChartType = 'line' | 'pie' | 'bar';
 
-export default function GoalChart({ goalId, forReports = false }: GoalChartProps) {
+export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     // Get chart type preference from sessionStorage
     const savedChartType = sessionStorage.getItem(`chartType_${goalId}`) as ChartType;
@@ -63,11 +63,6 @@ export default function GoalChart({ goalId, forReports = false }: GoalChartProps
     gcTime: 0,
   });
 
-  // Fetch reporting periods data if this is for reports
-  const { data: reportingData } = useQuery<ReportingData>({
-    queryKey: ['/api/reporting-periods'],
-    enabled: forReports,
-  });
 
 
 
@@ -112,9 +107,9 @@ export default function GoalChart({ goalId, forReports = false }: GoalChartProps
     console.log('📋 Filtered data sample:', filteredDataPoints.slice(0, 2));
   }
 
-  // Apply reporting period filtering if this is for reports
-  if (forReports && reportingData) {
-    filteredDataPoints = filterDataPointsByCurrentPeriod(filteredDataPoints, reportingData);
+  // Apply reporting period filtering if a specific period is selected
+  if (selectedPeriod) {
+    filteredDataPoints = filterDataPointsByPeriod(filteredDataPoints, selectedPeriod);
   }
   
   const chartData = filteredDataPoints
@@ -335,10 +330,10 @@ export default function GoalChart({ goalId, forReports = false }: GoalChartProps
             <h3 className="text-lg font-semibold text-gray-900">
               Progress Chart: {goal.title}
             </h3>
-            {forReports && reportingData && (
+            {selectedPeriod && (
               <div className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">
                 <Filter className="h-3 w-3" />
-                Current Period Only
+                Period {selectedPeriod.periodNumber}
               </div>
             )}
           </div>
