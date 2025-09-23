@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Line, ComposedChart, LineChart, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,6 +60,12 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
     // If saved type is scatter, default to line instead since scatter is removed
     return (savedChartType && savedChartType !== 'scatter') ? savedChartType : 'line';
   });
+
+  const [supportFilter, setSupportFilter] = useState<'all' | 'split'>(() => {
+    const savedSupportFilter = sessionStorage.getItem(`supportFilter_${goalId || 'all'}_${studentId}`) as 'all' | 'split';
+    return savedSupportFilter || 'all';
+  });
+
 
   // Save chart type preference when it changes
   const handleChartTypeChange = (chartType: ChartType) => {
@@ -185,6 +191,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
         yAxisLabel: yAxisLabel,
         durationUnit: fullDataPoint?.durationUnit || dp.durationUnit,
         goal: goal, // Include goal info for frequency direction
+        levelOfSupport: fullDataPoint?.levelOfSupport || dp.levelOfSupport || '[]',
       };
     })
     .sort((a, b) => a.x - b.x);
@@ -194,6 +201,14 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
   const chartTitle = goalId && currentGoal 
     ? `${currentGoal.title} Progress Chart`
     : "Progress Scatterplot";
+  
+  // Reset support filter when switching to non-percentage goals
+  useEffect(() => {
+    if (goalId && currentGoal && currentGoal.dataCollectionType !== 'percentage' && supportFilter === 'split') {
+      setSupportFilter('all');
+      sessionStorage.setItem(`supportFilter_${goalId}_${studentId}`, 'all');
+    }
+  }, [goalId, currentGoal, supportFilter, studentId]);
   
   const yAxisLabel = scatterData.length > 0 ? scatterData[0].yAxisLabel : "Progress";
 
@@ -281,16 +296,47 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
     }
   }
 
+  // Helper function to check if support level includes 'independent'
+  const isIndependentSupport = (levelOfSupport: string): boolean => {
+    try {
+      const supportArray = JSON.parse(levelOfSupport || '[]');
+      if (Array.isArray(supportArray)) {
+        return supportArray.length === 0 || supportArray.some(level => 
+          level.toLowerCase().includes('independent')
+        );
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  };
+
+  // Filter data based on support level for split mode
+  const independentData = supportFilter === 'split' 
+    ? scatterData.filter(point => isIndependentSupport(point.levelOfSupport))
+    : scatterData;
+    
+  const otherSupportData = supportFilter === 'split'
+    ? scatterData.filter(point => !isIndependentSupport(point.levelOfSupport))
+    : [];
+
   const hasData = scatterData.length > 0;
+  
+  // Determine if we should show percentage units
+  const isPercentageFormat = scatterData.length > 0 && scatterData[0].format === 'percentage';
 
   // Prepare data for different chart types
-  const lineBarData = scatterData.map((point: any) => ({
+  const prepareChartData = (data: any[]) => data.map((point: any) => ({
     date: new Date(point.x).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     progress: point.y,
     originalValue: point.originalValue,
     goalTitle: point.goalTitle,
     color: point.color,
   }));
+
+  const lineBarData = prepareChartData(scatterData);
+  const independentLineBarData = prepareChartData(independentData);
+  const otherSupportLineBarData = prepareChartData(otherSupportData);
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -373,6 +419,23 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              
+              {/* Support Level Filter for Percentage Goals Only */}
+              {goalId && currentGoal && currentGoal.dataCollectionType === 'percentage' && (
+                <Button
+                  variant={supportFilter === 'split' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => {
+                    const newFilter = supportFilter === 'split' ? 'all' : 'split';
+                    setSupportFilter(newFilter);
+                    sessionStorage.setItem(`supportFilter_${goalId || 'all'}_${studentId}`, newFilter);
+                  }}
+                  className="flex items-center gap-2"
+                  data-testid="split-by-support-btn"
+                >
+                  {supportFilter === 'split' ? 'Show All Together' : 'Split by Support'}
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -386,7 +449,191 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
               Start collecting data on student goals to see progress trends in this scatterplot.
             </p>
           </div>
+        ) : supportFilter === 'split' && goalId && currentGoal && currentGoal.dataCollectionType === 'percentage' ? (
+          /* Dual Chart Layout */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Independent Support Chart */}
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <h4 className="text-sm font-semibold text-blue-800 mb-3 text-center">
+                Independent Support Data
+              </h4>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  {selectedChartType === 'line' && (
+                    <LineChart data={independentLineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis 
+                        domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                        ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                        tickFormatter={yAxisConfig.tickFormatter}
+                        allowDecimals={yAxisConfig.allowDecimals}
+                      />
+                      <Tooltip 
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="progress" 
+                        stroke="#2563EB" 
+                        strokeWidth={2}
+                        dot={{ fill: '#2563EB', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Independent"
+                      />
+                    </LineChart>
+                  )}
+
+                  {selectedChartType === 'bar' && (
+                    <BarChart data={independentLineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis 
+                        domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                        ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                        tickFormatter={yAxisConfig.tickFormatter}
+                        allowDecimals={yAxisConfig.allowDecimals}
+                      />
+                      <Tooltip 
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Legend />
+                      <Bar 
+                        dataKey="progress" 
+                        fill="#2563EB" 
+                        name="Independent"
+                      />
+                    </BarChart>
+                  )}
+
+                  {selectedChartType === 'pie' && independentLineBarData.length > 0 && (
+                    <RechartsPieChart>
+                      <Pie
+                        data={independentLineBarData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ date, progress }: any) => `${date}: ${progress}${isPercentageFormat ? '%' : ''}`}
+                        outerRadius={80}
+                        fill="#2563EB"
+                        dataKey="progress"
+                      >
+                        {independentLineBarData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill="#2563EB" />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']} />
+                    </RechartsPieChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Other Support Chart */}
+            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+              <h4 className="text-sm font-semibold text-orange-800 mb-3 text-center">
+                Any Other Support Data
+              </h4>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  {selectedChartType === 'line' && (
+                    <LineChart data={otherSupportLineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis 
+                        domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                        ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                        tickFormatter={yAxisConfig.tickFormatter}
+                        allowDecimals={yAxisConfig.allowDecimals}
+                      />
+                      <Tooltip 
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Legend />
+                      <Line 
+                        type="monotone" 
+                        dataKey="progress" 
+                        stroke="#F97316" 
+                        strokeWidth={2}
+                        dot={{ fill: '#F97316', strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Other Support"
+                      />
+                    </LineChart>
+                  )}
+
+                  {selectedChartType === 'bar' && (
+                    <BarChart data={otherSupportLineBarData} margin={{ top: 20, right: 20, bottom: 60, left: 60 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="date" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                      />
+                      <YAxis 
+                        domain={yAxisConfig.reversed ? [yAxisConfig.domain[1], yAxisConfig.domain[0]] : yAxisConfig.domain}
+                        ticks={yAxisConfig.reversed ? [...yAxisConfig.ticks].reverse() : yAxisConfig.ticks}
+                        tickFormatter={yAxisConfig.tickFormatter}
+                        allowDecimals={yAxisConfig.allowDecimals}
+                      />
+                      <Tooltip 
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        labelFormatter={(label) => `Date: ${label}`}
+                      />
+                      <Legend />
+                      <Bar 
+                        dataKey="progress" 
+                        fill="#F97316" 
+                        name="Other Support"
+                      />
+                    </BarChart>
+                  )}
+
+                  {selectedChartType === 'pie' && otherSupportLineBarData.length > 0 && (
+                    <RechartsPieChart>
+                      <Pie
+                        data={otherSupportLineBarData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ date, progress }: any) => `${date}: ${progress}${isPercentageFormat ? '%' : ''}`}
+                        outerRadius={80}
+                        fill="#F97316"
+                        dataKey="progress"
+                      >
+                        {otherSupportLineBarData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill="#F97316" />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: any) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']} />
+                    </RechartsPieChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
         ) : (
+          /* Single Chart Layout */
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               {selectedChartType === 'line' && (
@@ -405,7 +652,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                     allowDecimals={yAxisConfig.allowDecimals}
                   />
                   <Tooltip 
-                    formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                    formatter={(value: any, name: string) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
                   <Legend />
@@ -437,7 +684,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                     allowDecimals={yAxisConfig.allowDecimals}
                   />
                   <Tooltip 
-                    formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                    formatter={(value: any, name: string) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
                   <Legend />
@@ -456,7 +703,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ date, progress }: any) => `${date}: ${progress}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`}
+                    label={({ date, progress }: any) => `${date}: ${progress}${isPercentageFormat ? '%' : ''}`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="progress"
@@ -465,7 +712,7 @@ export default function StudentScatterplot({ studentId, goalId }: StudentScatter
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: any) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']} />
+                  <Tooltip formatter={(value: any) => [`${value}${isPercentageFormat ? '%' : ''}`, 'Progress']} />
                 </RechartsPieChart>
               )}
             </ResponsiveContainer>
