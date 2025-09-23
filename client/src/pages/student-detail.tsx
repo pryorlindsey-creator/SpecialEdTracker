@@ -794,7 +794,7 @@ export default function StudentDetail() {
                   </Button>
                 </div>
                 {/* Individual Goal Chart with Type Selection */}
-                <GoalChart goalId={selectedGoalId} />
+                <GoalChart goalId={selectedGoalId} forReports={true} />
               </>
             ) : (
               <div className="space-y-8">
@@ -816,6 +816,7 @@ export default function StudentDetail() {
                     <StudentScatterplot 
                       studentId={studentId || 0} 
                       goalId={goal.id}
+                      forReports={true}
                     />
                     
                     {/* Objectives Charts for this Goal */}
