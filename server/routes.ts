@@ -465,6 +465,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const goals = await storage.getGoalsByStudentId(studentId);
       
+      // Debug: Log goal data to understand levelOfSupport format
+      console.log("=== GOAL FETCH DEBUG ===");
+      goals.forEach(goal => {
+        console.log(`Goal ID ${goal.id} - Title: "${goal.title}"`);
+        console.log(`  levelOfSupport: ${goal.levelOfSupport} (type: ${typeof goal.levelOfSupport})`);
+      });
+      console.log("=== END GOAL DEBUG ===");
+      
       // Get progress data for each goal
       const goalsWithProgress = await Promise.all(
         goals.map(async (goal) => {
@@ -515,6 +523,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { objectives: objectivesData, ...goalRequestData } = req.body;
+      
+      // Convert levelOfSupport array to JSON string for storage (same as data points)
+      if (goalRequestData.levelOfSupport && Array.isArray(goalRequestData.levelOfSupport)) {
+        goalRequestData.levelOfSupport = goalRequestData.levelOfSupport.length > 0 
+          ? JSON.stringify(goalRequestData.levelOfSupport) 
+          : null;
+      }
       
       const goalData = insertGoalSchema.parse({
         ...goalRequestData,

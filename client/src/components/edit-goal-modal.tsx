@@ -76,8 +76,16 @@ export default function EditGoalModal({ goal, isOpen, onClose, onSuccess }: Edit
   const queryClient = useQueryClient();
   const [selectedSupport, setSelectedSupport] = useState<string[]>(() => {
     if (!goal.levelOfSupport) return [];
+    
     try {
-      return JSON.parse(goal.levelOfSupport);
+      const parsed = JSON.parse(goal.levelOfSupport);
+      // Normalize case: convert stored lowercase values to match UI capitalized values
+      return parsed.map((level: string) => {
+        const lowerLevel = level.toLowerCase();
+        // Find matching support level with proper capitalization
+        const matchedLevel = supportLevels.find(sl => sl.toLowerCase() === lowerLevel);
+        return matchedLevel || level; // fallback to original if no match
+      });
     } catch {
       return [];
     }
