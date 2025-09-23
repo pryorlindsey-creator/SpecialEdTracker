@@ -472,9 +472,9 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                               <Line
                                 type="monotone"
                                 dataKey="progress"
-                                stroke="#2563EB"
+                                stroke="#3b82f6"
                                 strokeWidth={2}
-                                dot={{ fill: "#2563EB", r: 4 }}
+                                dot={{ fill: "#3b82f6", r: 4 }}
                                 name="Independent Progress"
                               />
                             </LineChart>
@@ -493,7 +493,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                                 tickFormatter={yAxisConfig.tickFormatter}
                               />
                               <Tooltip content={<CustomTooltip />} />
-                              <Bar dataKey="progress" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                              <Bar dataKey="progress" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         )}
@@ -507,7 +507,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                                   value: item.progress,
                                   fill: `hsl(${200 + (index * 30)}, 70%, 50%)`
                                 }))}
-                                cx="50%" cy="50%" outerRadius={80} fill="#2563EB" dataKey="value"
+                                cx="50%" cy="50%" outerRadius={80} fill="#3b82f6" dataKey="value"
                                 label={({ name, value }) => `${name}: ${yAxisConfig.tickFormatter(value)}`}
                               />
                               <Tooltip formatter={(value: any) => [yAxisConfig.tickFormatter(value), 'Independent Progress']} />
@@ -546,9 +546,9 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                               <Line
                                 type="monotone"
                                 dataKey="progress"
-                                stroke="#F97316"
+                                stroke="#3b82f6"
                                 strokeWidth={2}
-                                dot={{ fill: "#F97316", r: 4 }}
+                                dot={{ fill: "#3b82f6", r: 4 }}
                                 name="Supported Progress"
                               />
                             </LineChart>
@@ -567,7 +567,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                                 tickFormatter={yAxisConfig.tickFormatter}
                               />
                               <Tooltip content={<CustomTooltip />} />
-                              <Bar dataKey="progress" fill="#F97316" radius={[4, 4, 0, 0]} />
+                              <Bar dataKey="progress" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                             </BarChart>
                           </ResponsiveContainer>
                         )}
@@ -624,7 +624,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                       <Line
                         type="monotone"
                         dataKey="progress"
-                        stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                        stroke="#3b82f6"
                         strokeWidth={3}
                         dot={(props) => {
                           const { cx, cy, payload } = props;
@@ -634,8 +634,8 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                               cx={cx}
                               cy={cy}
                               r={isObjective ? 6 : 4}
-                              fill={isObjective ? "#10B981" : (yAxisConfig.isReversed ? "#DC2626" : "#2563EB")}
-                              stroke={isObjective ? "#065F46" : (yAxisConfig.isReversed ? "#991B1B" : "#1E40AF")}
+                              fill="#3b82f6"
+                              stroke="#1e40af"
                               strokeWidth={2}
                             />
                           );
@@ -675,7 +675,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                     <Legend />
                     <Bar
                       dataKey="progress"
-                      fill={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                      fill="#3b82f6"
                       radius={[4, 4, 0, 0]}
                       name="Progress Data"
                     />
@@ -683,7 +683,7 @@ export default function GoalChart({ goalId, selectedPeriod }: GoalChartProps) {
                       <Line
                         type="monotone"
                         dataKey="progress"
-                        stroke={yAxisConfig.isReversed ? "#DC2626" : "#2563EB"}
+                        stroke="#3b82f6"
                         strokeWidth={2}
                         strokeDasharray="5 5"
                         dot={false}

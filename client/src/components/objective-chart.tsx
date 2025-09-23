@@ -247,9 +247,9 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                   <Line 
                     type="monotone" 
                     dataKey="progress" 
-                    stroke="#10b981" 
+                    stroke="#3b82f6" 
                     strokeWidth={2}
-                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
                     activeDot={{ r: 6 }}
                     name="Progress"
                   />
@@ -279,7 +279,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                   <Legend />
                   <Bar 
                     dataKey="progress" 
-                    fill="#10b981" 
+                    fill="#3b82f6" 
                     name="Progress"
                   />
                 </BarChart>
