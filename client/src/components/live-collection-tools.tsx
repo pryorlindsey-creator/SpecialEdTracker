@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Timer, Plus, Minus, Save, RotateCcw, Clock, Hash, Percent, Target } from "lucide-react";
+import { Timer, Plus, Minus, Save, RotateCcw, Clock, Hash, Percent, Target, X } from "lucide-react";
 import { format } from "date-fns";
 
 interface LiveCollectionToolsProps {
@@ -120,6 +120,35 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
     toast({
       title: "Session Reset",
       description: "All data has been cleared.",
+    });
+  };
+
+  const cancelSession = () => {
+    // Stop any running timers
+    setIsCollecting(false);
+    setSessionStartTime(null);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    
+    // Clear all collected data
+    setCurrentTimer(0);
+    setFrequencyCount(0);
+    setDurationMinutes(0);
+    setDurationSeconds(0);
+    setPercentageTrials({ correct: 0, total: 0, noResponse: 0 });
+    setNotes("");
+    setLevelOfSupport([]);
+    setSetting([]);
+    setCustomSetting("");
+    setShowCustomSetting(false);
+    setCustomSupport("");
+    setShowCustomSupport(false);
+    
+    toast({
+      title: "Session Cancelled",
+      description: "Live collection session cancelled. All data has been discarded.",
+      variant: "destructive",
     });
   };
 
@@ -691,24 +720,37 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
         </CardContent>
       </Card>
 
-      {/* Save Button */}
-      <div className="text-center">
-        <Button 
-          size="lg" 
-          onClick={saveData}
-          disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0) || (dataType === 'percentage' && percentageTrials.total === 0 && percentageTrials.noResponse === 0)}
-          className="bg-blue-600 hover:bg-blue-700 px-8"
-        >
-          <Save className="h-5 w-5 mr-2" />
-          Save Data Point
-        </Button>
+      {/* Save and Cancel Buttons */}
+      <div className="text-center space-y-4">
+        <div className="flex justify-center space-x-4">
+          <Button 
+            size="lg" 
+            onClick={saveData}
+            disabled={(dataType === 'frequency' && isCollecting) || (dataType === 'frequency' && frequencyCount === 0) || (dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0) || (dataType === 'percentage' && percentageTrials.total === 0 && percentageTrials.noResponse === 0)}
+            className="bg-blue-600 hover:bg-blue-700 px-8"
+            data-testid="button-save-data"
+          >
+            <Save className="h-5 w-5 mr-2" />
+            Save Data Point
+          </Button>
+          <Button 
+            size="lg" 
+            onClick={cancelSession}
+            variant="destructive"
+            className="px-8"
+            data-testid="button-cancel-collection"
+          >
+            <X className="h-5 w-5 mr-2" />
+            Cancel Collection
+          </Button>
+        </div>
         {isCollecting && dataType === 'frequency' && (
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-600">
             Stop the session to save your data
           </p>
         )}
         {(dataType !== 'frequency' || !isCollecting) && (
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-600">
             {dataType === 'frequency' && frequencyCount === 0 && "Add at least one occurrence to save"}
             {dataType === 'duration' && durationMinutes === 0 && durationSeconds === 0 && "Set duration time to save"}
             {dataType === 'percentage' && percentageTrials.total === 0 && percentageTrials.noResponse === 0 && "Add at least one trial to save"}
