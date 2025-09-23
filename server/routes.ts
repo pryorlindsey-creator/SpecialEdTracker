@@ -48,11 +48,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Direct data points query
       const directDataPoints = await storage.getDataPointsByGoalId(goalId);
-      console.log(`Direct query result: ${directDataPoints.length} data points`);
-      
       // Goal progress query
       const progress = await storage.getGoalProgress(goalId);
-      console.log(`Goal progress result: ${progress.dataPoints.length} data points`);
       
       res.json({
         directDataPoints: directDataPoints.length,
@@ -465,13 +462,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const goals = await storage.getGoalsByStudentId(studentId);
       
-      // Debug: Log goal data to understand levelOfSupport format
-      console.log("=== GOAL FETCH DEBUG ===");
-      goals.forEach(goal => {
-        console.log(`Goal ID ${goal.id} - Title: "${goal.title}"`);
-        console.log(`  levelOfSupport: ${goal.levelOfSupport} (type: ${typeof goal.levelOfSupport})`);
-      });
-      console.log("=== END GOAL DEBUG ===");
       
       // Get progress data for each goal
       const goalsWithProgress = await Promise.all(
