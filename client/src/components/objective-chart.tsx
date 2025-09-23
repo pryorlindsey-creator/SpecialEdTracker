@@ -134,11 +134,11 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
     .slice(-10);
 
   // Split data by support level for percentage goals when support filter is 'split'
-  const independentData = supportFilter === 'split' && goal?.dataCollectionType === 'percentage'
+  const independentData = supportFilter === 'split' && goal?.goal?.dataCollectionType === 'percentage'
     ? chartData.filter(item => hasIndependentSupport(item.support))
     : chartData;
 
-  const otherSupportData = supportFilter === 'split' && goal?.dataCollectionType === 'percentage'
+  const otherSupportData = supportFilter === 'split' && goal?.goal?.dataCollectionType === 'percentage'
     ? chartData.filter(item => !hasIndependentSupport(item.support))
     : [];
 
@@ -243,7 +243,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
             </DropdownMenu>
             
             {/* Support Level Filter Toggle - Only for percentage goals */}
-            {goal?.dataCollectionType === 'percentage' && (
+            {goal?.goal?.dataCollectionType === 'percentage' && (
               <Button
                 variant={supportFilter === 'split' ? "default" : "outline"}
                 size="sm"
@@ -270,7 +270,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
         ) : (
           <>
             {/* Chart Container - Single or Dual based on support filter */}
-            {supportFilter === 'split' && goal?.dataCollectionType === 'percentage' ? (
+            {supportFilter === 'split' && goal?.goal?.dataCollectionType === 'percentage' ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* With Support Chart */}
                 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
