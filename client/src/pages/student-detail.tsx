@@ -864,7 +864,7 @@ export default function StudentDetail() {
                     />
                     
                     {/* Objectives Charts for this Goal */}
-                    <ObjectiveChartsForGoal goalId={goal.id} />
+                    <ObjectiveChartsForGoal goalId={goal.id} selectedPeriod={selectedReportingPeriod} />
                   </div>
                 ))}
               </div>
