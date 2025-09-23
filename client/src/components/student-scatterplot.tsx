@@ -469,7 +469,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
             {/* Independent Support Chart */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <h4 className="text-sm font-semibold text-blue-800 mb-3 text-center">
-                Independent Support Data
+                Independent-Data
               </h4>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
@@ -559,7 +559,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
             {/* Other Support Chart */}
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
               <h4 className="text-sm font-semibold text-orange-800 mb-3 text-center">
-                Any Other Support Data
+                With Support-Data
               </h4>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
