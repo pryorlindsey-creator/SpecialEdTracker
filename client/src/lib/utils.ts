@@ -60,3 +60,16 @@ export function filterDataPointsByCurrentPeriod<T extends { date: string }>(
   
   return filterDataPointsByDateRange(dataPoints, currentPeriod.startDate, currentPeriod.endDate);
 }
+
+// Filter data points to only include those within a specific reporting period
+export function filterDataPointsByPeriod<T extends { date: string }>(
+  dataPoints: T[], 
+  period: ReportingPeriod | null
+): T[] {
+  if (!period) {
+    // If no period specified, return all data points
+    return dataPoints;
+  }
+  
+  return filterDataPointsByDateRange(dataPoints, period.startDate, period.endDate);
+}
