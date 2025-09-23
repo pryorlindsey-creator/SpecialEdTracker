@@ -243,7 +243,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                     formatter={(value: any, name: string) => [`${value}%`, 'Progress']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
-                  <Legend />
+
                   <Line 
                     type="monotone" 
                     dataKey="progress" 
@@ -276,7 +276,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                     formatter={(value: any) => [`${value}%`, 'Progress']}
                     labelFormatter={(label) => `Date: ${label}`}
                   />
-                  <Legend />
+
                   <Bar 
                     dataKey="progress" 
                     fill="#3b82f6" 
