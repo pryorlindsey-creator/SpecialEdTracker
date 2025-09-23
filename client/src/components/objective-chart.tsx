@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LineChart as LineChartIcon, BarChart3, PieChart } from "lucide-react";
+import { ChevronDown, LineChart as LineChartIcon, BarChart3, PieChart, Filter } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -26,15 +26,17 @@ import {
   Cell,
 } from "recharts";
 import { format } from "date-fns";
+import { ReportingPeriod, filterDataPointsByPeriod } from "@/lib/utils";
 
 interface ObjectiveChartProps {
   objectiveId: number;
   goalId: number;
+  selectedPeriod?: ReportingPeriod | null;
 }
 
 type ChartType = 'line' | 'bar' | 'pie';
 
-export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartProps) {
+export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: ObjectiveChartProps) {
   const [selectedChartType, setSelectedChartType] = useState<ChartType>(() => {
     const savedChartType = sessionStorage.getItem(`objectiveChartType_${objectiveId}`) as ChartType;
     return savedChartType || 'line';
@@ -88,9 +90,14 @@ export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartPr
   }
 
   // Filter data points for this specific objective
-  const objectiveDataPoints = Array.isArray(dataPoints) ? dataPoints.filter(
+  let objectiveDataPoints = Array.isArray(dataPoints) ? dataPoints.filter(
     (point: any) => point.objectiveId === objectiveId
   ) : [];
+
+  // Apply reporting period filtering if a specific period is selected
+  if (selectedPeriod) {
+    objectiveDataPoints = filterDataPointsByPeriod(objectiveDataPoints, selectedPeriod);
+  }
 
   const chartData = objectiveDataPoints
     .map((point: any, index: number) => ({
@@ -153,9 +160,17 @@ export default function ObjectiveChart({ objectiveId, goalId }: ObjectiveChartPr
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-gray-900 mb-2">
-              Objective Progress Chart
-            </CardTitle>
+            <div className="flex items-center gap-2 mb-2">
+              <CardTitle className="text-lg font-semibold text-gray-900">
+                Objective Progress Chart
+              </CardTitle>
+              {selectedPeriod && (
+                <div className="flex items-center gap-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+                  <Filter className="h-3 w-3" />
+                  Period {selectedPeriod.periodNumber}
+                </div>
+              )}
+            </div>
             <p className="text-gray-600 text-sm mb-2">
               {objective?.objective?.description || 'Loading...'}
             </p>
