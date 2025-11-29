@@ -113,7 +113,15 @@ export function parseTargetCriteria(criteria: string): {
 }
 
 /**
- * Check if data points meet mastery criteria
+ * Check if data points meet mastery criteria using a sliding window approach.
+ * 
+ * For "X out of Y" criteria (e.g., "4/5 trials"):
+ * - Scans through ALL data points looking for ANY window of Y trials
+ *   where at least X meet the threshold
+ * - Returns the FIRST (earliest) window where mastery was achieved
+ * 
+ * For "consecutive" criteria (e.g., "3 consecutive sessions"):
+ * - Looks for ANY window where ALL trials meet the threshold
  */
 export function checkMastery(
   dataPoints: DataPoint[],
@@ -125,94 +133,98 @@ export function checkMastery(
     return { isMastered: false };
   }
 
-  // Sort data points by date (most recent first)
+  // Sort data points by date (oldest first for sliding window)
   const sortedPoints = [...dataPoints].sort((a, b) => 
-    moment(b.date).valueOf() - moment(a.date).valueOf()
+    moment(a.date).valueOf() - moment(b.date).valueOf()
   );
 
   const { threshold, consecutiveCount, isFrequencyReduction, totalCount } = criteria;
 
-  // Handle "X out of Y" pattern
+  // Handle "X out of Y" pattern with sliding window
   if (totalCount && totalCount > 0) {
-    const recentPoints = sortedPoints.slice(0, totalCount);
-    
-    if (recentPoints.length < totalCount) {
+    // Need at least totalCount data points to evaluate
+    if (sortedPoints.length < totalCount) {
       return { isMastered: false };
     }
 
-    // For frequency reduction goals
-    if (dataCollectionType === 'frequency' && isFrequencyReduction) {
-      const belowThresholdCount = recentPoints.filter(point => {
-        const value = parseFloat(point.progressValue);
-        return value <= threshold;
-      }).length;
+    // Sliding window: check every possible window of size totalCount
+    for (let i = 0; i <= sortedPoints.length - totalCount; i++) {
+      const windowPoints = sortedPoints.slice(i, i + totalCount);
+      
+      // For frequency reduction goals
+      if (dataCollectionType === 'frequency' && isFrequencyReduction) {
+        const belowThresholdCount = windowPoints.filter(point => {
+          const value = parseFloat(point.progressValue);
+          return value <= threshold;
+        }).length;
 
-      if (belowThresholdCount >= consecutiveCount) {
-        return {
-          isMastered: true,
-          masteryDate: recentPoints[recentPoints.length - 1].date,
-          dataPointsUsed: recentPoints.map(p => p.id)
-        };
+        if (belowThresholdCount >= consecutiveCount) {
+          // Found a window where mastery is achieved
+          // The mastery date is the last point in this window (when mastery was confirmed)
+          return {
+            isMastered: true,
+            masteryDate: windowPoints[windowPoints.length - 1].date,
+            dataPointsUsed: windowPoints.map(p => p.id)
+          };
+        }
       }
-    }
-    // For percentage/accuracy goals
-    else {
-      const aboveThresholdCount = recentPoints.filter(point => {
-        const value = parseFloat(point.progressValue);
-        return value >= threshold;
-      }).length;
+      // For percentage/accuracy goals
+      else {
+        const aboveThresholdCount = windowPoints.filter(point => {
+          const value = parseFloat(point.progressValue);
+          return value >= threshold;
+        }).length;
 
-      if (aboveThresholdCount >= consecutiveCount) {
-        return {
-          isMastered: true,
-          masteryDate: recentPoints[recentPoints.length - 1].date,
-          dataPointsUsed: recentPoints.map(p => p.id)
-        };
+        if (aboveThresholdCount >= consecutiveCount) {
+          // Found a window where mastery is achieved
+          return {
+            isMastered: true,
+            masteryDate: windowPoints[windowPoints.length - 1].date,
+            dataPointsUsed: windowPoints.map(p => p.id)
+          };
+        }
       }
     }
   }
-  // Handle consecutive pattern (original logic)
+  // Handle consecutive pattern with sliding window
   else {
-    // For frequency reduction goals, check if recent values are below threshold
-    if (dataCollectionType === 'frequency' && isFrequencyReduction) {
-      const recentPoints = sortedPoints.slice(0, consecutiveCount);
-      
-      if (recentPoints.length < consecutiveCount) {
-        return { isMastered: false };
-      }
-
-      const allBelowThreshold = recentPoints.every(point => 
-        parseFloat(point.progressValue) <= threshold
-      );
-
-      if (allBelowThreshold) {
-        return {
-          isMastered: true,
-          masteryDate: recentPoints[recentPoints.length - 1].date,
-          dataPointsUsed: recentPoints.map(p => p.id)
-        };
-      }
+    // Need at least consecutiveCount data points to evaluate
+    if (sortedPoints.length < consecutiveCount) {
+      return { isMastered: false };
     }
 
-    // For percentage/accuracy goals, check if recent values meet or exceed threshold
-    else {
-      const recentPoints = sortedPoints.slice(0, consecutiveCount);
+    // Sliding window: check every possible window of size consecutiveCount
+    for (let i = 0; i <= sortedPoints.length - consecutiveCount; i++) {
+      const windowPoints = sortedPoints.slice(i, i + consecutiveCount);
       
-      if (recentPoints.length < consecutiveCount) {
-        return { isMastered: false };
+      // For frequency reduction goals
+      if (dataCollectionType === 'frequency' && isFrequencyReduction) {
+        const allBelowThreshold = windowPoints.every(point => 
+          parseFloat(point.progressValue) <= threshold
+        );
+
+        if (allBelowThreshold) {
+          return {
+            isMastered: true,
+            masteryDate: windowPoints[windowPoints.length - 1].date,
+            dataPointsUsed: windowPoints.map(p => p.id)
+          };
+        }
       }
+      // For percentage/accuracy goals
+      else {
+        const allMeetThreshold = windowPoints.every(point => {
+          const value = parseFloat(point.progressValue);
+          return value >= threshold;
+        });
 
-      const allMeetThreshold = recentPoints.every(point => {
-        const value = parseFloat(point.progressValue);
-        return value >= threshold;
-      });
-
-      if (allMeetThreshold) {
-        return {
-          isMastered: true,
-          masteryDate: recentPoints[recentPoints.length - 1].date,
-          dataPointsUsed: recentPoints.map(p => p.id)
-        };
+        if (allMeetThreshold) {
+          return {
+            isMastered: true,
+            masteryDate: windowPoints[windowPoints.length - 1].date,
+            dataPointsUsed: windowPoints.map(p => p.id)
+          };
+        }
       }
     }
   }
