@@ -32,13 +32,33 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 
 const editDataPointSchema = z.object({
-  date: z.string().min(1, "Date is required"),
-  progressValue: z.string().min(1, "Progress value is required"),
-  durationUnit: z.string().optional(),
-  levelOfSupport: z.array(z.string()).optional(),
-  anecdotalInfo: z.string().optional(),
-  numerator: z.string().optional(),
-  denominator: z.string().optional(),
+  date: z.string()
+    .min(1, "Date is required")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
+    .refine((date) => {
+      const parsed = new Date(date);
+      return !isNaN(parsed.getTime());
+    }, "Invalid date"),
+  progressValue: z.string()
+    .min(1, "Progress value is required")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= -999 && num <= 999;
+    }, "Value must be a number between -999 and 999"),
+  durationUnit: z.string().refine((val) => !val || val === "seconds" || val === "minutes", 
+    "Duration unit must be seconds or minutes").optional(),
+  levelOfSupport: z.array(z.string().max(100)).max(20).optional(),
+  anecdotalInfo: z.string().max(2000, "Notes must be 2000 characters or less").optional(),
+  numerator: z.string().optional().refine((val) => {
+    if (!val || val === '') return true;
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 0 && num <= 9999;
+  }, "Numerator must be between 0 and 9999"),
+  denominator: z.string().optional().refine((val) => {
+    if (!val || val === '') return true;
+    const num = parseInt(val);
+    return !isNaN(num) && num >= 1 && num <= 9999;
+  }, "Denominator must be between 1 and 9999"),
 });
 
 type EditDataPointFormData = z.infer<typeof editDataPointSchema>;

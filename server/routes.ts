@@ -3,10 +3,21 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./replitAuth";
 import { UserMigrationService } from "./userMigration";
-import { insertStudentSchema, insertGoalSchema, insertDataPointSchema, insertObjectiveSchema, students } from "@shared/schema";
+import { insertStudentSchema, insertGoalSchema, insertDataPointSchema, insertObjectiveSchema, students, reportingPeriodsSubmitSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+
+function safeParseInt(value: string, paramName: string): number | { error: string } {
+  const parsed = parseInt(value, 10);
+  if (isNaN(parsed) || !Number.isFinite(parsed)) {
+    return { error: `Invalid ${paramName}: must be a valid integer` };
+  }
+  if (parsed < 0 || parsed > 2147483647) {
+    return { error: `Invalid ${paramName}: value out of range` };
+  }
+  return parsed;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Temporary debug endpoint (before auth middleware)
@@ -1002,7 +1013,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/goals/:goalId/data-points', async (req: any, res) => {
     try {
-      const goalId = parseInt(req.params.goalId);
+      const goalIdResult = safeParseInt(req.params.goalId, 'goalId');
+      if (typeof goalIdResult === 'object' && 'error' in goalIdResult) {
+        return res.status(400).json({ message: goalIdResult.error });
+      }
+      const goalId = goalIdResult;
       const goal = await storage.getGoalById(goalId);
       
       if (!goal) {
@@ -1065,7 +1080,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a data point
   app.patch('/api/data-points/:id', async (req: any, res) => {
     try {
-      const dataPointId = parseInt(req.params.id);
+      const dataPointIdResult = safeParseInt(req.params.id, 'dataPointId');
+      if (typeof dataPointIdResult === 'object' && 'error' in dataPointIdResult) {
+        return res.status(400).json({ message: dataPointIdResult.error });
+      }
+      const dataPointId = dataPointIdResult;
       const existingDataPoint = await storage.getDataPointById(dataPointId);
       
       if (!existingDataPoint) {
@@ -1477,15 +1496,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = '4201332'; // Development mode - use fixed user ID
       const { periods, periodLength } = req.body;
       
-      console.log("Saving reporting periods for user ID:", userId);
-      console.log("Periods data:", { periods: periods?.length, periodLength });
+      // Validate using the new schema
+      const validatedData = reportingPeriodsSubmitSchema.safeParse({ periods, periodLength });
       
-      if (!periods || !Array.isArray(periods) || !periodLength) {
-        return res.status(400).json({ message: "Invalid periods data" });
+      if (!validatedData.success) {
+        return res.status(400).json({ 
+          message: "Invalid periods data", 
+          errors: validatedData.error.errors 
+        });
       }
       
-      await storage.saveReportingPeriods(userId, periods, periodLength);
-      console.log("Successfully saved reporting periods to database");
+      await storage.saveReportingPeriods(userId, validatedData.data.periods, validatedData.data.periodLength);
       
       res.json({ message: "Reporting periods saved successfully" });
     } catch (error) {

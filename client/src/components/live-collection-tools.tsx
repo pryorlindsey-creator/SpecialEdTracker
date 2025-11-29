@@ -10,6 +10,21 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Timer, Plus, Minus, Save, RotateCcw, Clock, Hash, Percent, Target, X } from "lucide-react";
 import { format } from "date-fns";
+import { z } from "zod";
+
+const liveCollectionDataSchema = z.object({
+  goalId: z.number().int().positive("Goal ID must be a positive integer"),
+  objectiveId: z.number().int().positive().nullable().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  progressFormat: z.enum(["percentage", "fraction", "frequency", "duration"]),
+  progressValue: z.number().min(-999).max(999),
+  numerator: z.number().int().min(0).max(9999).nullable().optional(),
+  denominator: z.number().int().min(0).max(9999).nullable().optional(),
+  durationUnit: z.enum(["seconds", "minutes"]).optional(),
+  levelOfSupport: z.array(z.string().max(100)).max(20),
+  setting: z.array(z.string().max(100)).max(20),
+  anecdotalInfo: z.string().max(2000).optional(),
+});
 
 interface LiveCollectionToolsProps {
   goalId: number;
@@ -244,20 +259,29 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
       
       const dataPoint = {
         goalId,
-        objectiveId, // Include objective ID if selected
-        date: today, // Send as YYYY-MM-DD string
-        progressFormat,
+        objectiveId: objectiveId || null,
+        date: today,
+        progressFormat: progressFormat as "percentage" | "fraction" | "frequency" | "duration",
         progressValue: parseFloat(progressValue),
         numerator,
         denominator,
-        // noResponseCount: dataType === 'percentage' ? percentageTrials.noResponse : 0, // pending database migration
-        durationUnit,
-        levelOfSupport: levelOfSupport.concat(showCustomSupport && customSupport ? [customSupport] : []),
-        setting: setting.concat(showCustomSetting && customSetting ? [customSetting] : []),
-        anecdotalInfo: notes || `Live collection session: ${formatTime(currentTimer)}${objectiveId ? ` - Objective ${objectiveId}` : ''}`
+        durationUnit: durationUnit as "seconds" | "minutes",
+        levelOfSupport: levelOfSupport.concat(showCustomSupport && customSupport ? [customSupport.trim()] : []).filter(s => s.length <= 100),
+        setting: setting.concat(showCustomSetting && customSetting ? [customSetting.trim()] : []).filter(s => s.length <= 100),
+        anecdotalInfo: (notes || `Live collection session: ${formatTime(currentTimer)}${objectiveId ? ` - Objective ${objectiveId}` : ''}`).slice(0, 2000)
       };
 
-      await apiRequest('POST', `/api/goals/${goalId}/data-points`, dataPoint);
+      const validationResult = liveCollectionDataSchema.safeParse(dataPoint);
+      if (!validationResult.success) {
+        toast({
+          title: "Validation Error",
+          description: validationResult.error.errors[0]?.message || "Invalid data format",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await apiRequest('POST', `/api/goals/${goalId}/data-points`, validationResult.data);
 
       toast({
         title: "Live Data Saved!",

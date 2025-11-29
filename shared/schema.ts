@@ -148,22 +148,59 @@ export const dataPointsRelations = relations(dataPoints, ({ one }) => ({
   }),
 }));
 
-// Insert schemas
+// Validation enums for strict type checking
+export const DATA_COLLECTION_TYPES = ["percentage", "frequency", "duration"] as const;
+export const PROGRESS_FORMATS = ["percentage", "fraction", "frequency", "duration"] as const;
+export const GOAL_STATUSES = ["active", "mastered", "discontinued"] as const;
+export const FREQUENCY_DIRECTIONS = ["increase", "decrease"] as const;
+export const DURATION_UNITS = ["seconds", "minutes"] as const;
+
+export type DataCollectionType = typeof DATA_COLLECTION_TYPES[number];
+export type ProgressFormat = typeof PROGRESS_FORMATS[number];
+export type GoalStatus = typeof GOAL_STATUSES[number];
+export type FrequencyDirection = typeof FREQUENCY_DIRECTIONS[number];
+export type DurationUnit = typeof DURATION_UNITS[number];
+
+// Insert schemas with strict validation
 export const insertStudentSchema = createInsertSchema(students).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
+  name: z.string().min(1, "Student name is required").max(100, "Name must be 100 characters or less"),
+  grade: z.string().max(20, "Grade must be 20 characters or less").optional(),
   iepDueDate: z.union([z.string(), z.date(), z.undefined()]).optional().transform((val) => {
     if (!val || val === '') return undefined;
-    return typeof val === 'string' ? new Date(val) : val;
+    if (typeof val === 'string') {
+      const parsed = new Date(val);
+      if (isNaN(parsed.getTime())) {
+        throw new Error("Invalid date format for IEP due date");
+      }
+      return parsed;
+    }
+    return val;
   }),
+  relatedServices: z.string().max(500, "Related services must be 500 characters or less").optional(),
 });
 
 export const insertGoalSchema = createInsertSchema(goals).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  title: z.string().min(1, "Goal title is required").max(200, "Title must be 200 characters or less"),
+  description: z.string().min(1, "Goal description is required").max(2000, "Description must be 2000 characters or less"),
+  targetCriteria: z.string().max(500, "Target criteria must be 500 characters or less").optional().nullable(),
+  levelOfSupport: z.string().max(500, "Level of support must be 500 characters or less").optional().nullable(),
+  dataCollectionType: z.enum(DATA_COLLECTION_TYPES, {
+    errorMap: () => ({ message: "Data collection type must be percentage, frequency, or duration" })
+  }).default("percentage"),
+  frequencyDirection: z.enum(FREQUENCY_DIRECTIONS, {
+    errorMap: () => ({ message: "Frequency direction must be increase or decrease" })
+  }).optional().nullable(),
+  status: z.enum(GOAL_STATUSES, {
+    errorMap: () => ({ message: "Status must be active, mastered, or discontinued" })
+  }).default("active"),
 });
 
 export const insertObjectiveSchema = createInsertSchema(objectives).omit({
@@ -171,29 +208,92 @@ export const insertObjectiveSchema = createInsertSchema(objectives).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
+  title: z.string().max(200, "Title must be 200 characters or less").optional().nullable(),
+  description: z.string().min(1, "Objective description is required").max(2000, "Description must be 2000 characters or less"),
+  targetCriteria: z.string().max(500, "Target criteria must be 500 characters or less").optional().nullable(),
   targetDate: z.union([z.string(), z.date(), z.undefined()]).optional().transform((val) => {
     if (!val || val === '') return undefined;
-    return typeof val === 'string' ? new Date(val) : val;
+    if (typeof val === 'string') {
+      const parsed = new Date(val);
+      if (isNaN(parsed.getTime())) {
+        throw new Error("Invalid date format for target date");
+      }
+      return parsed;
+    }
+    return val;
   }),
+  status: z.enum(GOAL_STATUSES, {
+    errorMap: () => ({ message: "Status must be active, mastered, or discontinued" })
+  }).default("active"),
 });
 
 export const insertDataPointSchema = createInsertSchema(dataPoints).omit({
   id: true,
   createdAt: true,
 }).extend({
-  objectiveId: z.number().optional().nullable(), // Make objectiveId explicitly optional and nullable
-  progressValue: z.number().transform((num) => num.toString()), // Convert number to string for decimal field
+  objectiveId: z.number().int().positive().optional().nullable(),
+  progressValue: z.number()
+    .min(-999, "Value must be greater than -999")
+    .max(999, "Value must be less than 999")
+    .transform((num) => num.toString()),
+  progressFormat: z.enum(PROGRESS_FORMATS, {
+    errorMap: () => ({ message: "Progress format must be percentage, fraction, frequency, or duration" })
+  }).default("percentage"),
+  numerator: z.number().int().min(0, "Numerator must be non-negative").max(9999, "Numerator must be less than 10000").optional().nullable(),
+  denominator: z.number().int().min(1, "Denominator must be at least 1").max(9999, "Denominator must be less than 10000").optional().nullable(),
+  durationUnit: z.enum(DURATION_UNITS, {
+    errorMap: () => ({ message: "Duration unit must be seconds or minutes" })
+  }).optional().nullable(),
+  levelOfSupport: z.string().max(500, "Level of support must be 500 characters or less").optional().nullable(),
+  setting: z.string().max(500, "Setting must be 500 characters or less").optional().nullable(),
+  anecdotalInfo: z.string().max(2000, "Anecdotal info must be 2000 characters or less").optional().nullable(),
   date: z.union([
     z.date(),
     z.string().transform((str) => {
-      // Handle YYYY-MM-DD string format
       if (str.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return new Date(str + 'T12:00:00.000Z'); // Use noon UTC to avoid timezone shift
+        const parsed = new Date(str + 'T12:00:00.000Z');
+        if (isNaN(parsed.getTime())) {
+          throw new Error("Invalid date format");
+        }
+        return parsed;
       }
-      // Handle ISO date strings
-      return new Date(str);
+      const parsed = new Date(str);
+      if (isNaN(parsed.getTime())) {
+        throw new Error("Invalid date format");
+      }
+      return parsed;
     })
-  ]), // Handle both Date and string inputs
+  ]),
+});
+
+// Reporting period validation schema
+export const insertReportingPeriodSchema = z.object({
+  userId: z.string().min(1, "User ID is required"),
+  periodLength: z.enum(["4.5-weeks", "3-weeks"], {
+    errorMap: () => ({ message: "Period length must be '4.5-weeks' or '3-weeks'" })
+  }),
+  periodNumber: z.number().int().min(1, "Period number must be at least 1").max(20, "Period number must be 20 or less"),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Start date must be in YYYY-MM-DD format"),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "End date must be in YYYY-MM-DD format"),
+}).refine((data) => {
+  const start = new Date(data.startDate);
+  const end = new Date(data.endDate);
+  return end >= start;
+}, {
+  message: "End date must be on or after start date",
+  path: ["endDate"],
+});
+
+// Schema for bulk reporting periods submission
+export const reportingPeriodsSubmitSchema = z.object({
+  periods: z.array(z.object({
+    periodNumber: z.number().int().min(1).max(20),
+    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format"),
+  })).min(1, "At least one period is required").max(20, "Maximum 20 periods allowed"),
+  periodLength: z.enum(["4.5-weeks", "3-weeks"], {
+    errorMap: () => ({ message: "Period length must be '4.5-weeks' or '3-weeks'" })
+  }),
 });
 
 // Types
