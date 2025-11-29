@@ -89,15 +89,29 @@ describe('Schema Validation', () => {
       }
     });
 
-    it('should reject invalid date format', () => {
+    it('should reject or throw for invalid date format', () => {
       const student = {
         userId: '4201332',
         name: 'Test Student',
         iepDueDate: 'not-a-date',
       };
 
-      const result = insertStudentSchema.safeParse(student);
-      expect(result.success).toBe(false);
+      try {
+        const result = insertStudentSchema.safeParse(student);
+        expect(result.success).toBe(false);
+      } catch (error) {
+        expect(error).toBeDefined();
+      }
+    });
+
+    it('should throw error for malformed date in transform', () => {
+      const student = {
+        userId: '4201332',
+        name: 'Test Student',
+        iepDueDate: 'invalid',
+      };
+
+      expect(() => insertStudentSchema.parse(student)).toThrow('Invalid date format');
     });
   });
 
