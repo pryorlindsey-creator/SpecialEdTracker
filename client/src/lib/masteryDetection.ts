@@ -2,6 +2,8 @@ import moment from 'moment';
 
 interface DataPoint {
   id: number;
+  goalId: number;
+  objectiveId?: number | null;
   progressValue: string;
   date: string;
   progressFormat: string;
@@ -48,6 +50,7 @@ export function parseTargetCriteria(criteria: string): {
   threshold: number;
   consecutiveCount: number;
   isFrequencyReduction?: boolean;
+  totalCount?: number | null;
 } | null {
   if (!criteria) return null;
 
@@ -199,7 +202,33 @@ export function checkMastery(
 }
 
 /**
+ * Helper function to check if an objective has achieved mastery
+ */
+function checkObjectiveMastery(
+  objective: Objective,
+  allDataPoints: DataPoint[],
+  dataCollectionType: string
+): { isMastered: boolean; masteryDate?: string; dataPointsUsed?: number[] } {
+  if (!objective.targetCriteria) {
+    return { isMastered: false };
+  }
+
+  const objectiveDataPoints = allDataPoints.filter(dp => 
+    dp.objectiveId === objective.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
+  );
+
+  if (objectiveDataPoints.length === 0) {
+    return { isMastered: false };
+  }
+
+  return checkMastery(objectiveDataPoints, objective.targetCriteria, dataCollectionType);
+}
+
+/**
  * Check all goals and objectives for mastery
+ * 
+ * IMPORTANT: Goals with objectives only show mastery when ALL objectives are mastered.
+ * Goals without objectives use the goal-level data point evaluation.
  */
 export function detectMastery(
   goals: Goal[],
@@ -209,56 +238,28 @@ export function detectMastery(
 ): MasteryAlert[] {
   const alerts: MasteryAlert[] = [];
 
-  // Check goals for mastery
-  goals.forEach(goal => {
-    if (goal.status === 'mastered' || !goal.targetCriteria) {
-      return;
-    }
+  // First, check objectives for mastery and track which ones are mastered
+  const objectiveMasteryStatus: { [objectiveId: number]: boolean } = {};
+  const objectiveAlerts: MasteryAlert[] = [];
 
-    const goalDataPoints = allDataPoints.filter(dp => 
-      dp.goalId === goal.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
-    );
-
-    if (goalDataPoints.length === 0) return;
-
-    const masteryResult = checkMastery(goalDataPoints, goal.targetCriteria, goal.dataCollectionType);
-    
-    if (masteryResult.isMastered) {
-      alerts.push({
-        id: `goal-${goal.id}`,
-        type: 'goal',
-        itemId: goal.id,
-        title: goal.title,
-        description: `Goal "${goal.title}" has met mastery criteria`,
-        targetCriteria: goal.targetCriteria,
-        masteryDate: masteryResult.masteryDate!,
-        dataPointsUsed: masteryResult.dataPointsUsed!,
-        studentId
-      });
-    }
-  });
-
-  // Check objectives for mastery
   Object.entries(objectives).forEach(([goalId, goalObjectives]) => {
     const goal = goals.find(g => g.id === parseInt(goalId));
     if (!goal || !Array.isArray(goalObjectives)) return;
 
     goalObjectives.forEach(objective => {
-      if (objective.status === 'mastered' || !objective.targetCriteria) return;
+      // Check if objective is already marked as mastered in status
+      if (objective.status === 'mastered') {
+        objectiveMasteryStatus[objective.id] = true;
+        return;
+      }
 
-      const objectiveDataPoints = allDataPoints.filter(dp => 
-        dp.objectiveId === objective.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
-      );
+      if (!objective.targetCriteria) {
+        objectiveMasteryStatus[objective.id] = false;
+        return;
+      }
 
-      if (objectiveDataPoints.length === 0) return;
-
-
-      
-      const masteryResult = checkMastery(
-        objectiveDataPoints, 
-        objective.targetCriteria, 
-        goal.dataCollectionType
-      );
+      const masteryResult = checkObjectiveMastery(objective, allDataPoints, goal.dataCollectionType);
+      objectiveMasteryStatus[objective.id] = masteryResult.isMastered;
       
       if (masteryResult.isMastered) {
         console.log('🎯 MASTERY ALERT: Objective achieved mastery!', {
@@ -267,7 +268,7 @@ export function detectMastery(
           criteria: objective.targetCriteria
         });
         
-        alerts.push({
+        objectiveAlerts.push({
           id: `objective-${objective.id}`,
           type: 'objective',
           itemId: objective.id,
@@ -280,6 +281,118 @@ export function detectMastery(
         });
       }
     });
+  });
+
+  // Add all objective alerts
+  alerts.push(...objectiveAlerts);
+
+  // Check goals for mastery
+  goals.forEach(goal => {
+    if (goal.status === 'mastered' || !goal.targetCriteria) {
+      return;
+    }
+
+    const goalObjectives = objectives[goal.id] || [];
+    const hasObjectives = goalObjectives.length > 0;
+
+    if (hasObjectives) {
+      // Goal has objectives - only show mastery if ALL objectives are mastered
+      const objectivesWithCriteria = goalObjectives.filter(obj => obj.targetCriteria);
+      
+      if (objectivesWithCriteria.length === 0) {
+        // Goal has objectives but none have target criteria - fall back to goal-level evaluation
+        const goalDataPoints = allDataPoints.filter(dp => 
+          dp.goalId === goal.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
+        );
+
+        if (goalDataPoints.length === 0) return;
+
+        const masteryResult = checkMastery(goalDataPoints, goal.targetCriteria, goal.dataCollectionType);
+        
+        if (masteryResult.isMastered) {
+          alerts.push({
+            id: `goal-${goal.id}`,
+            type: 'goal',
+            itemId: goal.id,
+            title: goal.title,
+            description: `Goal "${goal.title}" has met mastery criteria`,
+            targetCriteria: goal.targetCriteria,
+            masteryDate: masteryResult.masteryDate!,
+            dataPointsUsed: masteryResult.dataPointsUsed!,
+            studentId
+          });
+        }
+      } else {
+        // Check if ALL objectives with criteria are mastered
+        const allObjectivesMastered = objectivesWithCriteria.every(obj => {
+          // Check if already mastered in status OR detected as mastered in this run
+          return obj.status === 'mastered' || objectiveMasteryStatus[obj.id] === true;
+        });
+
+        if (allObjectivesMastered) {
+          // Find the most recent mastery date among all objectives
+          const objectiveMasteryDates = objectiveAlerts
+            .filter(alert => goalObjectives.some(obj => obj.id === alert.itemId))
+            .map(alert => alert.masteryDate);
+          
+          // Also check for already-mastered objectives
+          const alreadyMasteredObjectives = objectivesWithCriteria.filter(obj => obj.status === 'mastered');
+          
+          const latestMasteryDate = objectiveMasteryDates.length > 0 
+            ? objectiveMasteryDates.sort((a, b) => moment(b).valueOf() - moment(a).valueOf())[0]
+            : moment().format('YYYY-MM-DD');
+
+          // Collect all data point IDs used for objective mastery
+          const allDataPointsUsed = objectiveAlerts
+            .filter(alert => goalObjectives.some(obj => obj.id === alert.itemId))
+            .flatMap(alert => alert.dataPointsUsed);
+
+          console.log('🎯 GOAL MASTERY: All objectives mastered for goal!', {
+            goalId: goal.id,
+            goalTitle: goal.title,
+            objectiveCount: objectivesWithCriteria.length,
+            masteredCount: objectivesWithCriteria.filter(obj => 
+              obj.status === 'mastered' || objectiveMasteryStatus[obj.id] === true
+            ).length
+          });
+
+          alerts.push({
+            id: `goal-${goal.id}`,
+            type: 'goal',
+            itemId: goal.id,
+            title: goal.title,
+            description: `Goal "${goal.title}" is complete - all ${objectivesWithCriteria.length} objectives have been mastered`,
+            targetCriteria: goal.targetCriteria,
+            masteryDate: latestMasteryDate,
+            dataPointsUsed: allDataPointsUsed,
+            studentId
+          });
+        }
+      }
+    } else {
+      // Goal has NO objectives - use goal-level data point evaluation (original behavior)
+      const goalDataPoints = allDataPoints.filter(dp => 
+        dp.goalId === goal.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
+      );
+
+      if (goalDataPoints.length === 0) return;
+
+      const masteryResult = checkMastery(goalDataPoints, goal.targetCriteria, goal.dataCollectionType);
+      
+      if (masteryResult.isMastered) {
+        alerts.push({
+          id: `goal-${goal.id}`,
+          type: 'goal',
+          itemId: goal.id,
+          title: goal.title,
+          description: `Goal "${goal.title}" has met mastery criteria`,
+          targetCriteria: goal.targetCriteria,
+          masteryDate: masteryResult.masteryDate!,
+          dataPointsUsed: masteryResult.dataPointsUsed!,
+          studentId
+        });
+      }
+    }
   });
 
   console.log('🎯 MASTERY ALERTS GENERATED:', alerts.length, alerts);
