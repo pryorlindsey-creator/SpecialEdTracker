@@ -195,9 +195,12 @@ export const insertGoalSchema = createInsertSchema(goals).omit({
   dataCollectionType: z.enum(DATA_COLLECTION_TYPES, {
     errorMap: () => ({ message: "Data collection type must be percentage, frequency, or duration" })
   }).default("percentage"),
-  frequencyDirection: z.enum(FREQUENCY_DIRECTIONS, {
-    errorMap: () => ({ message: "Frequency direction must be increase or decrease" })
-  }).optional().nullable(),
+  frequencyDirection: z.preprocess(
+    (val) => (val === '' || val === undefined ? null : val),
+    z.enum(FREQUENCY_DIRECTIONS, {
+      errorMap: () => ({ message: "Frequency direction must be increase or decrease" })
+    }).optional().nullable()
+  ),
   status: z.enum(GOAL_STATUSES, {
     errorMap: () => ({ message: "Status must be active, mastered, or discontinued" })
   }).default("active"),
