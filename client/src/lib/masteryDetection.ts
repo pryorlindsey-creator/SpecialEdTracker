@@ -40,11 +40,18 @@ export interface MasteryAlert {
 
 /**
  * Parse target criteria string and extract mastery requirements
- * Examples:
- * - "80% accuracy over 3 consecutive sessions"
- * - "90% for 5 consecutive trials"
- * - "4 out of 5 sessions at 85%"
- * - "Reduce frequency to under 2 per hour for 3 days"
+ * 
+ * Supported formats:
+ * - "80% accuracy over 3 consecutive sessions" -> ALL 3 recent sessions must be >= 80%
+ * - "90% for 5 consecutive trials" -> ALL 5 recent trials must be >= 90%
+ * - "80% accuracy in 4/5 trials" -> 4 out of last 5 trials must be >= 80%
+ * - "4 out of 5 sessions at 85%" -> 4 out of last 5 sessions must be >= 85%
+ * - "80% in 4 out of 5 trials" -> 4 out of last 5 trials must be >= 80%
+ * - "Reduce frequency to under 2 per hour for 3 days" -> frequency reduction goal
+ * 
+ * Key distinction:
+ * - "X/Y trials" or "X out of Y" = X successes required out of Y total trials
+ * - "X consecutive" = ALL X trials must meet threshold (no failures allowed)
  */
 export function parseTargetCriteria(criteria: string): {
   threshold: number;
@@ -60,19 +67,31 @@ export function parseTargetCriteria(criteria: string): {
   const percentMatch = criteriaLower.match(/(\d+)%/);
   const threshold = percentMatch ? parseInt(percentMatch[1]) : null;
   
-  // Extract consecutive count - handle various patterns including "X out of Y"
-  const outOfMatch = criteriaLower.match(/(\d+(?:\.\d+)?)\s*out\s*of\s*(\d+(?:\.\d+)?)/);
-  const consecutiveMatch = criteriaLower.match(/(\d+(?:\.\d+)?)\s*consecutive|over\s*(\d+(?:\.\d+)?)|for\s*(\d+(?:\.\d+)?)/);
+  // Extract trial counts - handle various patterns
+  // Pattern 1: "X/Y" notation (e.g., "4/5 trials", "3/4 sessions")
+  const slashMatch = criteriaLower.match(/(\d+)\s*\/\s*(\d+)\s*(?:trial|session|attempt|opportunit)/i);
+  
+  // Pattern 2: "X out of Y" notation (e.g., "4 out of 5 trials")
+  const outOfMatch = criteriaLower.match(/(\d+)\s*out\s*of\s*(\d+)/);
+  
+  // Pattern 3: Consecutive pattern (e.g., "3 consecutive sessions", "over 4 sessions")
+  const consecutiveMatch = criteriaLower.match(/(\d+)\s*consecutive|over\s*(\d+)|for\s*(\d+)/);
   
   let consecutiveCount: number;
   let totalCount: number | null = null;
   
-  if (outOfMatch) {
+  if (slashMatch) {
+    // Handle "X/Y" pattern (e.g., "4/5 trials")
+    consecutiveCount = parseInt(slashMatch[1]);
+    totalCount = parseInt(slashMatch[2]);
+  } else if (outOfMatch) {
     // Handle "X out of Y" pattern
     consecutiveCount = parseInt(outOfMatch[1]);
     totalCount = parseInt(outOfMatch[2]);
   } else if (consecutiveMatch) {
+    // Handle consecutive pattern - ALL trials must meet threshold
     consecutiveCount = parseInt(consecutiveMatch[1] || consecutiveMatch[2] || consecutiveMatch[3]);
+    // For consecutive, totalCount stays null - meaning ALL consecutiveCount trials must succeed
   } else {
     consecutiveCount = 3; // Default to 3
   }
