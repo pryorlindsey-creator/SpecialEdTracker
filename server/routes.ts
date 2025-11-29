@@ -62,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error) {
       console.error("Goal 74 test error:", error);
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           };
           
           // Use passport's login method for proper session handling
-          req.login(adminUser, (err) => {
+          req.login(adminUser, (err: Error | null) => {
             if (err) {
               console.error('Passport login error:', err);
               return res.status(500).json({ success: false, message: 'Session creation failed' });
@@ -125,14 +125,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
             
             // Force session save to database
-            req.session.save((saveErr) => {
+            req.session.save((saveErr: Error | null) => {
               if (saveErr) {
                 console.error('Session save error:', saveErr);
-              } else {
-                console.log("Session saved to database successfully");
               }
               
-              console.log("Admin backup cookie and session both set");
               res.json({ success: true, message: "Admin login successful", redirectTo: "/" });
             });
           });
@@ -1023,11 +1020,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      console.log("=== DATA POINT CREATION REQUEST ===");
-      console.log("Goal ID:", goalId);
-      console.log("Request timestamp:", new Date().toISOString());
-      console.log("Received data point request body:", req.body);
-      
       // Convert level of support array to JSON string for storage
       const requestBody = { ...req.body };
       if (requestBody.levelOfSupport && Array.isArray(requestBody.levelOfSupport)) {
@@ -1055,22 +1047,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         studentId: goal.studentId, // Automatically assign student ID
       });
       
-      console.log("Parsed data point data:", dataPointData);
-      
       const dataPoint = await storage.createDataPoint(dataPointData);
-      console.log("✅ DATA POINT CREATED SUCCESSFULLY:");
-      console.log("   - ID:", dataPoint.id);
-      console.log("   - Goal ID:", dataPoint.goalId);
-      console.log("   - Progress Value:", dataPoint.progressValue);
-      console.log("   - Duration Unit:", dataPoint.durationUnit);
-      console.log("   - Date:", dataPoint.date);
-      console.log("   - Created At:", dataPoint.createdAt);
       
-      // Send response immediately to prevent timeout issues
       res.status(201).json(dataPoint);
-      
-      // Log completion
-      console.log("✅ Response sent successfully");
     } catch (error: any) {
       console.error("Error creating data point:", error);
       console.error("Error stack:", (error as Error)?.stack);
@@ -1104,11 +1083,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      console.log("=== DATA POINT UPDATE REQUEST ===");
-      console.log("Data Point ID:", dataPointId);
-      console.log("Request timestamp:", new Date().toISOString());
-      console.log("Received update data:", req.body);
-      
       // Convert level of support to JSON string for storage if it's an array
       const requestBody = { ...req.body };
       if (requestBody.levelOfSupport) {
@@ -1159,14 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse and validate the update data
       const updateData = insertDataPointSchema.partial().parse(requestBody);
       
-      console.log("Parsed update data:", updateData);
-      
       const dataPoint = await storage.updateDataPoint(dataPointId, updateData);
-      console.log("✅ DATA POINT UPDATED SUCCESSFULLY:");
-      console.log("   - ID:", dataPoint.id);
-      console.log("   - Progress Value:", dataPoint.progressValue);
-      console.log("   - Duration Unit:", dataPoint.durationUnit);
-      console.log("   - Date:", dataPoint.date);
       
       res.json(dataPoint);
     } catch (error: any) {
@@ -1574,7 +1541,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false,
         message: "Migration failed",
-        error: error.message 
+        error: error instanceof Error ? error.message : "Unknown error"
       });
     }
   });
@@ -1586,7 +1553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(validation);
     } catch (error) {
       console.error("Validation failed:", error);
-      res.status(500).json({ message: "Validation failed", error: error.message });
+      res.status(500).json({ message: "Validation failed", error: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 

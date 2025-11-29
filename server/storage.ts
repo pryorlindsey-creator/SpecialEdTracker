@@ -22,20 +22,6 @@ import {
 import { db } from "./db";
 import { eq, desc, sql, and, inArray, asc, isNull } from "drizzle-orm";
 
-// Helper function to convert level of support data for frontend
-function convertLevelOfSupport(levelOfSupport: string | null): string[] | null {
-  if (!levelOfSupport) return null;
-  
-  try {
-    // Try to parse as JSON array
-    const parsed = JSON.parse(levelOfSupport);
-    return Array.isArray(parsed) ? parsed : [levelOfSupport];
-  } catch {
-    // If parsing fails, treat as single string
-    return [levelOfSupport];
-  }
-}
-
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
@@ -176,23 +162,19 @@ export class DatabaseStorage implements IStorage {
 
   // Student operations
   async getStudentsByUserId(userId: string): Promise<Student[]> {
-    console.log("Querying students for user ID:", userId);
     const result = await db
       .select()
       .from(students)
       .where(eq(students.userId, userId))
       .orderBy(asc(students.name));
-    console.log("Query result:", result);
     return result;
   }
 
   async createStudent(student: InsertStudent): Promise<Student> {
-    console.log("Creating student:", student);
     const [newStudent] = await db
       .insert(students)
       .values(student)
       .returning();
-    console.log("Student created successfully:", newStudent);
     return newStudent;
   }
 
@@ -227,12 +209,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createGoal(goal: InsertGoal): Promise<Goal> {
-    console.log("Creating goal:", goal);
     const [newGoal] = await db
       .insert(goals)
       .values(goal)
       .returning();
-    console.log("Goal created successfully:", newGoal);
     return newGoal;
   }
 
@@ -294,12 +274,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDataPoint(dataPoint: InsertDataPoint): Promise<DataPoint> {
-    console.log("Creating data point:", dataPoint);
     const [newDataPoint] = await db
       .insert(dataPoints)
       .values(dataPoint)
       .returning();
-    console.log("Data point created successfully:", newDataPoint);
     return newDataPoint;
   }
 
@@ -622,6 +600,26 @@ export class DatabaseStorage implements IStorage {
     return goalsWithDetails;
   }
 
+  async getAllGoals(): Promise<Goal[]> {
+    return await db.select().from(goals);
+  }
+
+  async getAllDataPoints(): Promise<DataPoint[]> {
+    return await db.select().from(dataPoints);
+  }
+
+  async getAllSessions(): Promise<any[]> {
+    return await db.select().from(sessions);
+  }
+
+  async getAllReportingPeriods(): Promise<any[]> {
+    return await db.select().from(reportingPeriods);
+  }
+
+  async getAllObjectives(): Promise<any[]> {
+    return await db.select().from(objectives);
+  }
+
   async deleteUser(userId: string): Promise<void> {
     // First delete all related data
     const userStudents = await this.getStudentsByUserId(userId);
@@ -802,56 +800,6 @@ export class DatabaseStorage implements IStorage {
       .from(objectives)
       .where(eq(objectives.id, id));
     return objective;
-  }
-
-  // Admin methods for database management
-  async getAllUsers(): Promise<User[]> {
-    return await db.select().from(users);
-  }
-
-  async getAllStudents(): Promise<Student[]> {
-    return await db.select().from(students);
-  }
-
-  async getAllGoals(): Promise<Goal[]> {
-    return await db.select().from(goals);
-  }
-
-  async getAllDataPoints(): Promise<DataPoint[]> {
-    return await db.select().from(dataPoints);
-  }
-
-  async getAllSessions() {
-    return await db.select().from(sessions);
-  }
-
-  async getAllReportingPeriods() {
-    return await db.select().from(reportingPeriods);
-  }
-
-  async getAllObjectives() {
-    return await db.select().from(objectives);
-  }
-
-  async deleteUser(userId: string): Promise<void> {
-    // First delete all related data
-    const userStudents = await this.getStudentsByUserId(userId);
-    for (const student of userStudents) {
-      await this.deleteStudent(student.id);
-    }
-    // Then delete the user
-    await db.delete(users).where(eq(users.id, userId));
-  }
-
-  async getDatabaseSchema(): Promise<any> {
-    // Return schema information for admin view
-    return {
-      users: { tableName: "users", fields: [] },
-      students: { tableName: "students", fields: [] },
-      goals: { tableName: "goals", fields: [] },
-      dataPoints: { tableName: "data_points", fields: [] },
-      objectives: { tableName: "objectives", fields: [] },
-    };
   }
 
   // Admin verification methods
