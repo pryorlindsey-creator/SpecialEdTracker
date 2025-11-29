@@ -32,7 +32,7 @@ export function getCurrentReportingPeriod(reportingData: ReportingData | null): 
 }
 
 // Filter data points to only include those within a specific date range
-export function filterDataPointsByDateRange<T extends { date: string }>(
+export function filterDataPointsByDateRange<T extends { date: string | Date }>(
   dataPoints: T[], 
   startDate: string, 
   endDate: string
@@ -47,7 +47,7 @@ export function filterDataPointsByDateRange<T extends { date: string }>(
 }
 
 // Filter data points to only include those within the current reporting period
-export function filterDataPointsByCurrentPeriod<T extends { date: string }>(
+export function filterDataPointsByCurrentPeriod<T extends { date: string | Date }>(
   dataPoints: T[], 
   reportingData: ReportingData | null
 ): T[] {
@@ -62,7 +62,7 @@ export function filterDataPointsByCurrentPeriod<T extends { date: string }>(
 }
 
 // Filter data points to only include those within a specific reporting period
-export function filterDataPointsByPeriod<T extends { date: string }>(
+export function filterDataPointsByPeriod<T extends { date: string | Date }>(
   dataPoints: T[], 
   period: ReportingPeriod | null
 ): T[] {

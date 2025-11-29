@@ -17,7 +17,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -27,6 +26,7 @@ import {
 } from "recharts";
 import { format } from "date-fns";
 import { ReportingPeriod, filterDataPointsByPeriod } from "@/lib/utils";
+import type { GoalProgressResponse, ObjectiveProgressResponse, DataPoint } from "@shared/schema";
 
 interface ObjectiveChartProps {
   objectiveId: number;
@@ -53,8 +53,8 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
   }, [selectedChartType, objectiveId]);
 
   // Helper function to check if support levels include "independent"
-  const hasIndependentSupport = (supportData: string) => {
-    if (!supportData || supportData === 'Not specified') return true; // Treat no support as independent
+  const hasIndependentSupport = (supportData: string): boolean => {
+    if (!supportData || supportData === 'Not specified') return true;
     try {
       const supportLevels = JSON.parse(supportData);
       return Array.isArray(supportLevels) && supportLevels.includes('independent');
@@ -62,18 +62,19 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
       return supportData === 'independent';
     }
   };
+
   // Get goal data to access dataCollectionType
-  const { data: goal, isLoading: goalLoading } = useQuery({
+  const { data: goalData, isLoading: goalLoading } = useQuery<GoalProgressResponse>({
     queryKey: [`/api/goals/${goalId}`],
   });
 
   // Get objective data
-  const { data: objective, isLoading: objectiveLoading } = useQuery({
+  const { data: objectiveData, isLoading: objectiveLoading } = useQuery<ObjectiveProgressResponse>({
     queryKey: [`/api/objectives/${objectiveId}/progress`],
   });
 
   // Get data points for this objective
-  const { data: dataPoints, isLoading: dataLoading } = useQuery({
+  const { data: dataPointsList, isLoading: dataLoading } = useQuery<DataPoint[]>({
     queryKey: [`/api/goals/${goalId}/data-points`],
   });
 
@@ -95,7 +96,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
     );
   }
 
-  if (!objective || !dataPoints) {
+  if (!objectiveData || !dataPointsList) {
     return (
       <Card>
         <CardHeader>
@@ -110,18 +111,33 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
     );
   }
 
+  // Extract objective and goal from responses
+  const objective = objectiveData.objective;
+  const goal = goalData?.goal;
+
   // Filter data points for this specific objective
-  let objectiveDataPoints = Array.isArray(dataPoints) ? dataPoints.filter(
-    (point: any) => point.objectiveId === objectiveId
-  ) : [];
+  let objectiveDataPoints = Array.isArray(dataPointsList) 
+    ? dataPointsList.filter((point) => point.objectiveId === objectiveId) 
+    : [];
 
   // Apply reporting period filtering if a specific period is selected
   if (selectedPeriod) {
     objectiveDataPoints = filterDataPointsByPeriod(objectiveDataPoints, selectedPeriod);
   }
 
-  const chartData = objectiveDataPoints
-    .map((point: any, index: number) => ({
+  // Chart data type for proper typing
+  interface ChartDataPoint {
+    index: number;
+    date: string;
+    fullDate: Date | string;
+    progress: number;
+    originalValue: number;
+    support: string;
+    notes: string;
+  }
+
+  const chartData: ChartDataPoint[] = objectiveDataPoints
+    .map((point, index) => ({
       index: index + 1,
       date: format(new Date(point.date), "MMM d"),
       fullDate: point.date,
@@ -130,15 +146,16 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
       support: point.levelOfSupport || 'Not specified',
       notes: point.anecdotalInfo || '',
     }))
-    .sort((a: any, b: any) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+    .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
     .slice(-10);
 
   // Split data by support level for percentage goals when support filter is 'split'
-  const independentData = supportFilter === 'split' && goal?.goal?.dataCollectionType === 'percentage'
+  const isPercentageGoal = goal?.dataCollectionType === 'percentage';
+  const independentData = supportFilter === 'split' && isPercentageGoal
     ? chartData.filter(item => hasIndependentSupport(item.support))
     : chartData;
 
-  const otherSupportData = supportFilter === 'split' && goal?.goal?.dataCollectionType === 'percentage'
+  const otherSupportData = supportFilter === 'split' && isPercentageGoal
     ? chartData.filter(item => !hasIndependentSupport(item.support))
     : [];
 
@@ -183,7 +200,71 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
 
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
+  // Helper function to render charts for split view - With Support
+  const renderWithSupportChart = () => {
+    switch (selectedChartType) {
+      case 'line':
+        return (
+          <LineChart data={otherSupportData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+            <YAxis domain={[0, 100]} stroke="#666" fontSize={11} tickFormatter={(value) => `${value}%`} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Progress']} labelFormatter={(label) => `Date: ${label}`} />
+            <Line type="monotone" dataKey="progress" stroke="#A855F7" strokeWidth={2} dot={{ fill: "#A855F7", r: 4 }} name="With Support" />
+          </LineChart>
+        );
+      case 'bar':
+        return (
+          <BarChart data={otherSupportData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+            <YAxis domain={[0, 100]} stroke="#666" fontSize={11} tickFormatter={(value) => `${value}%`} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Progress']} labelFormatter={(label) => `Date: ${label}`} />
+            <Bar dataKey="progress" fill="#A855F7" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        );
+      case 'pie':
+        return (
+          <RechartsPieChart>
+            <Pie data={otherSupportData} cx="50%" cy="50%" outerRadius={80} fill="#A855F7" dataKey="progress" label={({ date, progress }) => `${date}: ${progress}%`} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'With Support']} />
+          </RechartsPieChart>
+        );
+    }
+  };
 
+  // Helper function to render charts for split view - Independent
+  const renderIndependentChart = () => {
+    switch (selectedChartType) {
+      case 'line':
+        return (
+          <LineChart data={independentData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+            <YAxis domain={[0, 100]} stroke="#666" fontSize={11} tickFormatter={(value) => `${value}%`} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Progress']} labelFormatter={(label) => `Date: ${label}`} />
+            <Line type="monotone" dataKey="progress" stroke="#2563EB" strokeWidth={2} dot={{ fill: "#2563EB", r: 4 }} name="Independent" />
+          </LineChart>
+        );
+      case 'bar':
+        return (
+          <BarChart data={independentData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" stroke="#666" fontSize={11} />
+            <YAxis domain={[0, 100]} stroke="#666" fontSize={11} tickFormatter={(value) => `${value}%`} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Progress']} labelFormatter={(label) => `Date: ${label}`} />
+            <Bar dataKey="progress" fill="#2563EB" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        );
+      case 'pie':
+        return (
+          <RechartsPieChart>
+            <Pie data={independentData} cx="50%" cy="50%" outerRadius={80} fill="#2563EB" dataKey="progress" label={({ date, progress }) => `${date}: ${progress}%`} />
+            <Tooltip formatter={(value: number) => [`${value}%`, 'Independent']} />
+          </RechartsPieChart>
+        );
+    }
+  };
 
   return (
     <Card>
@@ -202,18 +283,18 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
               )}
             </div>
             <p className="text-gray-600 text-sm mb-2">
-              {objective?.objective?.description || 'Loading...'}
+              {objective?.description || 'Loading...'}
             </p>
-            {objective?.objective?.targetCriteria && (
+            {objective?.targetCriteria && (
               <p className="text-sm text-blue-600 mb-2">
-                <strong>Target:</strong> {objective.objective.targetCriteria}
+                <strong>Target:</strong> {objective.targetCriteria}
               </p>
             )}
-            <Badge className={getStatusColor(objective?.objective?.status || 'active')}>
-              {objective?.objective?.status === 'mastered' ? 'Mastered' : 
-               objective?.objective?.status === 'active' ? 'Active' : 
-               objective?.objective?.status === 'discontinued' ? 'Discontinued' : 
-               objective?.objective?.status || 'Active'}
+            <Badge className={getStatusColor(objective?.status || 'active')}>
+              {objective?.status === 'mastered' ? 'Mastered' : 
+               objective?.status === 'active' ? 'Active' : 
+               objective?.status === 'discontinued' ? 'Discontinued' : 
+               objective?.status || 'Active'}
             </Badge>
           </div>
           
@@ -243,7 +324,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
             </DropdownMenu>
             
             {/* Support Level Filter Toggle - Only for percentage goals */}
-            {goal?.goal?.dataCollectionType === 'percentage' && (
+            {isPercentageGoal && (
               <Button
                 variant={supportFilter === 'split' ? "default" : "outline"}
                 size="sm"
@@ -270,7 +351,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
         ) : (
           <>
             {/* Chart Container - Single or Dual based on support filter */}
-            {supportFilter === 'split' && goal?.goal?.dataCollectionType === 'percentage' ? (
+            {supportFilter === 'split' && isPercentageGoal ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* With Support Chart */}
                 <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
@@ -284,57 +365,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
-                        {selectedChartType === 'line' && (
-                          <LineChart data={otherSupportData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
-                            <YAxis 
-                              domain={[0, 100]}
-                              stroke="#666"
-                              fontSize={11}
-                              tickFormatter={(value) => `${value}%`}
-                            />
-                            <Tooltip
-                              formatter={(value: any) => [`${value}%`, 'Progress']}
-                              labelFormatter={(label) => `Date: ${label}`}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="progress"
-                              stroke="#A855F7"
-                              strokeWidth={2}
-                              dot={{ fill: "#A855F7", r: 4 }}
-                              name="With Support"
-                            />
-                          </LineChart>
-                        )}
-                        {selectedChartType === 'bar' && (
-                          <BarChart data={otherSupportData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
-                            <YAxis 
-                              domain={[0, 100]}
-                              stroke="#666"
-                              fontSize={11}
-                              tickFormatter={(value) => `${value}%`}
-                            />
-                            <Tooltip
-                              formatter={(value: any) => [`${value}%`, 'Progress']}
-                              labelFormatter={(label) => `Date: ${label}`}
-                            />
-                            <Bar dataKey="progress" fill="#A855F7" radius={[4, 4, 0, 0]} />
-                          </BarChart>
-                        )}
-                        {selectedChartType === 'pie' && (
-                          <RechartsPieChart>
-                            <Pie
-                              data={otherSupportData}
-                              cx="50%" cy="50%" outerRadius={80} fill="#A855F7" dataKey="progress"
-                              label={({ date, progress }: any) => `${date}: ${progress}%`}
-                            />
-                            <Tooltip formatter={(value: any) => [`${value}%`, 'With Support']} />
-                          </RechartsPieChart>
-                        )}
+                        {renderWithSupportChart()}
                       </ResponsiveContainer>
                     )}
                   </div>
@@ -352,57 +383,7 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height="100%">
-                        {selectedChartType === 'line' && (
-                          <LineChart data={independentData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
-                            <YAxis 
-                              domain={[0, 100]}
-                              stroke="#666"
-                              fontSize={11}
-                              tickFormatter={(value) => `${value}%`}
-                            />
-                            <Tooltip
-                              formatter={(value: any) => [`${value}%`, 'Progress']}
-                              labelFormatter={(label) => `Date: ${label}`}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="progress"
-                              stroke="#2563EB"
-                              strokeWidth={2}
-                              dot={{ fill: "#2563EB", r: 4 }}
-                              name="Independent"
-                            />
-                          </LineChart>
-                        )}
-                        {selectedChartType === 'bar' && (
-                          <BarChart data={independentData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis dataKey="date" stroke="#666" fontSize={11} />
-                            <YAxis 
-                              domain={[0, 100]}
-                              stroke="#666"
-                              fontSize={11}
-                              tickFormatter={(value) => `${value}%`}
-                            />
-                            <Tooltip
-                              formatter={(value: any) => [`${value}%`, 'Progress']}
-                              labelFormatter={(label) => `Date: ${label}`}
-                            />
-                            <Bar dataKey="progress" fill="#2563EB" radius={[4, 4, 0, 0]} />
-                          </BarChart>
-                        )}
-                        {selectedChartType === 'pie' && (
-                          <RechartsPieChart>
-                            <Pie
-                              data={independentData}
-                              cx="50%" cy="50%" outerRadius={80} fill="#2563EB" dataKey="progress"
-                              label={({ date, progress }: any) => `${date}: ${progress}%`}
-                            />
-                            <Tooltip formatter={(value: any) => [`${value}%`, 'Independent']} />
-                          </RechartsPieChart>
-                        )}
+                        {renderIndependentChart()}
                       </ResponsiveContainer>
                     )}
                   </div>
@@ -498,24 +479,24 @@ export default function ObjectiveChart({ objectiveId, goalId, selectedPeriod }: 
         )}
         
         {/* Objective Statistics */}
-        {objective?.currentProgress !== undefined && (
+        {objectiveData?.currentProgress !== undefined && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900">{objective?.dataPointsCount || 0}</p>
+              <p className="text-2xl font-bold text-gray-900">{objectiveData?.dataPointsCount || 0}</p>
               <p className="text-xs text-gray-600">Data Points</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900">{objective?.averageScore?.toFixed(0) || 0}%</p>
+              <p className="text-2xl font-bold text-gray-900">{objectiveData?.averageScore?.toFixed(0) || 0}%</p>
               <p className="text-xs text-gray-600">Average Score</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className={`text-2xl font-bold ${(objective?.trend || 0) > 0 ? 'text-green-600' : (objective?.trend || 0) < 0 ? 'text-red-600' : 'text-gray-900'}`}>
-                {(objective?.trend || 0) > 0 ? `+${objective.trend.toFixed(1)}%` : (objective?.trend || 0) < 0 ? `${objective.trend.toFixed(1)}%` : '0%'}
+              <p className={`text-2xl font-bold ${(objectiveData?.trend || 0) > 0 ? 'text-green-600' : (objectiveData?.trend || 0) < 0 ? 'text-red-600' : 'text-gray-900'}`}>
+                {(objectiveData?.trend || 0) > 0 ? `+${objectiveData.trend.toFixed(1)}%` : (objectiveData?.trend || 0) < 0 ? `${objectiveData.trend.toFixed(1)}%` : '0%'}
               </p>
               <p className="text-xs text-gray-600">Trend</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-900">{objective?.lastScore?.toFixed(0) || 0}%</p>
+              <p className="text-2xl font-bold text-gray-900">{objectiveData?.lastScore?.toFixed(0) || 0}%</p>
               <p className="text-xs text-gray-600">Last Score</p>
             </div>
           </div>

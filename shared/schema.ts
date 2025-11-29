@@ -222,3 +222,31 @@ export type InsertObjective = z.infer<typeof insertObjectiveSchema>;
 export type Objective = typeof objectives.$inferSelect;
 export type InsertDataPoint = z.infer<typeof insertDataPointSchema>;
 export type DataPoint = typeof dataPoints.$inferSelect;
+
+// API Response Types
+export interface GoalProgressResponse {
+  goal: Goal;
+  dataPoints: DataPoint[];
+  currentProgress: number;
+  averageScore: number;
+  trend: number;
+  lastScore: number;
+}
+
+export interface ObjectiveProgressResponse {
+  objective: Objective;
+  dataPoints: DataPoint[];
+  currentProgress: number;
+  averageScore: number;
+  trend: number;
+  lastScore: number;
+  dataPointsCount: number;
+}
+
+export interface GoalWithProgress extends Goal {
+  currentProgress: number;
+  averageScore: number;
+  trend: number;
+  lastScore: number;
+  dataPointsCount: number;
+}
