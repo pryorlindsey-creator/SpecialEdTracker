@@ -19,18 +19,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  console.log(`📡 [API REQUEST] ${method} ${url}`);
-  console.log("📡 [API REQUEST] Data being sent:", data);
-  
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
-
-  console.log(`📡 [API RESPONSE] Status: ${res.status} ${res.statusText}`);
-  console.log("📡 [API RESPONSE] Headers:", Object.fromEntries(res.headers.entries()));
 
   await throwIfResNotOk(res);
   return res;
@@ -59,10 +53,11 @@ export const queryClient = new QueryClient({
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
-      refetchOnWindowFocus: true, // Allow refetch on window focus to get fresh data
-      staleTime: 0, // Always consider data stale to prevent cache issues
-      cacheTime: 0, // Don't cache data to prevent stale data issues
-      retry: false,
+      refetchOnWindowFocus: false,
+      staleTime: 30 * 1000,
+      gcTime: 5 * 60 * 1000,
+      retry: 1,
+      retryDelay: 1000,
     },
     mutations: {
       retry: false,

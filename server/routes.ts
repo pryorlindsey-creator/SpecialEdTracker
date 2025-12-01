@@ -19,207 +19,139 @@ function safeParseInt(value: string, paramName: string): number | { error: strin
   return parsed;
 }
 
+const isDevelopment = process.env.NODE_ENV !== 'production';
+
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Temporary debug endpoint (before auth middleware)
-  app.get('/api/debug/force-load', async (req, res) => {
-    try {
-      console.log("Force loading students for user 4201332");
-      const students = await storage.getStudentsByUserId('4201332');
-      
-      const studentsWithSummary = await Promise.all(
-        students.map(async (student) => {
-          const summary = await storage.getStudentSummary(student.id);
-          return {
-            ...student,
-            ...summary,
-          };
-        })
-      );
-      
-      console.log("Force load result:", studentsWithSummary.length, "students");
-      res.json(studentsWithSummary);
-    } catch (error) {
-      console.error("Force load error:", error);
-      res.status(500).json({ message: "Failed to force load students" });
-    }
-  });
+  // Debug endpoints - only available in development mode
+  if (isDevelopment) {
+    app.get('/api/debug/force-load', async (req, res) => {
+      try {
+        const students = await storage.getStudentsByUserId('4201332');
+        const studentsWithSummary = await Promise.all(
+          students.map(async (student) => {
+            const summary = await storage.getStudentSummary(student.id);
+            return { ...student, ...summary };
+          })
+        );
+        res.json(studentsWithSummary);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to force load students" });
+      }
+    });
 
-  // Test endpoint to verify server connectivity
-  app.post('/api/test', (req, res) => {
-    console.log("Test endpoint hit successfully");
-    console.log("Test request body:", req.body);
-    res.json({ message: "Server is working", received: req.body });
-  });
+    app.post('/api/test', (req, res) => {
+      res.json({ message: "Server is working", received: req.body });
+    });
 
-  // Debug endpoint to test Focus goal data specifically
-  app.get('/api/debug/goal-74', async (req, res) => {
-    try {
-      console.log("=== TESTING GOAL 74 (FOCUS GOAL) ===");
-      const goalId = 74;
-      
-      // Direct data points query
-      const directDataPoints = await storage.getDataPointsByGoalId(goalId);
-      // Goal progress query
-      const progress = await storage.getGoalProgress(goalId);
-      
-      res.json({
-        directDataPoints: directDataPoints.length,
-        progressDataPoints: progress.dataPoints.length,
-        latestDataPoints: directDataPoints.slice(0, 5).map(dp => ({
-          id: dp.id,
-          date: dp.date,
-          value: dp.progressValue
-        }))
-      });
-    } catch (error) {
-      console.error("Goal 74 test error:", error);
-      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
-    }
-  });
+    app.get('/api/debug/goal-74', async (req, res) => {
+      try {
+        const goalId = 74;
+        const directDataPoints = await storage.getDataPointsByGoalId(goalId);
+        const progress = await storage.getGoalProgress(goalId);
+        res.json({
+          directDataPoints: directDataPoints.length,
+          progressDataPoints: progress.dataPoints.length,
+          latestDataPoints: directDataPoints.slice(0, 5).map(dp => ({
+            id: dp.id,
+            date: dp.date,
+            value: dp.progressValue
+          }))
+        });
+      } catch (error) {
+        res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+      }
+    });
+  }
 
   // Auth middleware - this sets up sessions first
   await setupAuth(app);
 
-  // Admin login route (after auth middleware to have session available)
-  app.post('/api/auth/admin-login', async (req: any, res) => {
-    try {
-      console.log("Admin login attempt received");
-      console.log("Request body:", req.body);
-      console.log("Request headers:", req.headers);
-      
-      const { username, password } = req.body;
-      
-      console.log("Extracted credentials:", { username, password: password ? "[PASSWORD PROVIDED]" : "[NO PASSWORD]" });
-      
-      // Check admin credentials
-      if (username === 'sandralindsey' && password === 'IsabelShea@1998') {
-        console.log("Admin credentials match! Login successful");
+  // Admin login route - development mode only with env var credentials
+  if (isDevelopment) {
+    app.post('/api/auth/admin-login', async (req: any, res) => {
+      try {
+        const { username, password } = req.body;
+        const adminUsername = process.env.ADMIN_USERNAME || 'admin';
+        const adminPassword = process.env.ADMIN_PASSWORD;
         
-        // Create admin user in database 
-        const adminUser = await storage.upsertUser({
-          id: '4201332', // Use the user ID that has all the existing data
-          email: 'sandralindsey@speechpathai.com',
-          firstName: 'Sandra',
-          lastName: 'Lindsey',
-        });
-        
-        console.log("Admin user created/updated:", adminUser);
-        
-        // Bypass session issues with a direct session setup
-        if (req.session) {
-          console.log("Session is available");
-          
-          // Set up user data directly
-          const adminUser = {
-            claims: { 
-              sub: '4201332',
-              email: 'sandralindsey@speechpathai.com',
-              first_name: 'Sandra',
-              last_name: 'Lindsey'
-            },
-            expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week
-          };
-          
-          // Use passport's login method for proper session handling
-          req.login(adminUser, (err: Error | null) => {
-            if (err) {
-              console.error('Passport login error:', err);
-              return res.status(500).json({ success: false, message: 'Session creation failed' });
-            }
-            
-            // Set admin cookie as backup
-            res.cookie('admin_session', JSON.stringify(adminUser), {
-              httpOnly: false, // Allow frontend access
-              secure: false,
-              maxAge: 7 * 24 * 60 * 60 * 1000,
-              sameSite: 'lax'
-            });
-            
-            // Force session save to database
-            req.session.save((saveErr: Error | null) => {
-              if (saveErr) {
-                console.error('Session save error:', saveErr);
-              }
-              
-              res.json({ success: true, message: "Admin login successful", redirectTo: "/" });
-            });
-          });
-        } else {
-          console.log("No session available, using cookie fallback");
-          const userData = {
-            claims: { 
-              sub: '4201332',
-              email: 'sandralindsey@speechpathai.com',
-              first_name: 'Sandra',
-              last_name: 'Lindsey'
-            },
-            expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60)
-          };
-          
-          res.cookie('admin_session', JSON.stringify(userData), { 
-            httpOnly: false, // Allow frontend access
-            secure: false,
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-            sameSite: 'lax'
-          });
-          res.json({ success: true, message: "Admin login successful (no session)", redirectTo: "/" });
+        if (!adminPassword) {
+          return res.status(503).json({ message: "Admin login not configured" });
         }
         
-      } else {
-        console.log("Admin credentials do NOT match");
-        console.log("Expected username: 'sandralindsey', received:", username);
-        console.log("Password provided:", password ? "YES" : "NO");
-        res.status(401).json({ message: "Invalid admin credentials" });
+        if (username === adminUsername && password === adminPassword) {
+          await storage.upsertUser({
+            id: '4201332',
+            email: 'sandralindsey@speechpathai.com',
+            firstName: 'Sandra',
+            lastName: 'Lindsey',
+          });
+          
+          if (req.session) {
+            const adminUser = {
+              claims: { 
+                sub: '4201332',
+                email: 'sandralindsey@speechpathai.com',
+                first_name: 'Sandra',
+                last_name: 'Lindsey'
+              },
+              expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60),
+            };
+            
+            req.login(adminUser, (err: Error | null) => {
+              if (err) {
+                return res.status(500).json({ success: false, message: 'Session creation failed' });
+              }
+              
+              req.session.save((saveErr: Error | null) => {
+                res.json({ success: true, message: "Admin login successful", redirectTo: "/" });
+              });
+            });
+          } else {
+            res.status(500).json({ message: "Session not available" });
+          }
+        } else {
+          res.status(401).json({ message: "Invalid admin credentials" });
+        }
+      } catch (error) {
+        res.status(500).json({ message: "Login failed" });
       }
-    } catch (error) {
-      console.error("Error during admin login:", error);
-      res.status(500).json({ message: "Login failed" });
-    }
-  });
-
-  // Auth middleware - this sets up sessions first
-  await setupAuth(app);
-
-  // Auth routes
-  app.get('/api/auth/debug', (req: any, res) => {
-    res.json({
-      isAuthenticated: req.isAuthenticated(),
-      hasUser: !!req.user,
-      hasSession: !!req.session,
-      sessionId: req.sessionID,
-      userClaims: req.user?.claims || null,
-      expires_at: req.user?.expires_at || null,
     });
-  });
+  }
 
-  // Temporary test route to create a user session for testing
-  app.get('/api/auth/test-login', async (req: any, res) => {
-    try {
-      console.log("Creating test user session");
-      
-      // Create a test user
-      const testUser = await storage.upsertUser({
-        id: 'test-user-123',
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
+  // Auth debug routes - development mode only
+  if (isDevelopment) {
+    app.get('/api/auth/debug', (req: any, res) => {
+      res.json({
+        isAuthenticated: req.isAuthenticated(),
+        hasUser: !!req.user,
+        hasSession: !!req.session,
+        sessionId: req.sessionID,
+        userClaims: req.user?.claims || null,
+        expires_at: req.user?.expires_at || null,
       });
-      
-      // Manually create session
-      req.user = {
-        claims: { sub: 'test-user-123', email: 'test@example.com' },
-        expires_at: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
-      };
-      
-      req.session.passport = { user: req.user };
-      
-      console.log("Test user session created");
-      res.redirect('/');
-    } catch (error) {
-      console.error("Error creating test session:", error);
-      res.status(500).json({ message: "Failed to create test session" });
-    }
-  });
+    });
+
+    app.get('/api/auth/test-login', async (req: any, res) => {
+      try {
+        await storage.upsertUser({
+          id: 'test-user-123',
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User',
+        });
+        
+        req.user = {
+          claims: { sub: 'test-user-123', email: 'test@example.com' },
+          expires_at: Math.floor(Date.now() / 1000) + 3600,
+        };
+        
+        req.session.passport = { user: req.user };
+        res.redirect('/');
+      } catch (error) {
+        res.status(500).json({ message: "Failed to create test session" });
+      }
+    });
+  }
 
   app.get('/api/auth/user', async (req: any, res) => {
     try {
@@ -240,110 +172,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Debug endpoint to check user data associations
-  app.get('/api/debug/user-data', async (req: any, res) => {
-    try {
-      const userId = '4201332';
-      console.log("=== DEBUG USER DATA ===");
-      console.log("Current user ID:", userId);
-      
-      // Get all users
-      const allUsers = await storage.getAllUsers();
-      console.log("All users:", allUsers.map(u => ({ id: u.id, email: u.email })));
-      
-      // Get all students
-      const allStudents = await storage.getAllStudents();
-      console.log("All students:", allStudents.map(s => ({ id: s.id, name: s.name, userId: s.userId })));
-      
-      // Get students for current user
-      const userStudents = await storage.getStudentsByUserId(userId);
-      console.log("Students for current user:", userStudents.length);
-      
-      res.json({
-        currentUserId: userId,
-        allUsers: allUsers.map(u => ({ id: u.id, email: u.email })),
-        allStudents: allStudents.map(s => ({ id: s.id, name: s.name, userId: s.userId })),
-        userStudents: userStudents.length
-      });
-    } catch (error) {
-      console.error("Debug error:", error);
-      res.status(500).json({ message: "Debug failed" });
-    }
-  });
+  // Debug endpoints - only available in development mode
+  if (isDevelopment) {
+    app.get('/api/debug/user-data', async (req: any, res) => {
+      try {
+        const userId = '4201332';
+        const allUsers = await storage.getAllUsers();
+        const allStudents = await storage.getAllStudents();
+        const userStudents = await storage.getStudentsByUserId(userId);
+        
+        res.json({
+          currentUserId: userId,
+          allUsers: allUsers.map(u => ({ id: u.id, email: u.email })),
+          allStudents: allStudents.map(s => ({ id: s.id, name: s.name, userId: s.userId })),
+          userStudents: userStudents.length
+        });
+      } catch (error) {
+        res.status(500).json({ message: "Debug failed" });
+      }
+    });
 
-  // Fix user data association - transfer students from test user to current user
-  app.post('/api/debug/fix-user-data', async (req: any, res) => {
-    try {
-      const currentUserId = '4201332';
-      const testUserId = 'test-user-123';
-      
-      console.log(`Transferring students from ${testUserId} to ${currentUserId}`);
-      
-      // Update all students from test user to current user
-      const result = await db
-        .update(students)
-        .set({ userId: currentUserId })
-        .where(eq(students.userId, testUserId))
-        .returning();
-      
-      console.log(`Transferred ${result.length} students to current user`);
-      
-      res.json({
-        message: `Successfully transferred ${result.length} students to your account`,
-        transferredStudents: result.length
-      });
-    } catch (error) {
-      console.error("Fix error:", error);
-      res.status(500).json({ message: "Failed to fix user data" });
-    }
-  });
+    app.post('/api/debug/fix-user-data', async (req: any, res) => {
+      try {
+        const currentUserId = '4201332';
+        const testUserId = 'test-user-123';
+        
+        const result = await db
+          .update(students)
+          .set({ userId: currentUserId })
+          .where(eq(students.userId, testUserId))
+          .returning();
+        
+        res.json({
+          message: `Successfully transferred ${result.length} students to your account`,
+          transferredStudents: result.length
+        });
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fix user data" });
+      }
+    });
 
-  // Temporary fix endpoint for user 4201332 (no auth required for testing)
-  app.get('/api/students/force-load', async (req, res) => {
-    try {
-      console.log("Force loading students for user 4201332");
-      const students = await storage.getStudentsByUserId('4201332');
-      
-      const studentsWithSummary = await Promise.all(
-        students.map(async (student) => {
-          const summary = await storage.getStudentSummary(student.id);
-          return {
-            ...student,
-            ...summary,
-          };
-        })
-      );
-      
-      console.log("Force load result:", studentsWithSummary.length, "students");
-      res.json(studentsWithSummary);
-    } catch (error) {
-      console.error("Force load error:", error);
-      res.status(500).json({ message: "Failed to force load students" });
-    }
-  });
+    app.get('/api/students/force-load', async (req, res) => {
+      try {
+        const students = await storage.getStudentsByUserId('4201332');
+        const studentsWithSummary = await Promise.all(
+          students.map(async (student) => {
+            const summary = await storage.getStudentSummary(student.id);
+            return { ...student, ...summary };
+          })
+        );
+        res.json(studentsWithSummary);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to force load students" });
+      }
+    });
+  }
 
   // Student routes with proper user ownership
   app.get('/api/students', async (req: any, res) => {
     try {
-      const userId = '4201332'; // Development mode - use fixed user ID
-      console.log("Fetching students for user ID:", userId);
-      
-      // Now that all students are migrated to one user, use standard ownership
+      const userId = '4201332';
       const students = await storage.getStudentsByUserId(userId);
-      console.log("Found students:", students.length);
       
-      // Get summary data for each student
       const studentsWithSummary = await Promise.all(
         students.map(async (student) => {
           const summary = await storage.getStudentSummary(student.id);
-          return {
-            ...student,
-            ...summary,
-          };
+          return { ...student, ...summary };
         })
       );
       
-      console.log("Returning students with summary:", studentsWithSummary.length);
       res.json(studentsWithSummary);
     } catch (error) {
       console.error("Error fetching students:", error);
@@ -353,18 +250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/students', async (req: any, res) => {
     try {
-      const userId = '4201332'; // Development mode - use fixed user ID
-      console.log("Creating student for user:", userId);
-      console.log("Request body:", req.body);
-      
-      const studentData = insertStudentSchema.parse({
-        ...req.body,
-        userId,
-      });
-      
-      console.log("Parsed student data:", studentData);
+      const userId = '4201332';
+      const studentData = insertStudentSchema.parse({ ...req.body, userId });
       const student = await storage.createStudent(studentData);
-      console.log("Student created successfully:", student.id);
       res.status(201).json(student);
     } catch (error) {
       console.error("Error creating student:", error);
@@ -385,9 +273,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Student not found" });
       }
 
-      // Verify ownership - now all students belong to user 4201332
       const userId = '4201332';
-      console.log(`Student ${studentId} belongs to ${student.userId}, current user is ${userId}`);
       
       if (student.userId !== userId) {
         return res.status(403).json({ message: "Access denied" });
