@@ -50,6 +50,13 @@ Goal limits: Each student can have a maximum of 15 goals (not required to have 1
 - **Monthly Reminder System**: Automated popup alerts for upcoming calendar events including IEP due dates and reporting period start/end dates. Shows once per month with color-coded event categorization, days-until counters, and clean dismissal system (September 1, 2025).
 - **Mastery Alert System**: Comprehensive automated mastery detection system that monitors goal and objective progress against target criteria. Features intelligent parsing of criteria patterns and **sliding window evaluation** that scans ALL data points to find ANY qualifying window where mastery criteria is met (not just the most recent trials). Supports "X/Y trials" format (e.g., "80% in 4/5 trials" = 4 of any 5 trials at 80%+) and "consecutive" format (e.g., "80% for 3 consecutive sessions" = any 3 consecutive sessions all at 80%+). **Important**: Goals with objectives only show mastery when ALL objectives have been mastered - the goal's own data points are not sufficient. Goals without objectives continue to use goal-level data point evaluation. Updated November 29, 2025.
 - **User Ownership**: Strict user ownership system implemented to ensure data integrity and prevent cross-user data access issues.
+- **Database Performance Optimizations**: Comprehensive database optimizations implemented December 1, 2025:
+  - Connection pool configuration: max=10 connections, 30s idle timeout, 10s connection timeout with proper error handling
+  - Database indexes added on all frequently queried columns (userId, studentId, goalId, objectiveId, date) for faster lookups
+  - N+1 query patterns eliminated via batch operations (getAllStudentsWithDetails, getAllGoalsWithDetails, getAllDataPointsForGoalWithObjectives)
+  - Transaction support for all cascade delete operations (deleteGoal, clearStudentData, removeStudentFromCaseload, clearAllUserData) ensuring atomicity
+  - Admin verification queries optimized from 6 separate queries to 1 combined query with subqueries
+  - All 130 unit tests passing after optimizations
 - **Production Readiness**: Application fully prepared for external deployment with comprehensive security configurations, documentation, and deployment guides. All development files cleaned up and debug logging removed.
 
 ## External Dependencies
