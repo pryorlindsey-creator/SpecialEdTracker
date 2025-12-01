@@ -1482,37 +1482,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/table/:tableName', async (req, res) => {
     try {
       const tableName = req.params.tableName;
-      let data;
+      const rawPage = parseInt(req.query.page as string);
+      const rawLimit = parseInt(req.query.limit as string);
+      
+      const page = isNaN(rawPage) || rawPage < 1 ? 1 : rawPage;
+      const limit = isNaN(rawLimit) || rawLimit < 1 ? 100 : Math.min(rawLimit, 500);
+      const offset = (page - 1) * limit;
+      
+      let allData: any[] = [];
       
       switch (tableName) {
         case 'users':
-          data = await storage.getAllUsers();
+          allData = await storage.getAllUsers();
           break;
         case 'students':
-          data = await storage.getAllStudents();
+          allData = await storage.getAllStudents();
           break;
         case 'goals':
-          data = await storage.getAllGoals();
+          allData = await storage.getAllGoals();
           break;
         case 'data_points':
         case 'dataPoints':
-          data = await storage.getAllDataPoints();
+          allData = await storage.getAllDataPoints();
           break;
         case 'sessions':
-          data = await storage.getAllSessions();
+          allData = await storage.getAllSessions();
           break;
         case 'reporting_periods':
         case 'reportingPeriods':
-          data = await storage.getAllReportingPeriods();
+          allData = await storage.getAllReportingPeriods();
           break;
         case 'objectives':
-          data = await storage.getAllObjectives();
+          allData = await storage.getAllObjectives();
           break;
         default:
           return res.status(404).json({ message: "Table not found" });
       }
       
-      res.json(data);
+      const total = allData.length;
+      const totalPages = Math.ceil(total / limit);
+      const paginatedData = allData.slice(offset, offset + limit);
+      
+      res.json({
+        data: paginatedData,
+        total,
+        page,
+        limit,
+        totalPages
+      });
     } catch (error) {
       console.error(`Error fetching table ${req.params.tableName}:`, error);
       res.status(500).json({ message: "Failed to fetch table data" });
