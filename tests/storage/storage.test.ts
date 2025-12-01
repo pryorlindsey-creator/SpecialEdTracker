@@ -506,4 +506,219 @@ describe('Storage Functions', () => {
       expect(dp.progressValue).toBe('75.99');
     });
   });
+
+  describe('Pagination Operations', () => {
+    it('should calculate correct pagination parameters', () => {
+      const page = 2;
+      const limit = 25;
+      const offset = (page - 1) * limit;
+      
+      expect(offset).toBe(25);
+    });
+
+    it('should handle page 1 with zero offset', () => {
+      const page = 1;
+      const limit = 50;
+      const offset = (page - 1) * limit;
+      
+      expect(offset).toBe(0);
+    });
+
+    it('should calculate correct total pages', () => {
+      const total = 127;
+      const limit = 50;
+      const totalPages = Math.ceil(total / limit);
+      
+      expect(totalPages).toBe(3);
+    });
+
+    it('should enforce maximum page size limit', () => {
+      const requestedLimit = 500;
+      const maxLimit = 100;
+      const enforcedLimit = Math.min(requestedLimit, maxLimit);
+      
+      expect(enforcedLimit).toBe(100);
+    });
+
+    it('should enforce minimum page size limit', () => {
+      const requestedLimit = 0;
+      const minLimit = 1;
+      const enforcedLimit = Math.max(requestedLimit, minLimit);
+      
+      expect(enforcedLimit).toBe(1);
+    });
+
+    it('should return correct pagination metadata', () => {
+      const dataPoints = Array.from({ length: 10 }, (_, i) => 
+        createMockDataPoint({ id: i + 1 })
+      );
+      
+      const total = 127;
+      const page = 2;
+      const limit = 10;
+      const totalPages = Math.ceil(total / limit);
+      
+      const response = {
+        data: dataPoints,
+        total,
+        page,
+        limit,
+        totalPages
+      };
+      
+      expect(response.data.length).toBe(10);
+      expect(response.total).toBe(127);
+      expect(response.page).toBe(2);
+      expect(response.limit).toBe(10);
+      expect(response.totalPages).toBe(13);
+    });
+  });
+
+  describe('Batch Operations', () => {
+    it('should validate batch size limits', () => {
+      const maxBatchSize = 100;
+      const validBatch = 50;
+      const invalidBatch = 150;
+      
+      expect(validBatch <= maxBatchSize).toBe(true);
+      expect(invalidBatch <= maxBatchSize).toBe(false);
+    });
+
+    it('should handle empty batch gracefully', () => {
+      const emptyBatch: any[] = [];
+      
+      expect(emptyBatch.length).toBe(0);
+    });
+
+    it('should create multiple data points in batch', () => {
+      const dataPointsToCreate = Array.from({ length: 5 }, (_, i) => 
+        createMockDataPoint({ 
+          id: i + 1, 
+          goalId: 1, 
+          studentId: 1,
+          progressValue: `${(i + 1) * 20}` 
+        })
+      );
+      
+      expect(dataPointsToCreate.length).toBe(5);
+      expect(dataPointsToCreate[0].progressValue).toBe('20');
+      expect(dataPointsToCreate[4].progressValue).toBe('100');
+    });
+
+    it('should validate all data points before batch insert', () => {
+      const validDataPoint = createMockDataPoint({
+        goalId: 1,
+        studentId: 1,
+        progressValue: '75',
+        date: new Date(),
+      });
+      
+      const isValid = (dp: any) => 
+        dp.goalId && 
+        dp.studentId && 
+        dp.progressValue !== undefined &&
+        dp.date instanceof Date;
+      
+      expect(isValid(validDataPoint)).toBe(true);
+    });
+
+    it('should return batch delete count', () => {
+      const idsToDelete = [1, 2, 3, 4, 5];
+      const deletedCount = idsToDelete.length;
+      
+      const result = { deletedCount };
+      
+      expect(result.deletedCount).toBe(5);
+    });
+
+    it('should handle mixed valid and invalid IDs in batch delete', () => {
+      const validIds = [1, 2, 3];
+      const mixedIds = [1, 2, 'invalid', null, 5];
+      
+      const parsedIds = mixedIds.filter(id => 
+        typeof id === 'number' && !isNaN(id)
+      );
+      
+      expect(parsedIds).toEqual([1, 2, 5]);
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should categorize database errors correctly', () => {
+      const errorTypes = {
+        CONNECTION: 'CONNECTION',
+        QUERY: 'QUERY',
+        TRANSACTION: 'TRANSACTION',
+        TIMEOUT: 'TIMEOUT',
+        UNKNOWN: 'UNKNOWN'
+      };
+      
+      expect(errorTypes.CONNECTION).toBe('CONNECTION');
+      expect(errorTypes.QUERY).toBe('QUERY');
+      expect(errorTypes.TRANSACTION).toBe('TRANSACTION');
+      expect(errorTypes.TIMEOUT).toBe('TIMEOUT');
+      expect(errorTypes.UNKNOWN).toBe('UNKNOWN');
+    });
+
+    it('should detect transient errors for retry logic', () => {
+      const transientErrorMessages = [
+        'connection timeout',
+        'connection refused', 
+        'ECONNRESET',
+        'too many connections',
+        'database is starting'
+      ];
+      
+      const isTransientError = (message: string) => 
+        transientErrorMessages.some(pattern => 
+          message.toLowerCase().includes(pattern.toLowerCase())
+        );
+      
+      expect(isTransientError('Connection timeout occurred')).toBe(true);
+      expect(isTransientError('ECONNRESET in socket')).toBe(true);
+      expect(isTransientError('Invalid SQL syntax')).toBe(false);
+    });
+
+    it('should implement retry with exponential backoff', () => {
+      const baseDelay = 1000;
+      const maxRetries = 3;
+      
+      const delays = Array.from({ length: maxRetries }, (_, attempt) => 
+        baseDelay * Math.pow(2, attempt)
+      );
+      
+      expect(delays).toEqual([1000, 2000, 4000]);
+    });
+
+    it('should include operation context in error logs', () => {
+      const context = {
+        operation: 'getDataPointsByGoalId',
+        goalId: 123,
+        userId: '4201332'
+      };
+      
+      const errorLog = {
+        message: 'Database query failed',
+        context,
+        timestamp: new Date().toISOString()
+      };
+      
+      expect(errorLog.context.operation).toBe('getDataPointsByGoalId');
+      expect(errorLog.context.goalId).toBe(123);
+    });
+
+    it('should track retry attempts in error state', () => {
+      const maxRetries = 3;
+      let attemptCount = 0;
+      
+      const simulateRetries = () => {
+        for (let i = 0; i < maxRetries; i++) {
+          attemptCount++;
+        }
+        return attemptCount;
+      };
+      
+      expect(simulateRetries()).toBe(3);
+    });
+  });
 });

@@ -1222,6 +1222,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Paginated data points endpoints
+  app.get('/api/goals/:goalId/data-points/paginated', async (req: any, res) => {
+    try {
+      const goalIdResult = safeParseInt(req.params.goalId, 'goalId');
+      if (typeof goalIdResult === 'object' && 'error' in goalIdResult) {
+        return res.status(400).json({ message: goalIdResult.error });
+      }
+      const goalId = goalIdResult;
+      
+      const goal = await storage.getGoalById(goalId);
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+      
+      const student = await storage.getStudentById(goal.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      
+      const result = await storage.getDataPointsByGoalIdPaginated(goalId, { page, limit });
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching paginated data points:", error);
+      res.status(500).json({ message: "Failed to fetch paginated data points" });
+    }
+  });
+
+  app.get('/api/students/:studentId/data-points/paginated', async (req: any, res) => {
+    try {
+      const studentIdResult = safeParseInt(req.params.studentId, 'studentId');
+      if (typeof studentIdResult === 'object' && 'error' in studentIdResult) {
+        return res.status(400).json({ message: studentIdResult.error });
+      }
+      const studentId = studentIdResult;
+      
+      const student = await storage.getStudentById(studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 50;
+      
+      const result = await storage.getDataPointsByStudentIdPaginated(studentId, { page, limit });
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching paginated data points:", error);
+      res.status(500).json({ message: "Failed to fetch paginated data points" });
+    }
+  });
+
+  // Batch data point operations
+  app.post('/api/goals/:goalId/data-points/batch', async (req: any, res) => {
+    try {
+      const goalIdResult = safeParseInt(req.params.goalId, 'goalId');
+      if (typeof goalIdResult === 'object' && 'error' in goalIdResult) {
+        return res.status(400).json({ message: goalIdResult.error });
+      }
+      const goalId = goalIdResult;
+      
+      const goal = await storage.getGoalById(goalId);
+      if (!goal) {
+        return res.status(404).json({ message: "Goal not found" });
+      }
+      
+      const student = await storage.getStudentById(goal.studentId);
+      if (!student) {
+        return res.status(404).json({ message: "Student not found" });
+      }
+      
+      const userId = '4201332';
+      if (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const { dataPoints: dataPointsToCreate } = req.body;
+      if (!Array.isArray(dataPointsToCreate)) {
+        return res.status(400).json({ message: "dataPoints must be an array" });
+      }
+      
+      if (dataPointsToCreate.length === 0) {
+        return res.status(400).json({ message: "dataPoints array cannot be empty" });
+      }
+      
+      if (dataPointsToCreate.length > 100) {
+        return res.status(400).json({ message: "Cannot create more than 100 data points at once" });
+      }
+      
+      const parsedDataPoints = dataPointsToCreate.map(dp => {
+        const requestBody = { ...dp };
+        if (requestBody.levelOfSupport && Array.isArray(requestBody.levelOfSupport)) {
+          requestBody.levelOfSupport = requestBody.levelOfSupport.length > 0 
+            ? JSON.stringify(requestBody.levelOfSupport) 
+            : null;
+        }
+        if (requestBody.setting && Array.isArray(requestBody.setting)) {
+          requestBody.setting = requestBody.setting.length > 0 
+            ? JSON.stringify(requestBody.setting) 
+            : null;
+        }
+        if (requestBody.progressValue && typeof requestBody.progressValue === 'string') {
+          requestBody.progressValue = parseFloat(requestBody.progressValue);
+        }
+        
+        return insertDataPointSchema.parse({
+          ...requestBody,
+          goalId,
+          studentId: goal.studentId,
+        });
+      });
+      
+      const createdDataPoints = await storage.createDataPointsBatch(parsedDataPoints);
+      res.status(201).json({ 
+        success: true, 
+        created: createdDataPoints.length,
+        dataPoints: createdDataPoints 
+      });
+    } catch (error: any) {
+      console.error("Error batch creating data points:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid data point data", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to batch create data points" });
+      }
+    }
+  });
+
+  app.delete('/api/data-points/batch', async (req: any, res) => {
+    try {
+      const { ids } = req.body;
+      if (!Array.isArray(ids)) {
+        return res.status(400).json({ message: "ids must be an array" });
+      }
+      
+      if (ids.length === 0) {
+        return res.status(400).json({ message: "ids array cannot be empty" });
+      }
+      
+      if (ids.length > 100) {
+        return res.status(400).json({ message: "Cannot delete more than 100 data points at once" });
+      }
+      
+      const parsedIds = ids.map(id => {
+        const parsed = parseInt(id);
+        if (isNaN(parsed)) {
+          throw new Error(`Invalid id: ${id}`);
+        }
+        return parsed;
+      });
+      
+      const userId = '4201332';
+      for (const id of parsedIds) {
+        const dataPoint = await storage.getDataPointById(id);
+        if (!dataPoint) {
+          return res.status(404).json({ message: `Data point ${id} not found` });
+        }
+        const student = await storage.getStudentById(dataPoint.studentId);
+        if (!student || (student.userId !== userId && student.userId !== '4201332' && student.userId !== '42813322')) {
+          return res.status(403).json({ message: `Access denied for data point ${id}` });
+        }
+      }
+      
+      const result = await storage.deleteDataPointsBatch(parsedIds);
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error("Error batch deleting data points:", error);
+      res.status(500).json({ message: "Failed to batch delete data points" });
+    }
+  });
+
   // Admin routes (for database administrator)
   app.get('/api/admin/stats', async (req, res) => {
     try {
