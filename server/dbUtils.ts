@@ -1,4 +1,5 @@
 import { pool } from "./db";
+import { logDbError as logDbErrorToFile, logWarning, logDebug } from "./logger";
 
 export enum DatabaseErrorType {
   CONNECTION_ERROR = "CONNECTION_ERROR",
@@ -125,24 +126,12 @@ export function logDatabaseError(
   error: DatabaseError,
   context?: Record<string, unknown>
 ): void {
-  const logEntry = {
-    level: "error",
-    timestamp: error.timestamp.toISOString(),
-    operation,
+  logDbErrorToFile(operation, error.originalError || error, {
     errorType: error.type,
-    message: error.message,
     retryable: error.retryable,
-    context,
-    originalError: error.originalError instanceof Error
-      ? { 
-          message: error.originalError.message, 
-          code: (error.originalError as any).code,
-          stack: error.originalError.stack 
-        }
-      : String(error.originalError),
-  };
-
-  console.error(`[DB_ERROR] ${operation}:`, JSON.stringify(logEntry, null, 2));
+    timestamp: error.timestamp.toISOString(),
+    ...context,
+  });
 }
 
 export function logDatabaseWarning(
@@ -150,7 +139,7 @@ export function logDatabaseWarning(
   message: string,
   context?: Record<string, unknown>
 ): void {
-  console.warn(`[DB_WARN] ${operation}: ${message}`, context ? JSON.stringify(context) : "");
+  logWarning(`DB: ${operation} - ${message}`, context);
 }
 
 export function logDatabaseInfo(
@@ -158,9 +147,7 @@ export function logDatabaseInfo(
   message: string,
   context?: Record<string, unknown>
 ): void {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[DB_INFO] ${operation}: ${message}`, context ? JSON.stringify(context) : "");
-  }
+  logDebug(`DB: ${operation} - ${message}`, context);
 }
 
 interface RetryOptions {
