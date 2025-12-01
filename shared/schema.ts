@@ -47,7 +47,9 @@ export const students = pgTable("students", {
   relatedServices: text("related_services"), // JSON string of services like "Speech Therapy, Occupational Therapy"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_students_user_id").on(table.userId),
+]);
 
 // Goals table
 export const goals = pgTable("goals", {
@@ -62,7 +64,9 @@ export const goals = pgTable("goals", {
   status: varchar("status").notNull().default("active"), // active, mastered, discontinued
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_goals_student_id").on(table.studentId),
+]);
 
 // Objectives table
 export const objectives = pgTable("objectives", {
@@ -76,7 +80,10 @@ export const objectives = pgTable("objectives", {
   status: varchar("status").notNull().default("active"), // active, mastered, discontinued
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_objectives_goal_id").on(table.goalId),
+  index("idx_objectives_student_id").on(table.studentId),
+]);
 
 // Data points table
 export const dataPoints = pgTable("data_points", {
@@ -95,7 +102,12 @@ export const dataPoints = pgTable("data_points", {
   setting: text("setting"), // settings as JSON array string or single value (general-education, special-education, etc.)
   anecdotalInfo: text("anecdotal_info"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_data_points_goal_id").on(table.goalId),
+  index("idx_data_points_objective_id").on(table.objectiveId),
+  index("idx_data_points_student_id").on(table.studentId),
+  index("idx_data_points_date").on(table.date),
+]);
 
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
@@ -313,7 +325,9 @@ export const reportingPeriods = pgTable("reporting_periods", {
   endDate: date("end_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  index("idx_reporting_periods_user_id").on(table.userId),
+]);
 
 export type ReportingPeriod = typeof reportingPeriods.$inferSelect;
 export type InsertReportingPeriod = typeof reportingPeriods.$inferInsert;
