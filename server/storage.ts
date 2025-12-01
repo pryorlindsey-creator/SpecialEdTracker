@@ -234,14 +234,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteGoal(id: number): Promise<void> {
-    // First delete all data points associated with this goal
-    await db.delete(dataPoints).where(eq(dataPoints.goalId, id));
-    
-    // Then delete all objectives associated with this goal
-    await db.delete(objectives).where(eq(objectives.goalId, id));
-    
-    // Finally delete the goal itself
-    await db.delete(goals).where(eq(goals.id, id));
+    // Use transaction to ensure all related data is deleted atomically
+    await db.transaction(async (tx) => {
+      // First delete all data points associated with this goal
+      await tx.delete(dataPoints).where(eq(dataPoints.goalId, id));
+      
+      // Then delete all objectives associated with this goal
+      await tx.delete(objectives).where(eq(objectives.goalId, id));
+      
+      // Finally delete the goal itself
+      await tx.delete(goals).where(eq(goals.id, id));
+    });
   }
 
   // Data point operations
@@ -289,6 +292,38 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(dataPoints.date));
   }
 
+  async getAllDataPointsForGoalWithObjectives(goalId: number): Promise<Array<DataPoint & { 
+    objectiveDescription?: string | null;
+    isObjectiveSpecific: boolean;
+  }>> {
+    // Fetch all data points for this goal (both goal-level and objective-specific) in one query
+    const allGoalDataPoints = await db
+      .select()
+      .from(dataPoints)
+      .where(eq(dataPoints.goalId, goalId))
+      .orderBy(desc(dataPoints.date));
+
+    // Fetch all objectives for this goal in one query
+    const goalObjectives = await db
+      .select()
+      .from(objectives)
+      .where(eq(objectives.goalId, goalId));
+
+    // Create a lookup map for objectives
+    const objectiveMap = new Map(goalObjectives.map(obj => [obj.id, obj]));
+
+    // Enrich data points with objective information
+    return allGoalDataPoints.map(dp => {
+      const objective = dp.objectiveId ? objectiveMap.get(dp.objectiveId) : null;
+      return {
+        ...dp,
+        levelOfSupport: dp.levelOfSupport || null,
+        objectiveDescription: objective?.description || null,
+        isObjectiveSpecific: !!dp.objectiveId,
+      };
+    });
+  }
+
   async getDataPointById(id: number): Promise<DataPoint | undefined> {
     const [dataPoint] = await db
       .select()
@@ -312,32 +347,38 @@ export class DatabaseStorage implements IStorage {
 
   // Clear data operations
   async clearStudentData(studentId: number): Promise<void> {
-    // Delete all data points for this student
-    await db.delete(dataPoints).where(eq(dataPoints.studentId, studentId));
-    
-    // Delete all objectives for this student
-    await db.delete(objectives).where(eq(objectives.studentId, studentId));
-    
-    // Delete all goals for this student
-    await db.delete(goals).where(eq(goals.studentId, studentId));
+    // Use transaction to ensure all related data is deleted atomically
+    await db.transaction(async (tx) => {
+      // Delete all data points for this student
+      await tx.delete(dataPoints).where(eq(dataPoints.studentId, studentId));
+      
+      // Delete all objectives for this student
+      await tx.delete(objectives).where(eq(objectives.studentId, studentId));
+      
+      // Delete all goals for this student
+      await tx.delete(goals).where(eq(goals.studentId, studentId));
+    });
   }
 
   async removeStudentFromCaseload(studentId: number): Promise<void> {
-    // Delete all data points for this student
-    await db.delete(dataPoints).where(eq(dataPoints.studentId, studentId));
-    
-    // Delete all objectives for this student
-    await db.delete(objectives).where(eq(objectives.studentId, studentId));
-    
-    // Delete all goals for this student
-    await db.delete(goals).where(eq(goals.studentId, studentId));
-    
-    // Delete the student record itself
-    await db.delete(students).where(eq(students.id, studentId));
+    // Use transaction to ensure all related data is deleted atomically
+    await db.transaction(async (tx) => {
+      // Delete all data points for this student
+      await tx.delete(dataPoints).where(eq(dataPoints.studentId, studentId));
+      
+      // Delete all objectives for this student
+      await tx.delete(objectives).where(eq(objectives.studentId, studentId));
+      
+      // Delete all goals for this student
+      await tx.delete(goals).where(eq(goals.studentId, studentId));
+      
+      // Delete the student record itself
+      await tx.delete(students).where(eq(students.id, studentId));
+    });
   }
 
   async clearAllUserData(userId: string): Promise<void> {
-    // Get all students for this user
+    // Get all students for this user first (outside transaction for read)
     const userStudents = await db
       .select({ id: students.id })
       .from(students)
@@ -345,22 +386,25 @@ export class DatabaseStorage implements IStorage {
     
     const studentIds = userStudents.map(s => s.id);
     
-    if (studentIds.length > 0) {
-      // Delete all data points for all students
-      await db.delete(dataPoints).where(inArray(dataPoints.studentId, studentIds));
+    // Use transaction for all delete operations
+    await db.transaction(async (tx) => {
+      if (studentIds.length > 0) {
+        // Delete all data points for all students
+        await tx.delete(dataPoints).where(inArray(dataPoints.studentId, studentIds));
+        
+        // Delete all objectives for all students  
+        await tx.delete(objectives).where(inArray(objectives.studentId, studentIds));
+        
+        // Delete all goals for all students
+        await tx.delete(goals).where(inArray(goals.studentId, studentIds));
+      }
       
-      // Delete all objectives for all students  
-      await db.delete(objectives).where(inArray(objectives.studentId, studentIds));
+      // Delete all students
+      await tx.delete(students).where(eq(students.userId, userId));
       
-      // Delete all goals for all students
-      await db.delete(goals).where(inArray(goals.studentId, studentIds));
-    }
-    
-    // Delete all students
-    await db.delete(students).where(eq(students.userId, userId));
-    
-    // Delete reporting periods
-    await db.delete(reportingPeriods).where(eq(reportingPeriods.userId, userId));
+      // Delete reporting periods
+      await tx.delete(reportingPeriods).where(eq(reportingPeriods.userId, userId));
+    });
   }
 
   // Analytics operations
@@ -568,36 +612,111 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getAllStudentsWithDetails(): Promise<any[]> {
-    const allStudents = await db.select().from(students);
-    const studentsWithDetails = await Promise.all(
-      allStudents.map(async (student) => {
-        const summary = await this.getStudentSummary(student.id);
-        const user = await this.getUser(student.userId);
-        return {
-          ...student,
-          ...summary,
-          teacherEmail: user?.email,
-        };
-      })
-    );
-    return studentsWithDetails;
+    // Fetch all data in parallel to avoid N+1 queries
+    const [allStudents, allUsers, allGoals, allDataPoints] = await Promise.all([
+      db.select().from(students),
+      db.select().from(users),
+      db.select().from(goals),
+      db.select().from(dataPoints),
+    ]);
+
+    // Create lookup maps for efficient access
+    const userMap = new Map(allUsers.map(u => [u.id, u]));
+    const goalsByStudent = new Map<number, typeof allGoals>();
+    const dataPointsByGoal = new Map<number, typeof allDataPoints>();
+
+    // Group goals by student
+    for (const goal of allGoals) {
+      if (!goalsByStudent.has(goal.studentId)) {
+        goalsByStudent.set(goal.studentId, []);
+      }
+      goalsByStudent.get(goal.studentId)!.push(goal);
+    }
+
+    // Group data points by goal
+    for (const dp of allDataPoints) {
+      if (!dataPointsByGoal.has(dp.goalId)) {
+        dataPointsByGoal.set(dp.goalId, []);
+      }
+      dataPointsByGoal.get(dp.goalId)!.push(dp);
+    }
+
+    // Build student details without additional queries
+    return allStudents.map(student => {
+      const studentGoals = goalsByStudent.get(student.id) || [];
+      const user = userMap.get(student.userId);
+      
+      // Calculate summary inline
+      const totalGoals = studentGoals.length;
+      const activeGoals = studentGoals.filter(g => g.status === 'active').length;
+      const completedGoals = studentGoals.filter(g => g.status === 'mastered').length;
+      
+      let totalDataPoints = 0;
+      let lastDataPoint: typeof allDataPoints[0] | undefined;
+      
+      for (const goal of studentGoals) {
+        const goalDps = dataPointsByGoal.get(goal.id) || [];
+        totalDataPoints += goalDps.length;
+        for (const dp of goalDps) {
+          if (!lastDataPoint || new Date(dp.date) > new Date(lastDataPoint.date)) {
+            lastDataPoint = dp;
+          }
+        }
+      }
+
+      return {
+        ...student,
+        totalGoals,
+        activeGoals,
+        completedGoals,
+        totalDataPoints,
+        lastDataPoint,
+        teacherEmail: user?.email,
+      };
+    });
   }
 
   async getAllGoalsWithDetails(): Promise<any[]> {
-    const allGoals = await db.select().from(goals);
-    const goalsWithDetails = await Promise.all(
-      allGoals.map(async (goal) => {
-        const student = await this.getStudentById(goal.studentId);
-        const progress = await this.getGoalProgress(goal.id);
-        return {
-          ...goal,
-          studentName: student?.name,
-          currentProgress: progress.currentProgress,
-          dataPointsCount: progress.dataPoints.length,
-        };
-      })
-    );
-    return goalsWithDetails;
+    // Fetch all data in parallel to avoid N+1 queries
+    const [allGoals, allStudents, allDataPoints] = await Promise.all([
+      db.select().from(goals),
+      db.select().from(students),
+      db.select().from(dataPoints),
+    ]);
+
+    // Create lookup maps for efficient access
+    const studentMap = new Map(allStudents.map(s => [s.id, s]));
+    const dataPointsByGoal = new Map<number, typeof allDataPoints>();
+
+    // Group data points by goal
+    for (const dp of allDataPoints) {
+      if (!dataPointsByGoal.has(dp.goalId)) {
+        dataPointsByGoal.set(dp.goalId, []);
+      }
+      dataPointsByGoal.get(dp.goalId)!.push(dp);
+    }
+
+    // Build goal details without additional queries
+    return allGoals.map(goal => {
+      const student = studentMap.get(goal.studentId);
+      const goalDataPoints = dataPointsByGoal.get(goal.id) || [];
+      
+      // Calculate current progress from most recent data point
+      let currentProgress = 0;
+      if (goalDataPoints.length > 0) {
+        const sortedDps = goalDataPoints.sort((a, b) => 
+          new Date(b.date).getTime() - new Date(a.date).getTime()
+        );
+        currentProgress = parseFloat(sortedDps[0].progressValue?.toString() || '0');
+      }
+
+      return {
+        ...goal,
+        studentName: student?.name,
+        currentProgress,
+        dataPointsCount: goalDataPoints.length,
+      };
+    });
   }
 
   async getAllGoals(): Promise<Goal[]> {
@@ -804,64 +923,37 @@ export class DatabaseStorage implements IStorage {
 
   // Admin verification methods
   async verifyUserData(userId: string) {
-    const user = await this.getUser(userId);
-    const userStudents = user ? await db.select().from(students).where(eq(students.userId, userId)) : [];
+    // Fetch user and students in parallel
+    const [user, userStudents] = await Promise.all([
+      this.getUser(userId),
+      db.select().from(students).where(eq(students.userId, userId))
+    ]);
     
-    const goalCounts = await db.execute(sql`
-      SELECT COUNT(g.id) as count 
-      FROM goals g
-      JOIN students s ON g.student_id = s.id
-      WHERE s.user_id = ${userId}
-    `);
-    
-    const dataPointCounts = await db.execute(sql`
-      SELECT COUNT(dp.id) as count 
-      FROM data_points dp
-      JOIN students s ON dp.student_id = s.id
-      WHERE s.user_id = ${userId}
+    // Combine multiple count queries into a single query for efficiency
+    const combinedCounts = await db.execute(sql`
+      SELECT 
+        (SELECT COUNT(g.id) FROM goals g JOIN students s ON g.student_id = s.id WHERE s.user_id = ${userId}) as goal_count,
+        (SELECT COUNT(dp.id) FROM data_points dp JOIN students s ON dp.student_id = s.id WHERE s.user_id = ${userId}) as data_point_count,
+        (SELECT COUNT(*) FROM goals g LEFT JOIN students s ON g.student_id = s.id WHERE s.id IS NULL) as orphaned_goals,
+        (SELECT COUNT(*) FROM data_points dp LEFT JOIN goals g ON dp.goal_id = g.id WHERE g.id IS NULL) as orphaned_data_points,
+        (SELECT COUNT(*) FROM students s LEFT JOIN goals g ON s.id = g.student_id WHERE s.user_id = ${userId} AND g.id IS NULL) as students_without_goals,
+        (SELECT COUNT(*) FROM goals g JOIN students s ON g.student_id = s.id LEFT JOIN data_points dp ON g.id = dp.goal_id WHERE s.user_id = ${userId} AND dp.id IS NULL) as goals_without_data_points
     `);
 
-    const orphanedGoals = await db.execute(sql`
-      SELECT COUNT(*) as count
-      FROM goals g
-      LEFT JOIN students s ON g.student_id = s.id
-      WHERE s.id IS NULL
-    `);
-
-    const orphanedDataPoints = await db.execute(sql`
-      SELECT COUNT(*) as count
-      FROM data_points dp
-      LEFT JOIN goals g ON dp.goal_id = g.id
-      WHERE g.id IS NULL
-    `);
-
-    const studentsWithoutGoals = await db.execute(sql`
-      SELECT COUNT(*) as count
-      FROM students s
-      LEFT JOIN goals g ON s.id = g.student_id
-      WHERE s.user_id = ${userId} AND g.id IS NULL
-    `);
-
-    const goalsWithoutDataPoints = await db.execute(sql`
-      SELECT COUNT(*) as count
-      FROM goals g
-      JOIN students s ON g.student_id = s.id
-      LEFT JOIN data_points dp ON g.id = dp.goal_id
-      WHERE s.user_id = ${userId} AND dp.id IS NULL
-    `);
+    const counts = combinedCounts.rows[0] || {};
 
     return {
       userId,
       userExists: !!user,
       studentCount: userStudents.length,
-      goalCount: Number(goalCounts.rows[0]?.count || 0),
-      dataPointCount: Number(dataPointCounts.rows[0]?.count || 0),
+      goalCount: Number(counts.goal_count || 0),
+      dataPointCount: Number(counts.data_point_count || 0),
       sampleStudents: userStudents.slice(0, 5),
       dataIntegrity: {
-        orphanedGoals: Number(orphanedGoals.rows[0]?.count || 0),
-        orphanedDataPoints: Number(orphanedDataPoints.rows[0]?.count || 0),
-        studentsWithoutGoals: Number(studentsWithoutGoals.rows[0]?.count || 0),
-        goalsWithoutDataPoints: Number(goalsWithoutDataPoints.rows[0]?.count || 0),
+        orphanedGoals: Number(counts.orphaned_goals || 0),
+        orphanedDataPoints: Number(counts.orphaned_data_points || 0),
+        studentsWithoutGoals: Number(counts.students_without_goals || 0),
+        goalsWithoutDataPoints: Number(counts.goals_without_data_points || 0),
       }
     };
   }

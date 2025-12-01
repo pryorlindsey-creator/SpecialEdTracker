@@ -976,32 +976,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Access denied" });
       }
 
-      // Get both goal-level and objective-specific data points
-      const goalDataPoints = await storage.getDataPointsByGoalId(goalId);
+      // Use optimized method that fetches all data in 2 queries instead of N+1
+      const allDataPoints = await storage.getAllDataPointsForGoalWithObjectives(goalId);
       
-      // Get all objectives for this goal
-      const objectives = await storage.getObjectivesByGoalId(goalId);
-      
-      // Get data points for all objectives of this goal
-      const objectiveDataPoints = [];
-      for (const objective of objectives) {
-        const objDataPoints = await storage.getDataPointsByObjectiveId(objective.id);
-        // Add objective info to each data point
-        const enrichedObjDataPoints = objDataPoints.map(dp => ({
-          ...dp,
-          objectiveDescription: objective.description,
-          isObjectiveSpecific: true
-        }));
-        objectiveDataPoints.push(...enrichedObjDataPoints);
-      }
-      
-      // Combine and mark general goal data points
-      const allDataPoints = [
-        ...goalDataPoints.map(dp => ({ ...dp, isObjectiveSpecific: false, objectiveDescription: null })),
-        ...objectiveDataPoints
-      ];
-      
-      // Sort by date
+      // Sort by date (ascending for chronological display)
       allDataPoints.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
       
       res.json(allDataPoints);
