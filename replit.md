@@ -61,6 +61,13 @@ Goal limits: Each student can have a maximum of 15 goals (not required to have 1
   - **Batch Operations**: Bulk create/delete for data points with validation, size limits (max 100), and atomic transactions
   - All 147 unit tests passing after enhancements
 - **Production Readiness**: Application fully prepared for external deployment with comprehensive security configurations, documentation, and deployment guides. All development files cleaned up and debug logging removed.
+- **Resource Optimization (December 1, 2025)**:
+  - Fixed duplicate auth middleware setup that caused memory accumulation and CPU overhead
+  - React Query configured with sensible cache times (30s stale, 5min garbage collection) to reduce unnecessary refetching
+  - All debug endpoints gated behind NODE_ENV !== 'production' check
+  - Admin login credentials moved from hardcoded values to environment variables
+  - Removed excessive console.log statements from production code paths
+  - API request logging minimized to reduce CPU usage with large payloads
 
 ## External Dependencies
 
