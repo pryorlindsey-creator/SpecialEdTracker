@@ -44,18 +44,18 @@ export default function AdminPage() {
 
   const loginMutation = useMutation({
     mutationFn: async (creds: { username: string; password: string }) => {
-      if (creds.username === "SandraLindsey@speechpathai" && creds.password === "IsabelShea@1998") {
-        return { success: true };
-      }
-      throw new Error("Invalid credentials");
+      const response = await apiRequest("POST", "/api/auth/admin-login", creds);
+      return await response.json();
     },
-    onSuccess: () => {
-      localStorage.setItem("admin_authenticated", "true");
-      setIsAuthenticated(true);
-      toast({
-        title: "Success",
-        description: "Admin login successful",
-      });
+    onSuccess: (data) => {
+      if (data.success) {
+        localStorage.setItem("admin_authenticated", "true");
+        setIsAuthenticated(true);
+        toast({
+          title: "Success",
+          description: "Admin login successful",
+        });
+      }
     },
     onError: () => {
       toast({
