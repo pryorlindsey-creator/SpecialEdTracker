@@ -367,3 +367,57 @@ export interface GoalWithProgress extends Goal {
   lastScore: number;
   dataPointsCount: number;
 }
+
+// Pagination Types
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
+}
+
+// Default pagination constants
+export const DEFAULT_PAGE_SIZE = 50;
+export const MAX_PAGE_SIZE = 200;
+export const DEFAULT_BATCH_SIZE = 100;
+export const MAX_BATCH_SIZE = 500;
+
+// Pagination validation schema
+export const paginationSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(MAX_PAGE_SIZE).default(DEFAULT_PAGE_SIZE),
+  sortBy: z.string().optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
+// Batch operation types
+export interface BatchCreateResult<T> {
+  success: T[];
+  failed: Array<{ index: number; error: string; data: unknown }>;
+  totalProcessed: number;
+  successCount: number;
+  failureCount: number;
+}
+
+export interface BatchDeleteResult {
+  deletedCount: number;
+  failedIds: number[];
+}
+
+// Batch data point creation schema
+export const batchInsertDataPointSchema = z.object({
+  dataPoints: z.array(insertDataPointSchema).min(1).max(MAX_BATCH_SIZE),
+});
+
+export type BatchInsertDataPoint = z.infer<typeof batchInsertDataPointSchema>;
