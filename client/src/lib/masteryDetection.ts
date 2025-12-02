@@ -328,77 +328,57 @@ export function detectMastery(
 
     if (hasObjectives) {
       // Goal has objectives - only show mastery if ALL objectives are mastered
-      const objectivesWithCriteria = goalObjectives.filter(obj => obj.targetCriteria);
-      
-      if (objectivesWithCriteria.length === 0) {
-        // Goal has objectives but none have target criteria - fall back to goal-level evaluation
-        const goalDataPoints = allDataPoints.filter(dp => 
-          dp.goalId === goal.id && dp.id && dp.progressValue && !isNaN(parseFloat(dp.progressValue))
-        );
-
-        if (goalDataPoints.length === 0) return;
-
-        const masteryResult = checkMastery(goalDataPoints, goal.targetCriteria, goal.dataCollectionType);
-        
-        if (masteryResult.isMastered) {
-          alerts.push({
-            id: `goal-${goal.id}`,
-            type: 'goal',
-            itemId: goal.id,
-            title: goal.title,
-            description: `Goal "${goal.title}" has met mastery criteria`,
-            targetCriteria: goal.targetCriteria,
-            masteryDate: masteryResult.masteryDate!,
-            dataPointsUsed: masteryResult.dataPointsUsed!,
-            studentId
-          });
+      // Check ALL objectives, not just those with criteria
+      const allObjectivesMastered = goalObjectives.every(obj => {
+        // An objective is considered mastered if:
+        // 1. Its status is explicitly 'mastered', OR
+        // 2. It has target criteria AND was detected as mastered in this run
+        if (obj.status === 'mastered') {
+          return true;
         }
-      } else {
-        // Check if ALL objectives with criteria are mastered
-        const allObjectivesMastered = objectivesWithCriteria.every(obj => {
-          // Check if already mastered in status OR detected as mastered in this run
-          return obj.status === 'mastered' || objectiveMasteryStatus[obj.id] === true;
+        // If objective has no target criteria and isn't marked as mastered, it blocks goal mastery
+        if (!obj.targetCriteria) {
+          return false;
+        }
+        // Check if it was detected as mastered in this run
+        return objectiveMasteryStatus[obj.id] === true;
+      });
+
+      if (allObjectivesMastered) {
+        // Find the most recent mastery date among all objectives
+        const objectiveMasteryDates = objectiveAlerts
+          .filter(alert => goalObjectives.some(obj => obj.id === alert.itemId))
+          .map(alert => alert.masteryDate);
+        
+        const latestMasteryDate = objectiveMasteryDates.length > 0 
+          ? objectiveMasteryDates.sort((a, b) => moment(b).valueOf() - moment(a).valueOf())[0]
+          : moment().format('YYYY-MM-DD');
+
+        // Collect all data point IDs used for objective mastery
+        const allDataPointsUsed = objectiveAlerts
+          .filter(alert => goalObjectives.some(obj => obj.id === alert.itemId))
+          .flatMap(alert => alert.dataPointsUsed);
+
+        console.log('🎯 GOAL MASTERY: All objectives mastered for goal!', {
+          goalId: goal.id,
+          goalTitle: goal.title,
+          objectiveCount: goalObjectives.length,
+          masteredCount: goalObjectives.filter(obj => 
+            obj.status === 'mastered' || objectiveMasteryStatus[obj.id] === true
+          ).length
         });
 
-        if (allObjectivesMastered) {
-          // Find the most recent mastery date among all objectives
-          const objectiveMasteryDates = objectiveAlerts
-            .filter(alert => goalObjectives.some(obj => obj.id === alert.itemId))
-            .map(alert => alert.masteryDate);
-          
-          // Also check for already-mastered objectives
-          const alreadyMasteredObjectives = objectivesWithCriteria.filter(obj => obj.status === 'mastered');
-          
-          const latestMasteryDate = objectiveMasteryDates.length > 0 
-            ? objectiveMasteryDates.sort((a, b) => moment(b).valueOf() - moment(a).valueOf())[0]
-            : moment().format('YYYY-MM-DD');
-
-          // Collect all data point IDs used for objective mastery
-          const allDataPointsUsed = objectiveAlerts
-            .filter(alert => goalObjectives.some(obj => obj.id === alert.itemId))
-            .flatMap(alert => alert.dataPointsUsed);
-
-          console.log('🎯 GOAL MASTERY: All objectives mastered for goal!', {
-            goalId: goal.id,
-            goalTitle: goal.title,
-            objectiveCount: objectivesWithCriteria.length,
-            masteredCount: objectivesWithCriteria.filter(obj => 
-              obj.status === 'mastered' || objectiveMasteryStatus[obj.id] === true
-            ).length
-          });
-
-          alerts.push({
-            id: `goal-${goal.id}`,
-            type: 'goal',
-            itemId: goal.id,
-            title: goal.title,
-            description: `Goal "${goal.title}" is complete - all ${objectivesWithCriteria.length} objectives have been mastered`,
-            targetCriteria: goal.targetCriteria,
-            masteryDate: latestMasteryDate,
-            dataPointsUsed: allDataPointsUsed,
-            studentId
-          });
-        }
+        alerts.push({
+          id: `goal-${goal.id}`,
+          type: 'goal',
+          itemId: goal.id,
+          title: goal.title,
+          description: `Goal "${goal.title}" is complete - all ${goalObjectives.length} objectives have been mastered`,
+          targetCriteria: goal.targetCriteria,
+          masteryDate: latestMasteryDate,
+          dataPointsUsed: allDataPointsUsed,
+          studentId
+        });
       }
     } else {
       // Goal has NO objectives - use goal-level data point evaluation (original behavior)
