@@ -184,6 +184,20 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
 
   if (masteryAlerts.length === 0) return null;
 
+  const goalCount = masteryAlerts.filter(a => a.type === 'goal').length;
+  const objectiveCount = masteryAlerts.filter(a => a.type === 'objective').length;
+  
+  const getMasteryDescription = () => {
+    const parts = [];
+    if (goalCount > 0) {
+      parts.push(`${goalCount} goal${goalCount !== 1 ? 's' : ''}`);
+    }
+    if (objectiveCount > 0) {
+      parts.push(`${objectiveCount} objective${objectiveCount !== 1 ? 's' : ''}`);
+    }
+    return parts.join(' and ');
+  };
+
   return (
     <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
       <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -193,7 +207,7 @@ export default function MasteryAlertPopup({ studentId, studentName }: MasteryAle
             Mastery Achieved! 🎉
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {studentName && `${studentName} has`} achieved mastery on {masteryAlerts.length} item{masteryAlerts.length !== 1 ? 's' : ''}:
+            {studentName && `${studentName} has`} achieved mastery on {getMasteryDescription()}:
           </AlertDialogDescription>
         </AlertDialogHeader>
 
