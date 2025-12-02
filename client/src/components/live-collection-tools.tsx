@@ -588,30 +588,16 @@ export default function LiveCollectionTools({ goalId, objectiveId, studentId, go
                 Level of Support (Select all that apply)
               </Label>
               <div className="space-y-4">
-                {(() => {
-                  const baseSupportOptions = [
-                    { id: "independent", label: "Independent" },
-                    { id: "verbal", label: "Verbal" },
-                    { id: "visual", label: "Visual" },
-                    { id: "written", label: "Written" },
-                    { id: "model-of-task", label: "Model of Task" },
-                    { id: "self-correction", label: "Self-Correction" },
-                    { id: "gesture", label: "Gesture" },
-                    { id: "custom", label: "Custom" },
-                  ];
-
-                  // Add custom level of support from the selected goal if it exists and isn't already in the list
-                  const supportOptions = [...baseSupportOptions];
-                  if (selectedGoal?.levelOfSupport && 
-                      !baseSupportOptions.some(option => option.id === selectedGoal.levelOfSupport)) {
-                    supportOptions.push({ 
-                      id: selectedGoal.levelOfSupport, 
-                      label: selectedGoal.levelOfSupport.charAt(0).toUpperCase() + selectedGoal.levelOfSupport.slice(1)
-                    });
-                  }
-
-                  return supportOptions;
-                })().map((option) => (
+                {[
+                  { id: "independent", label: "Independent" },
+                  { id: "verbal", label: "Verbal" },
+                  { id: "visual", label: "Visual" },
+                  { id: "written", label: "Written" },
+                  { id: "model-of-task", label: "Model of Task" },
+                  { id: "self-correction", label: "Self-Correction" },
+                  { id: "gesture", label: "Gesture" },
+                  { id: "custom", label: "Custom" },
+                ].map((option) => (
                   <div key={option.id} className="flex items-center space-x-3">
                     <Checkbox
                       id={option.id}
