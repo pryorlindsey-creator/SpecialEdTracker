@@ -1,0 +1,692 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Education Data Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        500: '#2196F3',
+                        600: '#1976D2',
+                        700: '#1565C0'
+                    },
+                    gray: {
+                        50: '#FAFAFA',
+                        100: '#F5F5F5',
+                        600: '#757575',
+                        800: '#424242'
+                    }
+                },
+                fontFamily: {
+                    'inter': ['Inter', 'sans-serif']
+                }
+            }
+        }
+    };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-inter">
+    <!-- @COMPONENT: AppContainer -->
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <!-- @COMPONENT: Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <i class="fas fa-graduation-cap text-primary-600 text-2xl mr-3"></i>
+                        <h1 class="text-xl font-bold text-gray-800">Special Education Data Collection</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">Welcome, <span data-bind="teacher.name" class="font-medium">Ms. Johnson</span></span>
+                        <div class="h-8 w-8 bg-primary-500 rounded-full flex items-center justify-center">
+                            <span class="text-white text-sm font-medium" data-bind="teacher.initials">MJ</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: Header -->
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Student List View -->
+            <!-- @COMPONENT: StudentList [students, onSelectStudent, onCreateStudent] -->
+            <div id="student-list-view" class="block">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-bold text-gray-800 mb-2">Manage Students</h2>
+                    <p class="text-gray-600">Track IEP goals and objectives for your students</p>
+                </div>
+
+                <!-- Add New Student Form -->
+                <!-- @COMPONENT: AddStudentForm [onSubmit] -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8 max-w-2xl">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-user-plus text-primary-600 mr-2"></i>
+                        Add New Student
+                    </h3>
+                    <form class="flex flex-col sm:flex-row gap-4" data-event="submit:handleCreateStudent">
+                        <input
+                            type="text"
+                            placeholder="Enter student name"
+                            data-bind="newStudentName"
+                            data-mock="true"
+                            class="flex-1 px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                        />
+                        <button
+                            type="submit"
+                            class="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                            data-event="click:handleCreateStudent"
+                        >
+                            <i class="fas fa-plus mr-2"></i>Add Student
+                        </button>
+                    </form>
+                </div>
+                <!-- @END_COMPONENT: AddStudentForm -->
+
+                <!-- Students Grid -->
+                <!-- @COMPONENT: StudentsGrid [students, onSelectStudent] -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                        <i class="fas fa-users text-primary-600 mr-2"></i>
+                        Your Students
+                        <span class="ml-2 bg-gray-100 text-gray-600 text-sm px-2 py-1 rounded-full" data-bind="students.length">4</span>
+                    </h3>
+                    
+                    <!-- @MAP: students.map(student => ( -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Sample Student 1 -->
+                        <div class="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-mock="true">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-white font-medium">JS</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">John Smith</h4>
+                                        <p class="text-sm text-gray-600">12 data entries</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Last entry:</span>
+                                <span class="font-medium text-gray-800">Dec 15, 2024</span>
+                            </div>
+                            <div class="mt-2 flex items-center">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 78%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-green-600">78% avg</span>
+                            </div>
+                        </div>
+
+                        <!-- Sample Student 2 -->
+                        <div class="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-mock="true">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-white font-medium">SJ</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">Sarah Johnson</h4>
+                                        <p class="text-sm text-gray-600">8 data entries</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Last entry:</span>
+                                <span class="font-medium text-gray-800">Dec 14, 2024</span>
+                            </div>
+                            <div class="mt-2 flex items-center">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 92%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-green-600">92% avg</span>
+                            </div>
+                        </div>
+
+                        <!-- Sample Student 3 -->
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-mock="true">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-white font-medium">MB</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">Michael Brown</h4>
+                                        <p class="text-sm text-gray-600">15 data entries</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Last entry:</span>
+                                <span class="font-medium text-gray-800">Dec 13, 2024</span>
+                            </div>
+                            <div class="mt-2 flex items-center">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 65%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-yellow-600">65% avg</span>
+                            </div>
+                        </div>
+
+                        <!-- Sample Student 4 -->
+                        <div class="bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-mock="true">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center mr-3">
+                                        <span class="text-white font-medium">EM</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-gray-800">Emma Martinez</h4>
+                                        <p class="text-sm text-gray-600">6 data entries</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-400"></i>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600">Last entry:</span>
+                                <span class="font-medium text-gray-800">Dec 12, 2024</span>
+                            </div>
+                            <div class="mt-2 flex items-center">
+                                <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                                </div>
+                                <span class="text-sm font-medium text-green-600">85% avg</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+                <!-- @END_COMPONENT: StudentsGrid -->
+            </div>
+            <!-- @END_COMPONENT: StudentList -->
+
+            <!-- Student Dashboard -->
+            <!-- @COMPONENT: StudentDashboard [studentId, studentName, onBackToStudents] -->
+            <div id="student-dashboard-view" class="hidden">
+                <!-- Dashboard Header -->
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center">
+                        <button class="mr-4 p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors" data-event="click:backToStudents">
+                            <i class="fas fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <h2 class="text-3xl font-bold text-gray-800">
+                                <span data-bind="student.name" class="text-primary-600">John Smith</span>'s Data
+                            </h2>
+                            <p class="text-gray-600">Track and analyze IEP goal progress</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <!-- @COMPONENT: TabNavigation [activeTab, onTabChange] -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+                    <div class="flex border-b border-gray-200">
+                        <button class="flex-1 px-6 py-4 text-center font-medium bg-primary-600 text-white rounded-tl-lg" data-event="click:setActiveTab" data-tab="dataEntry" data-implementation="Should update active tab state">
+                            <i class="fas fa-plus-circle mr-2"></i>Add Data
+                        </button>
+                        <button class="flex-1 px-6 py-4 text-center font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors" data-event="click:setActiveTab" data-tab="rawData">
+                            <i class="fas fa-table mr-2"></i>Raw Data
+                        </button>
+                        <button class="flex-1 px-6 py-4 text-center font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 transition-colors rounded-tr-lg" data-event="click:setActiveTab" data-tab="reports">
+                            <i class="fas fa-chart-line mr-2"></i>Reports
+                        </button>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: TabNavigation -->
+
+                <!-- Data Entry Tab -->
+                <!-- @COMPONENT: DataEntryForm [onSubmit] -->
+                <div id="data-entry-tab" class="block">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-edit text-primary-600 mr-2"></i>
+                            Add New IEP Goal Data
+                        </h3>
+                        <form class="space-y-6" data-event="submit:handleAddData">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- Date -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                                    <input
+                                        type="date"
+                                        data-bind="formData.date"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        data-mock="true"
+                                        value="2024-12-15"
+                                    />
+                                </div>
+
+                                <!-- Goal Number -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Goal Number *</label>
+                                    <input
+                                        type="text"
+                                        placeholder="e.g., Goal 1, Math Goal A"
+                                        data-bind="formData.goalNumber"
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        data-mock="true"
+                                        value="Goal 2"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Goal Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Goal Statement</label>
+                                <textarea
+                                    placeholder="Describe the IEP goal or objective being measured"
+                                    data-bind="formData.goalDescription"
+                                    rows="3"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    data-mock="true"
+                                >When given 10 two-digit addition problems, John will solve them with 80% accuracy across 3 consecutive trials.</textarea>
+                            </div>
+
+                            <!-- Progress Input -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Progress *</label>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">Percentage</label>
+                                        <div class="relative">
+                                            <input
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                placeholder="75"
+                                                data-bind="formData.percentage"
+                                                class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500 pr-8"
+                                                data-mock="true"
+                                                value="80"
+                                            />
+                                            <span class="absolute right-3 top-3 text-gray-500">%</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-500 mb-1">OR Attempts (correct/total)</label>
+                                        <input
+                                            type="text"
+                                            placeholder="8/10"
+                                            data-bind="formData.attempts"
+                                            class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                            data-mock="true"
+                                            value="8/10"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Level of Support -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Level of Support</label>
+                                <select
+                                    data-bind="formData.levelOfSupport"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    data-mock="true"
+                                >
+                                    <option value="">Select level of support</option>
+                                    <option value="independent" selected>Independent</option>
+                                    <option value="minimal">Minimal Support</option>
+                                    <option value="moderate">Moderate Support</option>
+                                    <option value="maximum">Maximum Support</option>
+                                    <option value="full">Full Support</option>
+                                </select>
+                            </div>
+
+                            <!-- Anecdotal Information -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Anecdotal Information</label>
+                                <textarea
+                                    placeholder="Additional notes, observations, or context about this data collection"
+                                    data-bind="formData.anecdotalInfo"
+                                    rows="4"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    data-mock="true"
+                                >Student worked independently and showed good focus. Completed all problems within the allocated time. Made calculation errors on two problems involving regrouping.</textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="flex justify-end pt-4">
+                                <button
+                                    type="submit"
+                                    class="px-6 py-3 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                                    data-event="click:handleAddData"
+                                >
+                                    <i class="fas fa-save mr-2"></i>Save Data Entry
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: DataEntryForm -->
+
+                <!-- Raw Data Tab -->
+                <!-- @COMPONENT: RawDataTable [dataPoints] -->
+                <div id="raw-data-tab" class="hidden">
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                                <i class="fas fa-table text-primary-600 mr-2"></i>
+                                All Data Entries
+                            </h3>
+                            <div class="text-sm text-gray-600">
+                                <span data-bind="dataPoints.length" class="font-medium">12</span> total entries
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead>
+                                    <tr class="border-b border-gray-200">
+                                        <th class="text-left py-3 px-4 font-medium text-gray-700">Date</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-700">Goal</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-700">Description</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-700">Progress</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-700">Support Level</th>
+                                        <th class="text-left py-3 px-4 font-medium text-gray-700">Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody data-mock="true">
+                                    <!-- @MAP: dataPoints.map(entry => ( -->
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                        <td class="py-4 px-4 text-sm">Dec 15, 2024</td>
+                                        <td class="py-4 px-4 text-sm font-medium">Goal 2</td>
+                                        <td class="py-4 px-4 text-sm max-w-xs truncate">Two-digit addition with 80% accuracy</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <div class="flex items-center">
+                                                <span class="text-green-600 font-medium mr-2">80%</span>
+                                                <span class="text-gray-500 text-xs">(8/10)</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                                Independent
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm max-w-xs truncate">Good focus, errors on regrouping problems</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                        <td class="py-4 px-4 text-sm">Dec 12, 2024</td>
+                                        <td class="py-4 px-4 text-sm font-medium">Goal 1</td>
+                                        <td class="py-4 px-4 text-sm max-w-xs truncate">Reading comprehension questions</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <div class="flex items-center">
+                                                <span class="text-green-600 font-medium mr-2">75%</span>
+                                                <span class="text-gray-500 text-xs">(6/8)</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                                Minimal
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm max-w-xs truncate">Needed prompting for inference questions</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                        <td class="py-4 px-4 text-sm">Dec 10, 2024</td>
+                                        <td class="py-4 px-4 text-sm font-medium">Goal 3</td>
+                                        <td class="py-4 px-4 text-sm max-w-xs truncate">Social interaction during group work</td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <div class="flex items-center">
+                                                <span class="text-green-600 font-medium mr-2">90%</span>
+                                                <span class="text-gray-500 text-xs">(9/10)</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm">
+                                            <span class="inline-flex px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                                                Independent
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-4 text-sm max-w-xs truncate">Excellent peer interaction, shared materials well</td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: RawDataTable -->
+
+                <!-- Reports Tab -->
+                <!-- @COMPONENT: ReportsSection [dataPoints, studentName] -->
+                <div id="reports-tab" class="hidden">
+                    <div class="space-y-6">
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Total Entries</p>
+                                        <p class="text-2xl font-bold text-gray-800" data-bind="stats.totalEntries">12</p>
+                                    </div>
+                                    <i class="fas fa-database text-primary-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Average Score</p>
+                                        <p class="text-2xl font-bold text-green-600" data-bind="stats.averageScore">78%</p>
+                                    </div>
+                                    <i class="fas fa-chart-line text-green-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Goals Tracked</p>
+                                        <p class="text-2xl font-bold text-blue-600" data-bind="stats.goalsTracked">3</p>
+                                    </div>
+                                    <i class="fas fa-bullseye text-blue-600 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-sm text-gray-600">Trend</p>
+                                        <p class="text-2xl font-bold text-green-600">↗ +5%</p>
+                                    </div>
+                                    <i class="fas fa-trending-up text-green-600 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Chart -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                                <i class="fas fa-chart-line text-primary-600 mr-2"></i>
+                                Progress Over Time
+                            </h3>
+                            <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg" data-implementation="Chart.js line chart showing progress over time">
+                                <canvas id="progressChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Goal-Specific Progress -->
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-800 mb-6 flex items-center">
+                                <i class="fas fa-bullseye text-primary-600 mr-2"></i>
+                                Goal-Specific Progress
+                            </h3>
+                            <div class="space-y-4" data-mock="true">
+                                <!-- Goal 1 -->
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-800">Goal 1: Reading Comprehension</h4>
+                                        <span class="text-sm text-gray-600">6 entries</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">Answer comprehension questions with 80% accuracy</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1 bg-gray-200 rounded-full h-3 mr-3">
+                                            <div class="bg-green-500 h-3 rounded-full" style="width: 75%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-green-600">75% avg</span>
+                                    </div>
+                                    <div class="mt-2 text-xs text-gray-500">
+                                        Latest: 85% (Dec 14) | Trend: ↗ +10%
+                                    </div>
+                                </div>
+
+                                <!-- Goal 2 -->
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-800">Goal 2: Math Computation</h4>
+                                        <span class="text-sm text-gray-600">4 entries</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">Solve two-digit addition with 80% accuracy</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1 bg-gray-200 rounded-full h-3 mr-3">
+                                            <div class="bg-green-500 h-3 rounded-full" style="width: 82%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-green-600">82% avg</span>
+                                    </div>
+                                    <div class="mt-2 text-xs text-gray-500">
+                                        Latest: 80% (Dec 15) | Trend: → Stable
+                                    </div>
+                                </div>
+
+                                <!-- Goal 3 -->
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h4 class="font-medium text-gray-800">Goal 3: Social Skills</h4>
+                                        <span class="text-sm text-gray-600">2 entries</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600 mb-3">Demonstrate appropriate peer interaction during group activities</p>
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1 bg-gray-200 rounded-full h-3 mr-3">
+                                            <div class="bg-green-500 h-3 rounded-full" style="width: 90%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium text-green-600">90% avg</span>
+                                    </div>
+                                    <div class="mt-2 text-xs text-gray-500">
+                                        Latest: 90% (Dec 10) | Trend: ↗ +15%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Print Report Button -->
+                        <div class="flex justify-end">
+                            <button class="px-6 py-3 bg-gray-600 text-white font-medium rounded-md hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors" data-event="click:printReport">
+                                <i class="fas fa-print mr-2"></i>Print Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_COMPONENT: ReportsSection -->
+            </div>
+            <!-- @END_COMPONENT: StudentDashboard -->
+        </main>
+    </div>
+    <!-- @END_COMPONENT: AppContainer -->
+
+    <script>
+        // TODO: Implement React component logic, state management, and Firebase integration
+        
+        (function() {
+            // Simple demo navigation between views
+            const studentListView = document.getElementById('student-list-view');
+            const studentDashboardView = document.getElementById('student-dashboard-view');
+            
+            // Tab switching logic
+            const tabs = ['data-entry-tab', 'raw-data-tab', 'reports-tab'];
+            
+            // Demo chart rendering
+            function renderProgressChart() {
+                const ctx = document.getElementById('progressChart');
+                if (ctx && typeof Chart !== 'undefined') {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Dec 1', 'Dec 5', 'Dec 8', 'Dec 10', 'Dec 12', 'Dec 15'],
+                            datasets: [{
+                                label: 'Progress %',
+                                data: [65, 70, 75, 78, 82, 80],
+                                borderColor: '#2196F3',
+                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Initialize demo
+            setTimeout(renderProgressChart, 100);
+            
+            // Demo event handlers (in real app, these would be React event handlers)
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('[data-event*="selectStudent"]')) {
+                    studentListView.style.display = 'none';
+                    studentDashboardView.style.display = 'block';
+                    setTimeout(renderProgressChart, 100);
+                }
+                
+                if (e.target.closest('[data-event*="backToStudents"]')) {
+                    studentListView.style.display = 'block';
+                    studentDashboardView.style.display = 'none';
+                }
+                
+                // Tab switching
+                if (e.target.closest('[data-tab]')) {
+                    const selectedTab = e.target.closest('[data-tab]').dataset.tab;
+                    
+                    // Update tab buttons
+                    document.querySelectorAll('[data-tab]').forEach(btn => {
+                        btn.classList.remove('bg-primary-600', 'text-white');
+                        btn.classList.add('text-gray-600', 'hover:text-gray-800');
+                    });
+                    e.target.closest('[data-tab]').classList.add('bg-primary-600', 'text-white');
+                    e.target.closest('[data-tab]').classList.remove('text-gray-600', 'hover:text-gray-800');
+                    
+                    // Show/hide tab content
+                    tabs.forEach(tabId => {
+                        const tabElement = document.getElementById(tabId);
+                        if (tabElement) {
+                            tabElement.style.display = tabId === `${selectedTab}-tab` ? 'block' : 'none';
+                        }
+                    });
+                    
+                    if (selectedTab === 'reports') {
+                        setTimeout(renderProgressChart, 100);
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

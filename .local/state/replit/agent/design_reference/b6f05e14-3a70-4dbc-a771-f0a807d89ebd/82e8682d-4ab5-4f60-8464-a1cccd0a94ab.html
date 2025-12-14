@@ -1,0 +1,981 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Education Data Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#059669',
+                        accent: '#7C3AED',
+                        surface: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-surface font-sans">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-graduation-cap text-2xl text-primary mr-3"></i>
+                    <h1 class="text-xl font-bold text-gray-900">Special Education Data Collection</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-sm text-gray-600" data-bind="user.email">teacher@school.edu</div>
+                    <button class="p-2 text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <!-- @COMPONENT: MainLayout -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- @COMPONENT: StudentsOverview [default view] -->
+        <div id="studentsOverview" class="space-y-6">
+            <!-- Header Section -->
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900">My Students</h2>
+                    <p class="text-gray-600 mt-1">Manage IEP goals and track student progress</p>
+                </div>
+                <button class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm" data-event="click:openAddStudentModal">
+                    <i class="fas fa-plus mr-2"></i>Add New Student
+                </button>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-100 rounded-lg">
+                            <i class="fas fa-users text-primary text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Total Students</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="stats.totalStudents">12</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-green-100 rounded-lg">
+                            <i class="fas fa-bullseye text-secondary text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Active Goals</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="stats.activeGoals">47</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-purple-100 rounded-lg">
+                            <i class="fas fa-chart-line text-accent text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">Data Points</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="stats.dataPoints">283</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-100 rounded-lg">
+                            <i class="fas fa-calendar-check text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-gray-600 text-sm">This Week</p>
+                            <p class="text-2xl font-bold text-gray-900" data-bind="stats.thisWeek">18</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student Cards Grid -->
+            <!-- @MAP: students.map(student => ( -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Sample Student Card 1 -->
+                <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-student-id="1">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-gray-900" data-bind="student.name">Emma Rodriguez</h3>
+                            <div class="p-2 bg-blue-100 rounded-lg">
+                                <i class="fas fa-user-graduate text-primary"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Student Stats -->
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Active Goals</span>
+                                <span class="font-medium text-gray-900" data-bind="student.goalsCount">4</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Total Data Points</span>
+                                <span class="font-medium text-gray-900" data-bind="student.dataPoints">23</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Last Updated</span>
+                                <span class="font-medium text-gray-900" data-bind="student.lastUpdated">Today</span>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity Indicator -->
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                <span data-bind="student.recentActivity">2 hours ago</span>
+                            </div>
+                            <button class="text-primary hover:text-blue-700 font-medium text-sm">
+                                View Details <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Student Card 2 -->
+                <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-student-id="2">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-gray-900" data-bind="student.name">Marcus Johnson</h3>
+                            <div class="p-2 bg-green-100 rounded-lg">
+                                <i class="fas fa-user-graduate text-secondary"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Active Goals</span>
+                                <span class="font-medium text-gray-900" data-bind="student.goalsCount">5</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Total Data Points</span>
+                                <span class="font-medium text-gray-900" data-bind="student.dataPoints">31</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Last Updated</span>
+                                <span class="font-medium text-gray-900" data-bind="student.lastUpdated">Yesterday</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                <span data-bind="student.recentActivity">1 day ago</span>
+                            </div>
+                            <button class="text-primary hover:text-blue-700 font-medium text-sm">
+                                View Details <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sample Student Card 3 -->
+                <div class="bg-white rounded-xl shadow-sm border hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent" data-student-id="3">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-semibold text-gray-900" data-bind="student.name">Sophia Chen</h3>
+                            <div class="p-2 bg-purple-100 rounded-lg">
+                                <i class="fas fa-user-graduate text-accent"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3 mb-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Active Goals</span>
+                                <span class="font-medium text-gray-900" data-bind="student.goalsCount">3</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Total Data Points</span>
+                                <span class="font-medium text-gray-900" data-bind="student.dataPoints">19</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 text-sm">Last Updated</span>
+                                <span class="font-medium text-gray-900" data-bind="student.lastUpdated">3 days ago</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center text-sm text-gray-600">
+                                <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                <span data-bind="student.recentActivity">3 days ago</span>
+                            </div>
+                            <button class="text-primary hover:text-blue-700 font-medium text-sm">
+                                View Details <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_MAP )) -->
+        </div>
+        <!-- @END_COMPONENT: StudentsOverview -->
+
+        <!-- @COMPONENT: StudentDetailView [hidden by default] -->
+        <div id="studentDetailView" class="hidden space-y-6">
+            <!-- Student Header -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button class="p-2 text-gray-600 hover:text-gray-900" data-event="click:backToStudents">
+                        <i class="fas fa-arrow-left text-xl"></i>
+                    </button>
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900" data-bind="selectedStudent.name">Emma Rodriguez</h2>
+                        <p class="text-gray-600" data-bind="selectedStudent.grade">Grade 3 • IEP Goals Dashboard</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <button class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                        <i class="fas fa-print mr-2"></i>Print Report
+                    </button>
+                    <button class="px-4 py-2 bg-primary text-white hover:bg-blue-700 rounded-lg transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Add Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="bg-white rounded-lg shadow-sm border">
+                <div class="flex border-b border-gray-200">
+                    <button class="px-6 py-4 text-primary border-b-2 border-primary font-medium" data-tab="overview">
+                        <i class="fas fa-chart-pie mr-2"></i>Overview
+                    </button>
+                    <button class="px-6 py-4 text-gray-600 hover:text-gray-900 font-medium" data-tab="goals">
+                        <i class="fas fa-bullseye mr-2"></i>Goals & Progress
+                    </button>
+                    <button class="px-6 py-4 text-gray-600 hover:text-gray-900 font-medium" data-tab="data-entry">
+                        <i class="fas fa-edit mr-2"></i>Data Entry
+                    </button>
+                    <button class="px-6 py-4 text-gray-600 hover:text-gray-900 font-medium" data-tab="reports">
+                        <i class="fas fa-chart-line mr-2"></i>Reports
+                    </button>
+                    <button class="px-6 py-4 text-gray-600 hover:text-gray-900 font-medium" data-tab="raw-data">
+                        <i class="fas fa-table mr-2"></i>Raw Data
+                    </button>
+                </div>
+
+                <!-- Overview Tab Content -->
+                <div id="overviewTab" class="p-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                        <!-- Student Summary Stats -->
+                        <div class="lg:col-span-1 space-y-4">
+                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-xl">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Summary</h3>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Active Goals</span>
+                                        <span class="font-semibold text-gray-900" data-bind="student.activeGoals">4</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Completed Goals</span>
+                                        <span class="font-semibold text-gray-900" data-bind="student.completedGoals">2</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Total Data Points</span>
+                                        <span class="font-semibold text-gray-900" data-bind="student.totalDataPoints">23</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Last Assessment</span>
+                                        <span class="font-semibold text-gray-900" data-bind="student.lastAssessment">Oct 15, 2024</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity & Quick Actions -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-white border rounded-xl p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
+                                <div class="space-y-4">
+                                    <!-- @MAP: recentActivity.map(activity => ( -->
+                                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="p-2 bg-green-100 rounded-lg">
+                                            <i class="fas fa-check text-secondary text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900" data-bind="activity.description">Reading comprehension data entered: 85% accuracy</p>
+                                            <p class="text-xs text-gray-600" data-bind="activity.timestamp">Today at 2:30 PM</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="p-2 bg-blue-100 rounded-lg">
+                                            <i class="fas fa-plus text-primary text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900" data-bind="activity.description">New goal added: Math computation skills</p>
+                                            <p class="text-xs text-gray-600" data-bind="activity.timestamp">Yesterday at 10:15 AM</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="p-2 bg-purple-100 rounded-lg">
+                                            <i class="fas fa-chart-line text-accent text-sm"></i>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="text-sm font-medium text-gray-900" data-bind="activity.description">Progress report generated for IEP meeting</p>
+                                            <p class="text-xs text-gray-600" data-bind="activity.timestamp">Oct 12, 2024</p>
+                                        </div>
+                                    </div>
+                                    <!-- @END_MAP )) -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goals & Progress Tab Content -->
+                <div id="goalsTab" class="hidden p-6">
+                    <div class="space-y-6">
+                        <!-- Individual Goal Cards -->
+                        <!-- @MAP: student.goals.map(goal => ( -->
+                        <div class="bg-white border rounded-xl p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2" data-bind="goal.title">Reading Comprehension</h4>
+                                    <p class="text-gray-600 text-sm" data-bind="goal.description">Student will read grade-level passages and answer comprehension questions with 80% accuracy over 3 consecutive trials.</p>
+                                </div>
+                                <div class="ml-4 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800" data-bind="goal.status">
+                                        Active
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Goal Progress Bar -->
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Current Progress</span>
+                                    <span class="text-sm font-semibold text-gray-900" data-bind="goal.progress">72%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300" style="width: 72%" data-bind="goal.progressWidth"></div>
+                                </div>
+                            </div>
+
+                            <!-- Goal Statistics -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="goal.dataPoints">8</p>
+                                    <p class="text-xs text-gray-600">Data Points</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="goal.averageScore">76%</p>
+                                    <p class="text-xs text-gray-600">Average Score</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="goal.trend">+5%</p>
+                                    <p class="text-xs text-gray-600">This Week</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900" data-bind="goal.lastScore">85%</p>
+                                    <p class="text-xs text-gray-600">Last Score</p>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <div class="text-sm text-gray-600">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Last updated: <span data-bind="goal.lastUpdated">Today</span>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm text-primary hover:bg-blue-50 rounded-md transition-colors" data-event="click:viewGoalChart">
+                                        <i class="fas fa-chart-line mr-1"></i>View Chart
+                                    </button>
+                                    <button class="px-3 py-1 text-sm text-primary hover:bg-blue-50 rounded-md transition-colors" data-event="click:addGoalData">
+                                        <i class="fas fa-plus mr-1"></i>Add Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Goal 2: Math Computation -->
+                        <div class="bg-white border rounded-xl p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Math Computation</h4>
+                                    <p class="text-gray-600 text-sm">Student will solve single-digit addition problems with 90% accuracy for 4 out of 5 trials.</p>
+                                </div>
+                                <div class="ml-4 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                                        Mastered
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Current Progress</span>
+                                    <span class="text-sm font-semibold text-gray-900">95%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300" style="width: 95%"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">6</p>
+                                    <p class="text-xs text-gray-600">Data Points</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">92%</p>
+                                    <p class="text-xs text-gray-600">Average Score</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">+8%</p>
+                                    <p class="text-xs text-gray-600">This Week</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">100%</p>
+                                    <p class="text-xs text-gray-600">Last Score</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <div class="text-sm text-gray-600">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Last updated: Yesterday
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm text-primary hover:bg-blue-50 rounded-md transition-colors">
+                                        <i class="fas fa-chart-line mr-1"></i>View Chart
+                                    </button>
+                                    <button class="px-3 py-1 text-sm text-primary hover:bg-blue-50 rounded-md transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Add Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Goal 3: Social Interaction -->
+                        <div class="bg-white border rounded-xl p-6 hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex-1">
+                                    <h4 class="text-lg font-semibold text-gray-900 mb-2">Social Interaction</h4>
+                                    <p class="text-gray-600 text-sm">Student will initiate appropriate social interactions with peers during structured activities for 3 out of 5 observed opportunities.</p>
+                                </div>
+                                <div class="ml-4 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                                        In Progress
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-sm font-medium text-gray-700">Current Progress</span>
+                                    <span class="text-sm font-semibold text-gray-900">45%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-3 rounded-full transition-all duration-300" style="width: 45%"></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">9</p>
+                                    <p class="text-xs text-gray-600">Data Points</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">48%</p>
+                                    <p class="text-xs text-gray-600">Average Score</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">+12%</p>
+                                    <p class="text-xs text-gray-600">This Week</p>
+                                </div>
+                                <div class="text-center p-3 bg-gray-50 rounded-lg">
+                                    <p class="text-2xl font-bold text-gray-900">60%</p>
+                                    <p class="text-xs text-gray-600">Last Score</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                <div class="text-sm text-gray-600">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    Last updated: 2 days ago
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm text-primary hover:bg-blue-50 rounded-md transition-colors">
+                                        <i class="fas fa-chart-line mr-1"></i>View Chart
+                                    </button>
+                                    <button class="px-3 py-1 text-sm text-primary hover:bg-blue-50 rounded-md transition-colors">
+                                        <i class="fas fa-plus mr-1"></i>Add Data
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+
+                        <!-- Add New Goal Button -->
+                        <div class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gray-400 transition-colors cursor-pointer" data-event="click:addNewGoal">
+                            <div class="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                <i class="fas fa-plus text-gray-600 text-xl"></i>
+                            </div>
+                            <h4 class="text-lg font-medium text-gray-900 mb-2">Add New Goal</h4>
+                            <p class="text-gray-600">Create a new IEP goal for this student</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Entry Tab Content -->
+                <div id="dataEntryTab" class="hidden p-6">
+                    <div class="max-w-2xl mx-auto">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-6">Add New Data Point</h3>
+                        
+                        <form class="space-y-6" data-event="submit:addDataPoint">
+                            <!-- Goal Selection -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Select Goal</label>
+                                <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-bind="form.goalId">
+                                    <option value="">Choose a goal...</option>
+                                    <option value="goal1">Reading Comprehension</option>
+                                    <option value="goal2">Math Computation</option>
+                                    <option value="goal3">Social Interaction</option>
+                                </select>
+                            </div>
+
+                            <!-- Date -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                <input type="date" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-bind="form.date" value="2024-10-15">
+                            </div>
+
+                            <!-- Progress Value -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Progress Value</label>
+                                <div class="flex space-x-4">
+                                    <div class="flex-1">
+                                        <label class="block text-xs text-gray-600 mb-1">Percentage</label>
+                                        <div class="relative">
+                                            <input type="number" min="0" max="100" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary pr-8" placeholder="85" data-bind="form.percentage">
+                                            <span class="absolute right-3 top-3 text-gray-500">%</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-center px-4">
+                                        <span class="text-gray-400">OR</span>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-xs text-gray-600 mb-1">Attempts Format</label>
+                                        <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="8/10" data-bind="form.attempts">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Level of Support -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Level of Support</label>
+                                <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-bind="form.support">
+                                    <option value="">Select support level...</option>
+                                    <option value="independent">Independent</option>
+                                    <option value="verbal-prompt">Verbal Prompt</option>
+                                    <option value="visual-prompt">Visual Prompt</option>
+                                    <option value="physical-prompt">Physical Prompt</option>
+                                    <option value="hand-over-hand">Hand-over-Hand</option>
+                                </select>
+                            </div>
+
+                            <!-- Anecdotal Information -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Anecdotal Information</label>
+                                <textarea rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Additional notes about the student's performance, behavior, or any relevant observations..." data-bind="form.notes"></textarea>
+                            </div>
+
+                            <!-- Submit Buttons -->
+                            <div class="flex justify-end space-x-4 pt-6">
+                                <button type="button" class="px-6 py-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" class="px-6 py-3 bg-primary text-white hover:bg-blue-700 rounded-lg transition-colors" data-implementation="Should validate form before submission">
+                                    <i class="fas fa-save mr-2"></i>Save Data Point
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Reports Tab Content -->
+                <div id="reportsTab" class="hidden p-6">
+                    <div class="space-y-6">
+                        <!-- Goal Selection for Reports -->
+                        <div class="bg-white border rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Select Goal for Detailed Report</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button class="p-4 text-left border-2 border-primary bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors">
+                                    <h4 class="font-semibold text-gray-900">Reading Comprehension</h4>
+                                    <p class="text-sm text-gray-600 mt-1">8 data points</p>
+                                </button>
+                                <button class="p-4 text-left border-2 border-gray-200 hover:border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <h4 class="font-semibold text-gray-900">Math Computation</h4>
+                                    <p class="text-sm text-gray-600 mt-1">6 data points</p>
+                                </button>
+                                <button class="p-4 text-left border-2 border-gray-200 hover:border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                                    <h4 class="font-semibold text-gray-900">Social Interaction</h4>
+                                    <p class="text-sm text-gray-600 mt-1">9 data points</p>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Chart Display -->
+                        <div class="bg-white border rounded-xl p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <h3 class="text-lg font-semibold text-gray-900">Progress Chart: Reading Comprehension</h3>
+                                <div class="flex space-x-2">
+                                    <button class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                                        <i class="fas fa-download mr-1"></i>Export
+                                    </button>
+                                    <button class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded-md transition-colors">
+                                        <i class="fas fa-print mr-1"></i>Print
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Chart Container -->
+                            <div class="h-80 bg-gray-50 rounded-lg flex items-center justify-center mb-6" data-implementation="Use Chart.js to render goal-specific progress chart">
+                                <canvas id="progressChart" width="400" height="200"></canvas>
+                            </div>
+
+                            <!-- Chart Statistics -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-gray-100">
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-gray-900">72%</p>
+                                    <p class="text-sm text-gray-600">Current Progress</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-gray-900">76%</p>
+                                    <p class="text-sm text-gray-600">Average Score</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-green-600">+15%</p>
+                                    <p class="text-sm text-gray-600">Trend (30 days)</p>
+                                </div>
+                                <div class="text-center">
+                                    <p class="text-2xl font-bold text-gray-900">8</p>
+                                    <p class="text-sm text-gray-600">Data Points</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Goal Summary Report -->
+                        <div class="bg-white border rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Goal Summary Report</h3>
+                            <div class="prose max-w-none">
+                                <p class="text-gray-700 mb-4">
+                                    <strong>Goal Statement:</strong> Student will read grade-level passages and answer comprehension questions with 80% accuracy over 3 consecutive trials.
+                                </p>
+                                <p class="text-gray-700 mb-4">
+                                    <strong>Current Status:</strong> The student is making steady progress toward mastery. Current performance shows 72% accuracy with an upward trend over the past month.
+                                </p>
+                                <p class="text-gray-700 mb-4">
+                                    <strong>Recent Performance:</strong> The student's most recent scores show improvement, with the last three data points at 80%, 85%, and 85% respectively.
+                                </p>
+                                <p class="text-gray-700">
+                                    <strong>Recommendations:</strong> Continue current intervention strategies. Consider reducing support level to promote independence as student approaches mastery criterion.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Raw Data Tab Content -->
+                <div id="rawDataTab" class="hidden p-6">
+                    <div class="space-y-6">
+                        <!-- Data Table -->
+                        <div class="bg-white border rounded-xl overflow-hidden">
+                            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                                <h3 class="text-lg font-semibold text-gray-900">All Data Points</h3>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Support Level</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <!-- @MAP: dataPoints.map(point => ( -->
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="point.date">Oct 15, 2024</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900" data-bind="point.goal">Reading Comprehension</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" data-bind="point.progress">85%</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="point.support">Verbal Prompt</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" data-bind="point.notes">Student showed improved focus and completed task with minimal prompting</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button class="text-primary hover:text-blue-700 mr-3" data-event="click:editDataPoint">Edit</button>
+                                                <button class="text-red-600 hover:text-red-900" data-event="click:deleteDataPoint">Delete</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Oct 13, 2024</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900">Math Computation</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">100%</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Independent</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">Excellent performance, completed all problems correctly without assistance</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button class="text-primary hover:text-blue-700 mr-3">Edit</button>
+                                                <button class="text-red-600 hover:text-red-900">Delete</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Oct 12, 2024</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900">Social Interaction</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">60%</span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Visual Prompt</td>
+                                            <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">Initiated conversation with peer during lunch, responded well to social cues</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <button class="text-primary hover:text-blue-700 mr-3">Edit</button>
+                                                <button class="text-red-600 hover:text-red-900">Delete</button>
+                                            </td>
+                                        </tr>
+                                        <!-- @END_MAP )) -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Export Options -->
+                        <div class="bg-white border rounded-xl p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Export Data</h3>
+                            <div class="flex flex-wrap gap-4">
+                                <button class="px-4 py-2 bg-primary text-white hover:bg-blue-700 rounded-lg transition-colors">
+                                    <i class="fas fa-file-csv mr-2"></i>Export as CSV
+                                </button>
+                                <button class="px-4 py-2 bg-secondary text-white hover:bg-green-700 rounded-lg transition-colors">
+                                    <i class="fas fa-file-excel mr-2"></i>Export as Excel
+                                </button>
+                                <button class="px-4 py-2 bg-gray-600 text-white hover:bg-gray-700 rounded-lg transition-colors">
+                                    <i class="fas fa-file-pdf mr-2"></i>Export as PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: StudentDetailView -->
+
+    </div>
+    <!-- @END_COMPONENT: MainLayout -->
+
+    <!-- @COMPONENT: AddStudentModal [modal] -->
+    <div id="addStudentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">Add New Student</h3>
+                    <button class="text-gray-400 hover:text-gray-600" data-event="click:closeModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form class="space-y-4" data-event="submit:addStudent">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Student Name</label>
+                        <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" placeholder="Enter student name" data-bind="newStudent.name" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Grade Level</label>
+                        <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary" data-bind="newStudent.grade">
+                            <option value="">Select grade...</option>
+                            <option value="K">Kindergarten</option>
+                            <option value="1">1st Grade</option>
+                            <option value="2">2nd Grade</option>
+                            <option value="3">3rd Grade</option>
+                            <option value="4">4th Grade</option>
+                            <option value="5">5th Grade</option>
+                        </select>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-4">
+                        <button type="button" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors" data-event="click:closeModal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-primary text-white hover:bg-blue-700 rounded-md transition-colors">
+                            Add Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AddStudentModal -->
+
+    <script>
+        // @STATE: currentView:'students'|'studentDetail' = 'students'
+        // @STATE: selectedStudent:object = null
+        // @STATE: students:array = sampleStudents
+        // @STATE: isLoading:boolean = false
+
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // Sample data for demonstration
+            const sampleStudents = [
+                {
+                    id: '1',
+                    name: 'Emma Rodriguez',
+                    grade: '3',
+                    goalsCount: 4,
+                    dataPoints: 23,
+                    lastUpdated: 'Today',
+                    recentActivity: '2 hours ago'
+                },
+                {
+                    id: '2', 
+                    name: 'Marcus Johnson',
+                    grade: '2',
+                    goalsCount: 5,
+                    dataPoints: 31,
+                    lastUpdated: 'Yesterday',
+                    recentActivity: '1 day ago'
+                },
+                {
+                    id: '3',
+                    name: 'Sophia Chen', 
+                    grade: '4',
+                    goalsCount: 3,
+                    dataPoints: 19,
+                    lastUpdated: '3 days ago',
+                    recentActivity: '3 days ago'
+                }
+            ];
+
+            // Navigation functionality
+            function showStudentsView() {
+                document.getElementById('studentsOverview').classList.remove('hidden');
+                document.getElementById('studentDetailView').classList.add('hidden');
+            }
+
+            function showStudentDetail(studentId) {
+                document.getElementById('studentsOverview').classList.add('hidden');
+                document.getElementById('studentDetailView').classList.remove('hidden');
+                
+                // TODO: Load student-specific data
+            }
+
+            // Tab navigation
+            function showTab(tabName) {
+                // Hide all tab content
+                document.querySelectorAll('[id$="Tab"]').forEach(tab => {
+                    tab.classList.add('hidden');
+                });
+                
+                // Show selected tab
+                document.getElementById(tabName + 'Tab').classList.remove('hidden');
+                
+                // Update tab button states
+                document.querySelectorAll('[data-tab]').forEach(btn => {
+                    btn.classList.remove('text-primary', 'border-b-2', 'border-primary');
+                    btn.classList.add('text-gray-600');
+                });
+                
+                document.querySelector(`[data-tab="${tabName}"]`).classList.remove('text-gray-600');
+                document.querySelector(`[data-tab="${tabName}"]`).classList.add('text-primary', 'border-b-2', 'border-primary');
+            }
+
+            // Event listeners
+            document.addEventListener('click', function(e) {
+                const studentCard = e.target.closest('[data-student-id]');
+                if (studentCard) {
+                    const studentId = studentCard.getAttribute('data-student-id');
+                    showStudentDetail(studentId);
+                    return;
+                }
+
+                const backBtn = e.target.closest('[data-event*="backToStudents"]');
+                if (backBtn) {
+                    showStudentsView();
+                    return;
+                }
+
+                const tabBtn = e.target.closest('[data-tab]');
+                if (tabBtn) {
+                    const tabName = tabBtn.getAttribute('data-tab');
+                    showTab(tabName);
+                    return;
+                }
+            });
+
+            // Initialize chart for reports tab
+            function initializeChart() {
+                const ctx = document.getElementById('progressChart');
+                if (ctx) {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Sep 15', 'Sep 22', 'Sep 29', 'Oct 6', 'Oct 13', 'Oct 15'],
+                            datasets: [{
+                                label: 'Reading Comprehension Progress',
+                                data: [45, 52, 60, 68, 75, 85],
+                                borderColor: '#2563EB',
+                                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                                borderWidth: 3,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Initialize the chart when the reports tab is shown
+            document.addEventListener('click', function(e) {
+                const reportsTab = e.target.closest('[data-tab="reports"]');
+                if (reportsTab) {
+                    setTimeout(initializeChart, 100); // Small delay to ensure tab content is visible
+                }
+            });
+
+            // Initialize default view
+            showStudentsView();
+        })();
+    </script>
+</body>
+</html>

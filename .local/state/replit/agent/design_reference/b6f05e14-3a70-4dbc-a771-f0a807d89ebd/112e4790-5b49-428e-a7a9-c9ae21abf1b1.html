@@ -1,0 +1,750 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Education Data Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: {
+                        50: '#E3F2FD',
+                        100: '#BBDEFB', 
+                        500: '#2196F3',
+                        600: '#1976D2',
+                        700: '#1565C0',
+                        900: '#0D47A1'
+                    },
+                    secondary: {
+                        100: '#C8E6C9',
+                        500: '#4CAF50',
+                        600: '#388E3C'
+                    },
+                    accent: {
+                        400: '#FF7043',
+                        500: '#FF5722'
+                    }
+                },
+                fontFamily: {
+                    'roboto': ['Roboto', 'sans-serif'],
+                    'roboto-mono': ['Roboto Mono', 'monospace']
+                }
+            }
+        }
+    };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-roboto">
+    <!-- @COMPONENT: App Container -->
+    <div id="app" class="min-h-screen">
+        
+        <!-- @COMPONENT: Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-graduation-cap text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-medium text-gray-900">Special Education Data Collection</h1>
+                                <p class="text-xs text-gray-500">IEP Goal Tracking System</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="hidden sm:flex items-center space-x-2 text-sm text-gray-600">
+                            <i class="fas fa-user-circle text-lg"></i>
+                            <span data-bind="user.email">teacher@school.edu</span>
+                        </div>
+                        <button class="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- @COMPONENT: Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            
+            <!-- @COMPONENT: Students List View (Default View) -->
+            <div id="students-view" class="space-y-8">
+                
+                <!-- Page Header -->
+                <div class="text-center">
+                    <h2 class="text-3xl font-bold text-gray-900">Manage Students</h2>
+                    <p class="mt-2 text-gray-600">Add students and track their IEP goals and objectives</p>
+                </div>
+
+                <!-- @COMPONENT: Add Student Card -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-plus-circle text-primary-600 mr-2"></i>
+                            Add New Student
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <form class="flex flex-col sm:flex-row gap-4">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Student Name</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter student name"
+                                    data-bind="newStudentName"
+                                    class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                                />
+                            </div>
+                            <div class="flex items-end">
+                                <button 
+                                    type="submit"
+                                    data-event="click:handleCreateStudent"
+                                    class="px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors shadow-sm"
+                                >
+                                    <i class="fas fa-plus mr-2"></i>Add Student
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: Students Grid -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                            <i class="fas fa-users text-primary-600 mr-2"></i>
+                            Your Students
+                            <span data-bind="students.length" class="ml-2 px-2 py-1 bg-primary-100 text-primary-700 text-xs rounded-full">4</span>
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <!-- @MAP: students.map(student => ( -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 hover:bg-primary-100 transition-colors cursor-pointer group">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 data-bind="student.name" class="font-medium text-gray-900">Sarah Johnson</h4>
+                                            <p class="text-sm text-gray-500">4 active goals</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        data-event="click:selectStudent"
+                                        class="px-3 py-2 bg-primary-600 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        View
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 hover:bg-primary-100 transition-colors cursor-pointer group">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 data-bind="student.name" class="font-medium text-gray-900">Michael Chen</h4>
+                                            <p class="text-sm text-gray-500">6 active goals</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        data-event="click:selectStudent"
+                                        class="px-3 py-2 bg-primary-600 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        View
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-primary-50 border border-primary-200 rounded-lg p-4 hover:bg-primary-100 transition-colors cursor-pointer group">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-12 h-12 bg-primary-600 rounded-full flex items-center justify-center">
+                                            <i class="fas fa-user text-white"></i>
+                                        </div>
+                                        <div>
+                                            <h4 data-bind="student.name" class="font-medium text-gray-900">Emma Rodriguez</h4>
+                                            <p class="text-sm text-gray-500">3 active goals</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        data-event="click:selectStudent"
+                                        class="px-3 py-2 bg-primary-600 text-white text-sm rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- @END_MAP )) -->
+                    </div>
+                </div>
+
+                <!-- User ID Info -->
+                <div class="text-center">
+                    <p class="text-sm text-gray-500">
+                        User ID (for data separation): 
+                        <span data-bind="userId" class="font-roboto-mono text-xs bg-gray-100 px-2 py-1 rounded">user_abc123def456</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- @COMPONENT: Student Dashboard View (Hidden by default) -->
+            <div id="student-dashboard" class="space-y-8 hidden">
+                
+                <!-- Dashboard Header -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-900">
+                            <span data-bind="selectedStudent.name" class="text-primary-600">Sarah Johnson</span>'s Data
+                        </h2>
+                        <p class="text-gray-600 mt-1">IEP Goal Tracking and Progress</p>
+                    </div>
+                    <button 
+                        data-event="click:backToStudents"
+                        class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center space-x-2"
+                    >
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Students</span>
+                    </button>
+                </div>
+
+                <!-- @COMPONENT: View Tabs -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                            <button 
+                                data-event="click:setView('dataEntry')"
+                                class="py-4 px-1 border-b-2 border-primary-600 font-medium text-sm text-primary-600"
+                            >
+                                <i class="fas fa-plus-circle mr-2"></i>Add Data
+                            </button>
+                            <button 
+                                data-event="click:setView('rawData')"
+                                class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            >
+                                <i class="fas fa-table mr-2"></i>Raw Data
+                            </button>
+                            <button 
+                                data-event="click:setView('reports')"
+                                class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                            >
+                                <i class="fas fa-chart-line mr-2"></i>Reports
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: Data Entry Form View -->
+                <div id="data-entry-view" class="space-y-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Add New Data Point</h3>
+                            <p class="text-sm text-gray-600 mt-1">Record progress for IEP goals and objectives</p>
+                        </div>
+                        <div class="p-6">
+                            <form class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                                        <input 
+                                            type="date" 
+                                            data-bind="formData.date"
+                                            class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Goal Number</label>
+                                        <input 
+                                            type="text" 
+                                            placeholder="e.g., Goal 1.2"
+                                            data-bind="formData.goalNumber"
+                                            class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Goal Description</label>
+                                    <textarea 
+                                        placeholder="Describe the IEP goal or objective"
+                                        data-bind="formData.goalDescription"
+                                        rows="3"
+                                        class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    ></textarea>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Progress Value</label>
+                                        <div class="relative">
+                                            <input 
+                                                type="number" 
+                                                step="0.1"
+                                                placeholder="e.g., 85"
+                                                data-bind="formData.progressValue"
+                                                class="w-full px-3 py-3 pr-8 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                                required
+                                            />
+                                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                                <span class="text-gray-500 text-sm">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-2">Level of Support</label>
+                                        <select 
+                                            data-bind="formData.levelOfSupport"
+                                            class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        >
+                                            <option value="">Select support level</option>
+                                            <option value="independent">Independent</option>
+                                            <option value="minimal">Minimal Support</option>
+                                            <option value="moderate">Moderate Support</option>
+                                            <option value="maximum">Maximum Support</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Anecdotal Information</label>
+                                    <textarea 
+                                        placeholder="Additional notes about the student's performance"
+                                        data-bind="formData.anecdotalInfo"
+                                        rows="4"
+                                        class="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    ></textarea>
+                                </div>
+
+                                <div class="flex justify-end space-x-4 pt-4">
+                                    <button 
+                                        type="button"
+                                        class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                                    >
+                                        Clear Form
+                                    </button>
+                                    <button 
+                                        type="submit"
+                                        data-event="click:handleAddData"
+                                        class="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                                    >
+                                        <i class="fas fa-save mr-2"></i>Save Data
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: Raw Data View (Hidden by default) -->
+                <div id="raw-data-view" class="space-y-8 hidden">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-medium text-gray-900">Data History</h3>
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-2">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Search data..."
+                                            class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-1 focus:ring-primary-500"
+                                        />
+                                        <button class="p-2 text-gray-400 hover:text-gray-600">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                    <button class="px-3 py-2 bg-secondary-600 text-white text-sm rounded-md hover:bg-secondary-700">
+                                        <i class="fas fa-download mr-2"></i>Export
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Support Level</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    <!-- @MAP: dataPoints.map(point => ( -->
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-01-15</td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">
+                                            <div>
+                                                <span class="font-medium">Goal 1.2</span>
+                                                <p class="text-gray-500 text-xs mt-1">Reading comprehension with grade-level text</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">85%</span>
+                                                <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                                    <div class="bg-secondary-500 h-2 rounded-full" style="width: 85%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Independent</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">Student demonstrated excellent comprehension skills during independent reading time</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary-600 hover:text-primary-900 mr-3">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-900">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-01-12</td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">
+                                            <div>
+                                                <span class="font-medium">Goal 2.1</span>
+                                                <p class="text-gray-500 text-xs mt-1">Math problem solving with word problems</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">72%</span>
+                                                <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 72%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Minimal</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">Needed prompting to identify key information in word problems</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary-600 hover:text-primary-900 mr-3">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-900">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2024-01-10</td>
+                                        <td class="px-6 py-4 text-sm text-gray-900">
+                                            <div>
+                                                <span class="font-medium">Goal 3.1</span>
+                                                <p class="text-gray-500 text-xs mt-1">Social interaction during group activities</p>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <span class="text-sm font-medium text-gray-900">90%</span>
+                                                <div class="ml-2 w-16 bg-gray-200 rounded-full h-2">
+                                                    <div class="bg-secondary-500 h-2 rounded-full" style="width: 90%"></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Independent</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">Initiated conversations and collaborated well with peers</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <button class="text-primary-600 hover:text-primary-900 mr-3">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-900">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <!-- @END_MAP )) -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- @COMPONENT: Reports View (Hidden by default) -->
+                <div id="reports-view" class="space-y-8 hidden">
+                    
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">Total Data Points</p>
+                                    <p data-bind="totalDataPoints" class="text-3xl font-bold text-gray-900">24</p>
+                                </div>
+                                <div class="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-database text-primary-600"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">Average Progress</p>
+                                    <p data-bind="averageProgress" class="text-3xl font-bold text-gray-900">82%</p>
+                                </div>
+                                <div class="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-chart-line text-secondary-600"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-600">Active Goals</p>
+                                    <p data-bind="activeGoals" class="text-3xl font-bold text-gray-900">4</p>
+                                </div>
+                                <div class="w-12 h-12 bg-accent-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-bullseye text-accent-400"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Chart -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Progress Over Time</h3>
+                            <p class="text-sm text-gray-600 mt-1">Track IEP goal progress by date</p>
+                        </div>
+                        <div class="p-6">
+                            <!-- @FUNCTIONALITY: This chart should implement progress visualization using Chart.js or similar -->
+                            <div class="h-80 flex items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                                <div class="text-center">
+                                    <i class="fas fa-chart-line text-4xl text-gray-400 mb-4"></i>
+                                    <p class="text-gray-500">Progress Chart Visualization</p>
+                                    <p class="text-sm text-gray-400 mt-1">Chart.js or Recharts implementation needed</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Goal-by-Goal Analysis -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Goal Analysis</h3>
+                            <p class="text-sm text-gray-600 mt-1">Performance breakdown by IEP goal</p>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <!-- @MAP: goalAnalysis.map(goal => ( -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Goal 1.2</h4>
+                                        <p class="text-sm text-gray-600">Reading comprehension with grade-level text</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-gray-900">85%</p>
+                                        <p class="text-sm text-gray-500">avg. progress</p>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-secondary-500 h-3 rounded-full" style="width: 85%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>8 data points</span>
+                                    <span>Last updated: Jan 15, 2024</span>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Goal 2.1</h4>
+                                        <p class="text-sm text-gray-600">Math problem solving with word problems</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-gray-900">72%</p>
+                                        <p class="text-sm text-gray-500">avg. progress</p>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-yellow-500 h-3 rounded-full" style="width: 72%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>6 data points</span>
+                                    <span>Last updated: Jan 12, 2024</span>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div>
+                                        <h4 class="font-medium text-gray-900">Goal 3.1</h4>
+                                        <p class="text-sm text-gray-600">Social interaction during group activities</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-bold text-gray-900">88%</p>
+                                        <p class="text-sm text-gray-500">avg. progress</p>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="bg-secondary-500 h-3 rounded-full" style="width: 88%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-2">
+                                    <span>10 data points</span>
+                                    <span>Last updated: Jan 10, 2024</span>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- @COMPONENT: Success/Error Modal -->
+        <div id="message-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+            <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                <div class="mb-4">
+                    <i id="modal-icon" class="fas fa-check-circle text-4xl text-secondary-500"></i>
+                </div>
+                <p id="modal-message" class="text-lg font-medium text-gray-900 mb-4">Data added successfully!</p>
+                <button 
+                    id="close-modal"
+                    data-event="click:closeModal"
+                    class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors"
+                >
+                    Close
+                </button>
+            </div>
+        </div>
+
+        <!-- @COMPONENT: Loading Overlay -->
+        <div id="loading-overlay" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white p-6 rounded-lg shadow-xl">
+                <div class="flex items-center space-x-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    <span class="text-gray-900 font-medium">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: App Container -->
+
+    <script>
+        // TODO: Implement React component logic, Firebase integration, and state management
+        // TODO: Add form validation and error handling
+        // TODO: Implement chart visualization using Chart.js or Recharts
+        // TODO: Add real-time data updates with Firebase Firestore
+        // TODO: Implement data export functionality
+        // TODO: Add search and filtering capabilities for raw data view
+        
+        (function() {
+            // Simple view switching for demo purposes
+            const views = ['students-view', 'student-dashboard'];
+            const dashboardViews = ['data-entry-view', 'raw-data-view', 'reports-view'];
+            
+            function showView(viewId) {
+                views.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.classList.toggle('hidden', id !== viewId);
+                    }
+                });
+            }
+            
+            function showDashboardView(viewId) {
+                dashboardViews.forEach(id => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.classList.toggle('hidden', id !== viewId);
+                    }
+                });
+            }
+            
+            // Modal management
+            function showModal(message, type = 'success') {
+                const modal = document.getElementById('message-modal');
+                const icon = document.getElementById('modal-icon');
+                const messageEl = document.getElementById('modal-message');
+                
+                messageEl.textContent = message;
+                
+                if (type === 'success') {
+                    icon.className = 'fas fa-check-circle text-4xl text-secondary-500';
+                } else {
+                    icon.className = 'fas fa-exclamation-circle text-4xl text-red-500';
+                }
+                
+                modal.classList.remove('hidden');
+            }
+            
+            function hideModal() {
+                document.getElementById('message-modal').classList.add('hidden');
+            }
+            
+            // Event listeners for demo navigation
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('[data-event*="selectStudent"]')) {
+                    showView('student-dashboard');
+                    showDashboardView('data-entry-view');
+                }
+                
+                if (e.target.closest('[data-event*="backToStudents"]')) {
+                    showView('students-view');
+                }
+                
+                if (e.target.closest('[data-event*="setView(\'dataEntry\')"]')) {
+                    showDashboardView('data-entry-view');
+                }
+                
+                if (e.target.closest('[data-event*="setView(\'rawData\')"]')) {
+                    showDashboardView('raw-data-view');
+                }
+                
+                if (e.target.closest('[data-event*="setView(\'reports\')"]')) {
+                    showDashboardView('reports-view');
+                }
+                
+                if (e.target.closest('[data-event*="handleAddData"]')) {
+                    e.preventDefault();
+                    showModal('Data added successfully!', 'success');
+                }
+                
+                if (e.target.closest('[data-event*="handleCreateStudent"]')) {
+                    e.preventDefault();
+                    showModal('Student added successfully!', 'success');
+                }
+                
+                if (e.target.closest('[data-event*="closeModal"]')) {
+                    hideModal();
+                }
+            });
+            
+            // Tab highlighting
+            document.addEventListener('click', function(e) {
+                const tabButtons = document.querySelectorAll('nav button');
+                if (e.target.closest('nav button')) {
+                    tabButtons.forEach(btn => {
+                        btn.className = btn.className.replace(/border-primary-600 text-primary-600/, 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300');
+                    });
+                    e.target.closest('button').className = e.target.closest('button').className.replace(/border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300/, 'border-primary-600 text-primary-600');
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

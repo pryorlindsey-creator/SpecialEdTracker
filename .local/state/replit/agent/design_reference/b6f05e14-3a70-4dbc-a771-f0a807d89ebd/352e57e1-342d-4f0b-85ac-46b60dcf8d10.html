@@ -1,0 +1,709 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Education Data Collection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        },
+                        success: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669'
+                        }
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- @COMPONENT: AppHeader -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-graduation-cap text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-semibold text-gray-900">Special Education Data Collection</h1>
+                        <p class="text-sm text-gray-500">IEP Goals & Objectives Tracking</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="text-right">
+                        <p class="text-sm font-medium text-gray-900" data-bind="user.name">Ms. Johnson</p>
+                        <p class="text-xs text-gray-500" data-bind="user.school">Lincoln Elementary</p>
+                    </div>
+                    <button class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 transition-colors">
+                        <i class="fas fa-user text-gray-600 text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- @END_COMPONENT: AppHeader -->
+
+    <!-- @COMPONENT: MainApp -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- @STATE: currentView:string = 'students', selectedStudent:object = null -->
+        
+        <!-- Students Management View -->
+        <!-- @COMPONENT: StudentsView -->
+        <div id="studentsView" class="students-view">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Student Management</h2>
+                <p class="text-gray-600">Manage your students and track their IEP goals and objectives</p>
+            </div>
+
+            <!-- Add New Student Card -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-plus-circle text-primary-500 mr-2"></i>
+                    Add New Student
+                </h3>
+                <form class="flex flex-col sm:flex-row gap-4">
+                    <div class="flex-1">
+                        <input 
+                            type="text" 
+                            placeholder="Enter student name" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                            data-mock="true"
+                        />
+                    </div>
+                    <div class="flex-1">
+                        <input 
+                            type="text" 
+                            placeholder="Grade level (optional)" 
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                            data-mock="true"
+                        />
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="px-6 py-3 bg-primary-500 text-white font-medium rounded-lg hover:bg-primary-600 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                        data-event="click:handleAddStudent"
+                    >
+                        Add Student
+                    </button>
+                </form>
+            </div>
+
+            <!-- Students Grid -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-users text-primary-500 mr-2"></i>
+                    Your Students <span class="text-sm font-normal text-gray-500 ml-2">(12 students)</span>
+                </h3>
+                
+                <!-- @MAP: students.map(student => ( -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-900" data-bind="student.name">Emma Wilson</h4>
+                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full" data-bind="student.grade">Grade 3</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-center">
+                                <i class="fas fa-bullseye text-blue-500 mr-2 w-4"></i>
+                                <span data-bind="student.goalsCount">5 Active Goals</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line text-green-500 mr-2 w-4"></i>
+                                <span data-bind="student.progress">78% Avg Progress</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar text-gray-500 mr-2 w-4"></i>
+                                <span data-bind="student.lastUpdate">Updated 2 days ago</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-blue-500 text-white text-sm py-2 px-3 rounded-md hover:bg-blue-600 transition-colors">
+                                View Data
+                            </button>
+                            <button class="bg-gray-100 text-gray-600 text-sm py-2 px-3 rounded-md hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-900" data-bind="student.name">Marcus Thompson</h4>
+                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full" data-bind="student.grade">Grade 4</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-center">
+                                <i class="fas fa-bullseye text-green-500 mr-2 w-4"></i>
+                                <span data-bind="student.goalsCount">3 Active Goals</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line text-green-500 mr-2 w-4"></i>
+                                <span data-bind="student.progress">85% Avg Progress</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar text-gray-500 mr-2 w-4"></i>
+                                <span data-bind="student.lastUpdate">Updated yesterday</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-green-500 text-white text-sm py-2 px-3 rounded-md hover:bg-green-600 transition-colors">
+                                View Data
+                            </button>
+                            <button class="bg-gray-100 text-gray-600 text-sm py-2 px-3 rounded-md hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer" data-event="click:selectStudent">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-900" data-bind="student.name">Sofia Rodriguez</h4>
+                            <span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full" data-bind="student.grade">Grade 2</span>
+                        </div>
+                        <div class="space-y-2 text-sm text-gray-600">
+                            <div class="flex items-center">
+                                <i class="fas fa-bullseye text-purple-500 mr-2 w-4"></i>
+                                <span data-bind="student.goalsCount">4 Active Goals</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-chart-line text-yellow-500 mr-2 w-4"></i>
+                                <span data-bind="student.progress">62% Avg Progress</span>
+                            </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-calendar text-gray-500 mr-2 w-4"></i>
+                                <span data-bind="student.lastUpdate">Updated 1 week ago</span>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex space-x-2">
+                            <button class="flex-1 bg-purple-500 text-white text-sm py-2 px-3 rounded-md hover:bg-purple-600 transition-colors">
+                                View Data
+                            </button>
+                            <button class="bg-gray-100 text-gray-600 text-sm py-2 px-3 rounded-md hover:bg-gray-200 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <!-- @END_MAP )) -->
+            </div>
+        </div>
+        <!-- @END_COMPONENT: StudentsView -->
+
+        <!-- Student Dashboard View -->
+        <!-- @COMPONENT: StudentDashboard -->
+        <div id="studentDashboard" class="student-dashboard hidden">
+            <!-- Navigation Header -->
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <button class="text-primary-500 hover:text-primary-600 font-medium flex items-center mb-2" data-event="click:backToStudents">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Students
+                    </button>
+                    <h2 class="text-2xl font-bold text-gray-900" data-bind="selectedStudent.name">Emma Wilson</h2>
+                    <p class="text-gray-600">IEP Goals & Objectives Data</p>
+                </div>
+                <div class="bg-white rounded-lg border border-gray-200 p-3">
+                    <div class="text-sm text-gray-600">Overall Progress</div>
+                    <div class="text-2xl font-bold text-green-600" data-bind="selectedStudent.overallProgress">78%</div>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+                <div class="flex overflow-x-auto">
+                    <button class="tab-button active px-6 py-4 text-sm font-medium border-b-2 border-primary-500 text-primary-600" data-tab="dataEntry">
+                        <i class="fas fa-plus-circle mr-2"></i>Add Data
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="rawData">
+                        <i class="fas fa-table mr-2"></i>View Data
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="reports">
+                        <i class="fas fa-chart-bar mr-2"></i>Reports
+                    </button>
+                    <button class="tab-button px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="goals">
+                        <i class="fas fa-bullseye mr-2"></i>Goals
+                    </button>
+                </div>
+            </div>
+
+            <!-- Data Entry Tab -->
+            <div id="dataEntryTab" class="tab-content">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center">
+                        <i class="fas fa-plus-circle text-primary-500 mr-2"></i>
+                        Add New Data Point
+                    </h3>
+                    
+                    <form class="space-y-6" data-event="submit:handleAddData">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Date -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Date <span class="text-red-500">*</span></label>
+                                <input 
+                                    type="date" 
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    data-mock="true"
+                                    required
+                                />
+                            </div>
+
+                            <!-- Goal Selection -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Goal Statement <span class="text-red-500">*</span></label>
+                                <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" data-mock="true" required>
+                                    <option value="">Select a goal...</option>
+                                    <option value="goal1" data-mock="true">Math: Count to 100 by 10s</option>
+                                    <option value="goal2" data-mock="true">Reading: Identify sight words</option>
+                                    <option value="goal3" data-mock="true">Communication: Request items</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Progress Input (Percentage or Fraction) -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Progress <span class="text-red-500">*</span></label>
+                                <div class="flex space-x-2">
+                                    <input 
+                                        type="text" 
+                                        placeholder="75% or 8/10" 
+                                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                        data-mock="true"
+                                        required
+                                    />
+                                    <button type="button" class="px-3 py-3 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 transition-colors">
+                                        <i class="fas fa-question-circle text-gray-500"></i>
+                                    </button>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-1">Enter as percentage (75%) or fraction (8/10)</p>
+                            </div>
+
+                            <!-- Level of Support -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Level of Support</label>
+                                <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500" data-mock="true">
+                                    <option value="">Select support level...</option>
+                                    <option value="independent" data-mock="true">Independent</option>
+                                    <option value="minimal" data-mock="true">Minimal Prompts</option>
+                                    <option value="moderate" data-mock="true">Moderate Prompts</option>
+                                    <option value="maximum" data-mock="true">Maximum Prompts</option>
+                                    <option value="full" data-mock="true">Full Support</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Anecdotal Information -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Anecdotal Information</label>
+                            <textarea 
+                                rows="4" 
+                                placeholder="Notes about the session, observations, strategies used, etc." 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                                data-mock="true"
+                            ></textarea>
+                        </div>
+
+                        <div class="flex justify-end space-x-4">
+                            <button type="button" class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Clear Form
+                            </button>
+                            <button type="submit" class="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                                <i class="fas fa-save mr-2"></i>
+                                Save Data Point
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Raw Data Tab -->
+            <div id="rawDataTab" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-6 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                                <i class="fas fa-table text-primary-500 mr-2"></i>
+                                Data Collection History
+                            </h3>
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm">
+                                    <i class="fas fa-filter mr-2"></i>Filter
+                                </button>
+                                <button class="px-4 py-2 bg-success-500 text-white rounded-md hover:bg-success-600 transition-colors text-sm">
+                                    <i class="fas fa-download mr-2"></i>Export
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Goal Statement</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Support Level</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <!-- @MAP: dataPoints.map(point => ( -->
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="point.date">2024-01-15</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900" data-bind="point.goalStatement">Math: Count to 100 by 10s</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" data-bind="point.progress">
+                                            80%
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="point.supportLevel">Minimal Prompts</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" data-bind="point.notes">Student showed improvement with visual cues</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary-600 hover:text-primary-900 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-900">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="point.date">2024-01-12</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900" data-bind="point.goalStatement">Reading: Identify sight words</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" data-bind="point.progress">
+                                            65%
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" data-bind="point.supportLevel">Moderate Prompts</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate" data-bind="point.notes">Used flashcards and repetition</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button class="text-primary-600 hover:text-primary-900 mr-3">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="text-red-600 hover:text-red-900">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <!-- @END_MAP )) -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports Tab -->
+            <div id="reportsTab" class="tab-content hidden">
+                <div class="space-y-6">
+                    <!-- Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-bullseye text-blue-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Total Goals</p>
+                                    <p class="text-2xl font-semibold text-gray-900" data-bind="stats.totalGoals">5</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-green-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Avg Progress</p>
+                                    <p class="text-2xl font-semibold text-gray-900" data-bind="stats.avgProgress">78%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-calendar text-purple-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Data Points</p>
+                                    <p class="text-2xl font-semibold text-gray-900" data-bind="stats.dataPoints">24</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-trophy text-yellow-600"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <p class="text-sm font-medium text-gray-500">Goals Met</p>
+                                    <p class="text-2xl font-semibold text-gray-900" data-bind="stats.goalsMet">2</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Progress Chart -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-lg font-semibold text-gray-900">Progress Over Time</h3>
+                            <select class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <option data-mock="true">All Goals</option>
+                                <option data-mock="true">Math: Count to 100 by 10s</option>
+                                <option data-mock="true">Reading: Identify sight words</option>
+                            </select>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="progressChart" class="w-full h-full"></canvas>
+                            <!-- @FUNCTIONALITY: Chart.js implementation showing progress over time -->
+                        </div>
+                    </div>
+
+                    <!-- Goal Breakdown -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Goal Performance</h3>
+                            <div class="space-y-4">
+                                <!-- @MAP: goals.map(goal => ( -->
+                                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                    <div class="flex-1">
+                                        <p class="font-medium text-gray-900" data-bind="goal.statement">Math: Count to 100 by 10s</p>
+                                        <p class="text-sm text-gray-500" data-bind="goal.category">Mathematics</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-lg font-semibold text-green-600" data-bind="goal.progress">85%</p>
+                                        <div class="w-20 bg-gray-200 rounded-full h-2 mt-1">
+                                            <div class="bg-green-500 h-2 rounded-full" style="width: 85%" data-bind="goal.progressBar"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4">Support Level Distribution</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Independent</span>
+                                    <span class="text-sm font-medium text-gray-900">35%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 35%"></div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Minimal Prompts</span>
+                                    <span class="text-sm font-medium text-gray-900">40%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: 40%"></div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Moderate Prompts</span>
+                                    <span class="text-sm font-medium text-gray-900">20%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-yellow-500 h-2 rounded-full" style="width: 20%"></div>
+                                </div>
+                                
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">Maximum Support</span>
+                                    <span class="text-sm font-medium text-gray-900">5%</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-red-500 h-2 rounded-full" style="width: 5%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Print Report Button -->
+                    <div class="flex justify-end">
+                        <button class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors mr-3">
+                            <i class="fas fa-download mr-2"></i>
+                            Export Data
+                        </button>
+                        <button class="px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors">
+                            <i class="fas fa-print mr-2"></i>
+                            Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: StudentDashboard -->
+    </div>
+    <!-- @END_COMPONENT: MainApp -->
+
+    <!-- @COMPONENT: MessageModal -->
+    <div id="messageModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <i id="modalIcon" class="fas fa-check-circle text-green-500 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <p id="modalMessage" class="text-sm font-medium text-gray-900">Success message here</p>
+                </div>
+            </div>
+            <div class="flex justify-end">
+                <button id="closeModal" class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: MessageModal -->
+
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // Tab switching functionality
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('border-primary-500', 'text-primary-600');
+                        btn.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    
+                    // Add active class to clicked tab
+                    button.classList.add('border-primary-500', 'text-primary-600');
+                    button.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    // Hide all tab contents
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Show target tab content
+                    const targetContent = document.getElementById(targetTab + 'Tab');
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                    }
+                });
+            });
+            
+            // View switching functionality
+            function showStudentsView() {
+                document.getElementById('studentsView').classList.remove('hidden');
+                document.getElementById('studentDashboard').classList.add('hidden');
+            }
+            
+            function showStudentDashboard() {
+                document.getElementById('studentsView').classList.add('hidden');
+                document.getElementById('studentDashboard').classList.remove('hidden');
+            }
+            
+            // Student card click handlers
+            document.querySelectorAll('[data-event="click:selectStudent"]').forEach(card => {
+                card.addEventListener('click', () => {
+                    showStudentDashboard();
+                });
+            });
+            
+            // Back to students button
+            document.querySelectorAll('[data-event="click:backToStudents"]').forEach(button => {
+                button.addEventListener('click', () => {
+                    showStudentsView();
+                });
+            });
+            
+            // Mock chart initialization
+            function initializeChart() {
+                const ctx = document.getElementById('progressChart');
+                if (ctx && typeof Chart !== 'undefined') {
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25'],
+                            datasets: [{
+                                label: 'Progress %',
+                                data: [45, 52, 60, 68, 75, 78],
+                                borderColor: '#3B82F6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // Initialize chart when page loads
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(initializeChart, 100);
+            });
+            
+            // Form submission handling
+            document.querySelector('[data-event="submit:handleAddData"]')?.addEventListener('submit', (e) => {
+                e.preventDefault();
+                // TODO: Handle form submission
+                console.log('Form submitted');
+            });
+            
+        })();
+    </script>
+</body>
+</html>
