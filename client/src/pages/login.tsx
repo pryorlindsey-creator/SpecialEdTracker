@@ -22,12 +22,12 @@ export default function Login() {
       const response = await apiRequest("POST", "/api/login", credentials);
       const data = await response.json();
 
-      if (data.success) {
+      if (data.message === "Login successful" || data.user) {
         toast({
           title: "Success",
           description: "Login successful",
         });
-        setLocation("/");
+        window.location.href = "/";  // Full page reload to refresh auth state
       }
     } catch (error: any) {
       toast({
