@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsx watch server/index.ts",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:client && npm run build:server && npm run db:push",
     "build:client": "vite build",
     "build:server": "esbuild server/index.ts --bundle --platform=node --packages=external --format=esm --outdir=dist/server",
     "start": "NODE_ENV=production node dist/server/index.js",
