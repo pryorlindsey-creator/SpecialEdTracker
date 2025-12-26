@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, ComposedChart } from "recharts";
 import { Download, Printer, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart3, TrendingUp, Filter } from "lucide-react";
 import { format } from "date-fns";
-import { filterDataPointsByPeriod, ReportingPeriod } from "@/lib/utils";
+import { filterDataPointsByPeriod, type ReportingPeriod } from "@/lib/utils";
 
 interface GoalChartProps {
   goalId: number;

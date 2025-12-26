@@ -35,7 +35,7 @@ import { format } from "date-fns";
 import { PDFGenerator, type PDFStudentData, type PDFGoalData, type PDFDataPoint } from "@/lib/pdf-generator";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { ReportingPeriod, ReportingData, getCurrentReportingPeriod } from "@/lib/utils";
+import { getCurrentReportingPeriod, type ReportingPeriod, type ReportingData } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,

@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
@@ -42,10 +41,16 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const port = 5000;
-  server.listen(port, () => {
-  logAppStart(port);
-});
+  // Use PORT from environment variable (required for Render.com)
+  const port = parseInt(process.env.PORT || "5000", 10);
+  
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    logAppStart(port);
+  });
 
   const gracefulShutdown = (signal: string) => {
     logAppStop(signal);

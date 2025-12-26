@@ -1,201 +1,141 @@
-import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
-
-import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
-
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
-}
-
-const getOidcConfig = memoize(
-  async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
-  },
-  { maxAge: 3600 * 1000 }
-);
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
+    createTableIfMissing: true,
     ttl: sessionTtl,
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || "dev-secret-change-in-production",
     store: sessionStore,
-    resave: true, // Force session save for admin login
-    saveUninitialized: true, // Allow empty sessions to be saved
+    resave: false,
+    saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // Development mode - disable for local testing
+      secure: process.env.NODE_ENV === "production",
       maxAge: sessionTtl,
       sameSite: 'lax'
     },
   });
 }
 
-function updateUserSession(
-  user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
-) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
-}
-
-async function upsertUser(
-  claims: any,
-) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
-}
-
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
-  app.use(passport.initialize());
-  app.use(passport.session());
 
-  const config = await getOidcConfig();
+  // Simple admin login endpoint
+  app.post("/api/login", async (req, res) => {
+    const { username, password } = req.body;
+    
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
 
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    try {
-      console.log("Authentication verify callback triggered");
-      console.log("User claims:", tokens.claims());
-      
-      const user = {};
-      updateUserSession(user, tokens);
-      await upsertUser(tokens.claims());
-      console.log("User session created and stored successfully");
-      verified(null, user);
-    } catch (error) {
-      console.error("Error in verify callback:", error);
-      verified(error, null);
+    if (!adminUsername || !adminPassword) {
+      console.error("ADMIN_USERNAME or ADMIN_PASSWORD not set");
+      return res.status(500).json({ message: "Server configuration error" });
     }
-  };
 
-  for (const domain of process.env
-    .REPLIT_DOMAINS!.split(",")) {
-    console.log("Setting up auth strategy for domain:", domain);
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify,
-    );
-    passport.use(strategy);
-    console.log("Strategy registered:", `replitauth:${domain}`);
-  }
+    if (username === adminUsername && password === adminPassword) {
+      // Create user session
+      const userId = "admin-" + adminUsername;
+      
+      // Upsert admin user in database
+      await storage.upsertUser({
+        id: userId,
+        email: `${adminUsername}@admin.local`,
+        firstName: "Admin",
+        lastName: "User",
+        profileImageUrl: null,
+      });
 
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
+      // Set session
+      (req.session as any).user = {
+        claims: {
+          sub: userId,
+          email: `${adminUsername}@admin.local`,
+          first_name: "Admin",
+          last_name: "User",
+        },
+        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week
+      };
 
-  app.get("/api/login", async (req, res, next) => {
-    console.log("Login attempt for hostname:", req.hostname);
-    console.log("Available strategies:", Object.keys((passport as any)._strategies || {}));
-    console.log("REPL_ID being used:", process.env.REPL_ID);
-    console.log("Expected callback URL:", `https://${req.hostname}/api/callback`);
-    
-    const currentConfig = await getOidcConfig();
-    console.log("Current OIDC config client_id:", currentConfig.client_id);
-    
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+      req.session.save((err) => {
+        if (err) {
+          console.error("Session save error:", err);
+          return res.status(500).json({ message: "Session error" });
+        }
+        console.log("Admin login successful for:", username);
+        return res.json({ 
+          message: "Login successful",
+          user: {
+            id: userId,
+            email: `${adminUsername}@admin.local`,
+            firstName: "Admin",
+            lastName: "User",
+          }
+        });
+      });
+    } else {
+      console.log("Failed login attempt for:", username);
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
   });
 
-  app.get("/api/callback", (req, res, next) => {
-    console.log("Auth callback received for hostname:", req.hostname);
-    console.log("Callback query params:", req.query);
-    console.log("Session ID:", req.sessionID);
-    console.log("Available auth strategies:", Object.keys((passport as any)._strategies || {}));
-    
-    passport.authenticate(`replitauth:${req.hostname}`, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+  // Login page (GET) - redirect or show status
+  app.get("/api/login", (req, res) => {
+    if ((req.session as any).user) {
+      return res.redirect("/");
+    }
+    return res.json({ message: "Please POST to /api/login with username and password" });
   });
 
+  // Logout endpoint
   app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("Logout error:", err);
+      }
+      res.redirect("/");
     });
+  });
+
+  // Get current user endpoint
+  app.get("/api/auth/user", (req, res) => {
+    const user = (req.session as any).user;
+    if (user) {
+      return res.json({
+        id: user.claims.sub,
+        email: user.claims.email,
+        firstName: user.claims.first_name,
+        lastName: user.claims.last_name,
+      });
+    }
+    return res.status(401).json({ message: "Not authenticated" });
   });
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
+  const user = (req.session as any)?.user;
 
-  // Check for admin cookie session as fallback
-  if (!req.isAuthenticated() && req.cookies?.admin_session) {
-    try {
-      const adminData = JSON.parse(req.cookies.admin_session);
-      if (adminData.expires_at && adminData.expires_at > Math.floor(Date.now() / 1000)) {
-        console.log("Using admin cookie session for user:", adminData.claims.sub);
-        req.user = adminData;
-        return next();
-      }
-    } catch (error) {
-      console.log("Invalid admin cookie:", error);
-    }
-  }
-
-  console.log("Auth check - isAuthenticated:", req.isAuthenticated());
-  console.log("Auth check - user exists:", !!user);
-  console.log("Auth check - user expires_at:", user?.expires_at);
-
-  if (!req.isAuthenticated() || !user || !user.expires_at) {
-    console.log("Auth failed - returning 401");
+  if (!user) {
+    console.log("Auth check failed - no user in session");
     return res.status(401).json({ message: "Unauthorized" });
   }
 
   const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    return next();
+  if (user.expires_at && now > user.expires_at) {
+    console.log("Auth check failed - session expired");
+    return res.status(401).json({ message: "Session expired" });
   }
 
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  // Attach user info to request for downstream use
+  (req as any).user = user;
+  return next();
 };

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit2, Trash2, Calendar, Bell, CheckCircle, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { Objective } from "@shared/schema";
+import type { Objective } from "@shared/schema";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { useMasteryReview } from "@/hooks/use-mastery-review";

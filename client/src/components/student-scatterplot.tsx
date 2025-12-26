@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TrendingUp, Calendar, ChevronDown, LineChart as LineChartIcon, BarChart3, PieChart, Filter } from "lucide-react";
 import { format } from "date-fns";
-import { filterDataPointsByPeriod, ReportingPeriod } from "@/lib/utils";
+import { filterDataPointsByPeriod, type ReportingPeriod } from "@/lib/utils";
 
 interface StudentScatterplotProps {
   studentId: number;
@@ -247,7 +247,8 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
     ticks: [0, 25, 50, 75, 100] as number[],
     tickFormatter: (value: number) => value.toString(),
     allowDecimals: true,
-    reversed: false
+    reversed: false,
+    formatType: 'default' as 'default' | 'frequency' | 'duration' | 'percentage'
   };
 
   if (scatterData.length > 0) {
@@ -267,7 +268,8 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
         ticks: calculateEvenTicks(domainMin, domainMax, 5),
         tickFormatter: (value: number) => Math.round(value).toString(),
         allowDecimals: false,
-        reversed: goal?.frequencyDirection === 'decrease'
+        reversed: goal?.frequencyDirection === 'decrease',
+        formatType: 'frequency' as const
       };
     } else if (firstDataPoint.format === 'duration') {
       const durationValues = scatterData.map((d: any) => d.y);
@@ -290,7 +292,8 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
           return `${totalMinutes}:${seconds.toString().padStart(2, '0')}`;
         },
         allowDecimals: false,
-        reversed: false
+        reversed: false,
+        formatType: 'duration' as const
       };
     } else {
       // Percentage type - use default 0-100 with even ticks
@@ -299,7 +302,8 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
         ticks: [0, 20, 40, 60, 80, 100],
         tickFormatter: (value: number) => `${value}%`,
         allowDecimals: true,
-        reversed: false
+        reversed: false,
+        formatType: 'percentage' as const
       };
     }
   }
@@ -489,7 +493,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         allowDecimals={yAxisConfig.allowDecimals}
                       />
                       <Tooltip 
-                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.formatType === 'percentage' ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
 
@@ -521,7 +525,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         allowDecimals={yAxisConfig.allowDecimals}
                       />
                       <Tooltip 
-                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.formatType === 'percentage' ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
 
@@ -579,7 +583,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         allowDecimals={yAxisConfig.allowDecimals}
                       />
                       <Tooltip 
-                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.formatType === 'percentage' ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
 
@@ -611,7 +615,7 @@ export default function StudentScatterplot({ studentId, goalId, selectedPeriod }
                         allowDecimals={yAxisConfig.allowDecimals}
                       />
                       <Tooltip 
-                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.tickFormatter === ((v: number) => `${v}%`) ? '%' : ''}`, 'Progress']}
+                        formatter={(value: any, name: string) => [`${value}${yAxisConfig.formatType === 'percentage' ? '%' : ''}`, 'Progress']}
                         labelFormatter={(label) => `Date: ${label}`}
                       />
 

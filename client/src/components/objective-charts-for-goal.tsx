@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import ObjectiveChart from "./objective-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ReportingPeriod } from "@/lib/utils";
+import type { ReportingPeriod } from "@/lib/utils";
 
 interface ObjectiveChartsForGoalProps {
   goalId: number;

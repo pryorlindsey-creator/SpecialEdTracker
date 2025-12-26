@@ -25,7 +25,7 @@ import {
   Cell,
 } from "recharts";
 import { format } from "date-fns";
-import { ReportingPeriod, filterDataPointsByPeriod } from "@/lib/utils";
+import { filterDataPointsByPeriod, type ReportingPeriod } from "@/lib/utils";
 import type { GoalProgressResponse, ObjectiveProgressResponse, DataPoint } from "@shared/schema";
 
 interface ObjectiveChartProps {
