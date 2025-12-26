@@ -184,16 +184,16 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Related Services</FormLabel>
-                  <div className="space-y-2 mt-2">
+                  <div className="space-y-3 mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
                     {RELATED_SERVICES_OPTIONS.map((service) => (
-                      <div key={service} className="flex items-center space-x-2">
+                      <div key={service} className="flex items-center space-x-3">
                         <Checkbox
                           id={service}
                           checked={field.value?.includes(service) || false}
                           onCheckedChange={(checked) => {
                             const currentServices = field.value || [];
                             let updatedServices;
-                            
+
                             if (service === "None") {
                               // If "None" is selected, clear all other services
                               updatedServices = checked ? ["None"] : [];
@@ -205,14 +205,14 @@ export default function AddStudentModal({ isOpen, onClose, onSuccess }: AddStude
                                 updatedServices = currentServices.filter(s => s !== service);
                               }
                             }
-                            
+
                             field.onChange(updatedServices);
                             setSelectedServices(updatedServices);
                           }}
                         />
-                        <label 
-                          htmlFor={service} 
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        <label
+                          htmlFor={service}
+                          className="text-sm font-medium text-gray-700 cursor-pointer select-none"
                         >
                           {service}
                         </label>
