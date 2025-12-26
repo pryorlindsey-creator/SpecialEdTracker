@@ -1,0 +1,15 @@
+# Query: QueryFunction
+# ContextLines: 1
+
+4 results - 2 files
+
+.local\state\replit\agent\filesystem\filesystem_state.json:
+  1: ⟪ 142726 characters skipped ⟫port default {\n  plugins: {\n    tailwindcss: {},\n    autoprefixer: {},\n  },\n}\n","path":null,"size_bytes":80,"size_tokens":null},"client/src/lib/queryClient.ts":{"content":"import { QueryClient, QueryFunction } from \"@tanstack/react-query\";\n\nasync function throwIfResNotOk(res: Response) {\n  if (!res.ok) {\n    const text = (await res.text()) || res.statusText;\n    console.error(`API Error ${res.status}:`, text);\n    \n    // Special handling for authentication failures\n    if (res.status === 401) {\n      console.error(\"Authentication failed - user needs to log in\");\n    }\n    \n    throw new Error(`${res.status}: ${text}`);\n  }\n}\n\nexport async function apiRequest(\n  method: string,\n  url: string,\n  data?: unknown | undefined,\n): Promise<Response> {\n  const res = await fetch(url, {\n    method,\n    headers: data ? { \"Content-Type\": \"application/json\" } : {},\n    body: data ? JSON.stringify(data) : undefined,\n    credentials: \"include\",\n  });\n\n  await throwIfResNotOk(res);\n  return res;\n}\n\ntype UnauthorizedBehavior = \"returnNull\" | \"throw\";\nexport const getQueryFn: <T>(options: {\n  on401: UnauthorizedBehavior;\n}) => QueryFunction<T> =\n  ({ on401: unauthorizedBehavior }) =>\n  async ({ queryKey }) => {\n    const res = await fetch(queryKey[0] as string, {\n      credentials: \"include\",\n    });\n\n    if (unauthorizedBehavior === \"returnNull\" && res.status === 401) {\n      return null;\n    }\n\n    await throwIfResNotOk(res);\n    return await res.json();\n  };\n\nexport const queryClient = new QueryClient({\n  defaultOptions: {\n    queries: {\n      queryFn: getQueryFn({ on401: \"throw\" }),\n      refetchInterval: false,\n      refetchOnWindowFocus: false,\n      staleTime: 30 * 1000,\n      gcTime: 5 * 60 * 1000,\n      retry: 1,\n      retryDelay: 1000,\n    },\n    mutations: {\n      retry: false,\n    },\n  },\n});\n","path":null,"size_bytes":1646,"size_tokens":null},"client/src/index.css":{"content":"@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n:root {\n  --background: hsl(0, 0%, 100%);\n  --foreground: hsl(221, 80%, 20%);\n  --muted: hsl(210, 40%, 98%);\n  --mute
+
+client\src\lib\queryClient.ts:
+   1: import type { QueryFunction } from "@tanstack/react-query";
+   2  
+
+  35    on401: UnauthorizedBehavior;
+  36: }) => QueryFunction<T> =
+  37    ({ on401: unauthorizedBehavior }) =>

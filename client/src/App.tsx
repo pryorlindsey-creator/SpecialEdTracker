@@ -10,6 +10,7 @@ import StudentDetail from "@/pages/student-detail";
 import GroupCollection from "@/pages/group-collection";
 import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
+import Login from "@/pages/login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -30,6 +31,9 @@ function Router() {
     <Switch>
       {/* Landing page for unauthenticated users or explicit landing route */}
       <Route path="/landing" component={Landing} />
+
+      {/* Login page */}
+      <Route path="/login" component={Login} />
       
       {/* Root path routing based on authentication */}
       <Route path="/">

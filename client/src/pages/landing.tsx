@@ -18,7 +18,7 @@ export default function Landing() {
             </div>
             <div className="flex space-x-4">
               <Button 
-                onClick={() => window.location.href = '/api/login'} 
+                onClick={() => window.location.href = '/login'} 
                 size="lg"
                 className="bg-blue-900 hover:bg-blue-800 text-white px-8 py-3"
               >
@@ -40,7 +40,7 @@ export default function Landing() {
             to track student progress, manage IEP goals, and generate meaningful reports with ease and precision.
           </p>
           <Button 
-            onClick={() => window.location.href = '/api/login'} 
+            onClick={() => window.location.href = '/login'} 
             size="lg"
             className="bg-blue-900 hover:bg-blue-800 text-white px-12 py-4 text-lg font-semibold"
           >
@@ -175,7 +175,7 @@ export default function Landing() {
               Join special education teachers who are already using our platform to streamline their IEP goal tracking, improve data accuracy, and save valuable time.
             </p>
             <Button 
-              onClick={() => window.location.href = '/api/login'} 
+              onClick={() => window.location.href = '/login'} 
               size="lg"
               className="bg-white hover:bg-gray-100 text-blue-900 px-12 py-4 text-lg font-semibold"
             >
